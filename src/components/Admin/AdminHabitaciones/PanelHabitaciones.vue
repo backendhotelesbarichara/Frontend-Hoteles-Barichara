@@ -101,7 +101,7 @@
         tabindex="-1"
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
-      >
+       >
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -403,19 +403,15 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      rooms: [
-        {
-          alias: "Habitación 1",
-          precio: 50000,
-        },
-      ],
-    };
+<script setup>
+import { ref } from 'vue';
+
+const rooms = ref([
+  {
+    alias: "Habitación 1",
+    precio: 50000,
   },
-};
+]);
 </script>
 
 <style scoped>

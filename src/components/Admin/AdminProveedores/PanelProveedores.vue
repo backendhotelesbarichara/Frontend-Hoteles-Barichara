@@ -122,16 +122,11 @@
 </div>
 </template>
 
-<script>
-import {
-    proveedores
-} from './../../BD/bd'
-export default {
-    data: () => ({
-        dataproveedores: proveedores,
-    })
+<script setup>
+import { ref } from 'vue';
+import { proveedores } from './../../BD/bd';
 
-}
+const dataproveedores = ref(proveedores);
 </script>
 
 <style scoped>

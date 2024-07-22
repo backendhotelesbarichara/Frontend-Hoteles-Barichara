@@ -1,5 +1,10 @@
 import { createApp } from "vue";
 import { createRouter, createWebHashHistory } from "vue-router";
+import axios from "axios";
+import { createPinia } from "pinia";
+import FloatingVue from 'floating-vue';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import 'floating-vue/dist/style.css';
 // import './style.css'
 
 
@@ -124,9 +129,17 @@ const router = createRouter({
   routes,
 });
 
+axios.defaults.baseURL = 'http://localhost:4500/api/'
+
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
+
 //instancia de vue
 const app = createApp(App);
 
 app.use(router);
+app.use(pinia);
+app.use(FloatingVue);
 
 app.mount("#app");
+

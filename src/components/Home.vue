@@ -161,23 +161,17 @@
 </div>
 </template>
 
-<script>
-import {
-    hoteles,
-    Sturisticos
-} from './../components/BD/bd'
-export default {
-    data: () => ({
-        datahotel: hoteles,
-        datasitios: Sturisticos,
-    }),
-    methods: {
-        scrollImages(offset, galleryType) {
-            const imageList = document.querySelector(`.${galleryType}-images`);
-            imageList.scrollLeft += offset;
-        },
-    },
-};
+<script setup>
+import { ref } from 'vue';
+import { hoteles, Sturisticos } from './../components/BD/bd';
+
+const datahotel = ref(hoteles);
+const datasitios = ref(Sturisticos);
+
+function scrollImages(offset, galleryType) {
+  const imageList = document.querySelector(`.${galleryType}-images`);
+  imageList.scrollLeft += offset;
+}
 </script>
 
 <style scoped>

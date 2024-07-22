@@ -1,6 +1,17 @@
+<script setup>
+import { ref } from "vue";
+import { useStoreUsuarios } from '../../stores/usuario.js';
+
+
+const useUsuario = useStoreUsuarios();
+
+</script>
+
+
 <template>
   <!-- Inicio de scroll de hoteles y sitios -->
   <main>
+    <h1>{{ useUsuario.usuario.nombre }}</h1>
     <div class="galeria">
       <div class="Hoteles"><h5>Administra tu hotel</h5></div>
       <div class="contenedor">
@@ -42,15 +53,21 @@
                   <i class="material-icons">checklist</i>
                 </div>
               </div>
+
+
             </router-link>
+
           </div>
+
         </center>
+
       </div>
+
     </div>
   </main>
 </template>
 
-<script></script>
+
 
 <style scoped>
 .galeria {

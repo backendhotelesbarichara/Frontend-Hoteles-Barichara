@@ -216,22 +216,18 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      hoteles: [
-        {
-          direccion: "Carrera 2A #6-12",
-          nombre: "Bella Vista",
-          rlagal: "Juan Romero",
-          tel: "3222431440",
-          correo: "juanr@gmail.com",
-        },
-      ],
-    };
+<script setup>
+import { ref } from 'vue';
+
+const hoteles = ref([
+  {
+    direccion: "Carrera 2A #6-12",
+    nombre: "Bella Vista",
+    rlagal: "Juan Romero",
+    tel: "3222431440",
+    correo: "juanr@gmail.com",
   },
-};
+]);
 </script>
 
 <style scoped>
