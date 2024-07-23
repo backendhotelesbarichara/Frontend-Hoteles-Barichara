@@ -2,23 +2,22 @@ import axios from "axios";
 import { ref } from "vue";
 import { defineStore } from "pinia";
 
-const modelo = "hotel";
+const modelo = "piso";
 const estatus = ref("");
 const validacion = ref("");
-const nuevoHotel = ref("");
-const idHotel = ref("");
-const hotelSeleccionado = ref("");
+const nuevoPiso = ref("");
+const idPiso = ref("");
 
-export const useStoreHotel = defineStore(
+export const useStorePiso = defineStore(
   modelo,
   () => {
-    const hoteles = ref([]);
+    const pisos = ref([]);
 
     const getAll = async () => {
       try {
         const response = await axios.get(`${modelo}/all`);
         console.log(response);
-        hoteles.value = response.data;
+        pisos.value = response.data;
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -27,14 +26,14 @@ export const useStoreHotel = defineStore(
       }
     };
 
-    const getPorUsuario = async (idUsuario) => {
+    const getPisoPorHotel = async (idHotel) => {
       try {
-        const response = await axios.get(`${modelo}/buscarHotel/${idUsuario}`);
+        const response = await axios.get(
+          `${modelo}/buscarPisoPorHotel/${idHotel}`
+        );
         console.log(response);
         estatus.value = response.status;
-        hotelSeleccionado.value = response.data[0];
-        idHotel.value = response.data[0]._id;
-        console.log("id pinia", idHotel.value)
+        idPiso.value = response.data[0]._id;
         return response.data;
       } catch (error) {
         console.log(error);
@@ -45,10 +44,10 @@ export const useStoreHotel = defineStore(
     const agregar = async (data) => {
       try {
         const response = await axios.post(`${modelo}/registro`, data);
-        console.log("hola soy nuevo hotel", response);
+        console.log("hola soy nuevo piso", response);
         estatus.value = response.status;
-        nuevoHotel.value = response.data._id;
-        console.log("soy nuevo hotel", nuevoHotel);
+        nuevoPiso.value = response.data._id;
+        console.log("soy nuevo piso", nuevoPiso);
         return response.data;
       } catch (error) {
         console.log(error);
@@ -91,49 +90,18 @@ export const useStoreHotel = defineStore(
       }
     };
 
-    const subirFotos = async (id, file) => {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "qcxzi3kl");
-        const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/dep417oku/image/upload`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        const imagenPrincipal = response.data.secure_url;
-
-        // Actualizar la foto de perfil del usuario
-        hotelSeleccionado.value.imagen = imagenPrincipal;
-
-        // Guardar la foto de perfil en el servidor
-        await editar(id, { imagenPrincipal });
-
-        return { imagenPrincipal };
-      } catch (error) {
-        console.error("Error al subir la foto:", error);
-        return null;
-      }
-    };
-
     return {
       getAll,
-      getPorUsuario,
+      getPisoPorHotel,
       agregar,
       editar,
       activar,
       inactivar,
-      hoteles,
+      pisos,
       estatus,
       validacion,
-      nuevoHotel,
-      idHotel,
-      hotelSeleccionado,
-      subirFotos,
+      nuevoPiso,
+      idPiso,
     };
   },
   {
