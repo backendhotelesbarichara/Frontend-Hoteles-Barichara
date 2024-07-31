@@ -1,107 +1,113 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
+import { useStoreHotel } from '../../stores/hotel.js';
+import { useStoreUsuarios } from '../../stores/usuario.js';
 
+const useHotel = useStoreHotel();
+const useUsuario = useStoreUsuarios();
+const nombre = ref("");
+const descripcion = ref("");
+const direccion = ref("");
+const correo = ref("");
+const telefono = ref("");
+const pisos = ref("");
+const idUsuario = ref(useUsuario.id)
 const uploadedImages = ref([]) // Almacenar las imágenes cargadas
 const imagesSelected = ref(0) // Contador de imágenes seleccionadas
 
-const handleFileUpload = (event) => {
-  if (imagesSelected.value >= 1) {
-    // Límite de 1 imágenes alcanzado, no permitir más
-    return
-  }
+const agregarHotel = async () => {
 
-  const fileInput = event.target
-  const files = fileInput.files
+  const data = {
+    nombre: nombre.value,
+    descripcion: descripcion.value,
+    direccion: direccion.value,
+    correo: correo.value,
+    telefono: telefono.value,
+    pisos: pisos.value,
+    idUsuario: idUsuario.value,
+  };
 
-  // Recorrer los archivos seleccionados
-  for (let i = 0; i < files.length; i++) {
-    if (imagesSelected.value >= 1) {
-      // Límite de 1 imágenes alcanzado, no permitir más
-      break
+  try {
+    const response = await useHotel.agregar(data);
+
+    if (useHotel.estatus === 200) {
+      console.log("Hotel añadido")
+    } else if (useHotel.estatus === 400) {
+      return;
     }
-
-    const file = files[i]
-    const imageURL = URL.createObjectURL(file)
-
-    uploadedImages.value.push({ src: imageURL, alt: 'Imagen' })
-    imagesSelected.value++
+  } catch (error) {
+    console.log('Error al agregar hotel:', error);
   }
+};
 
-  // Limpiar el campo de entrada de archivos si es necesario
-  fileInput.value = ''
-}
-
-const clearImages = () => {
-  // Restablecer el array de imágenes cargadas y el contador
-  uploadedImages.value = []
-  imagesSelected.value = 0
-}
 </script>
 
 <template>
   <main>
-    <div class="galeria">
-      <div class="Hoteles">
-        <h5>Registra tu hotel</h5>
-      </div>
-      <!-- Start: Ludens - Create-Edit Form -->
-      <div class="container" style="margin-top: 20px; margin-bottom: 20px">
-        <form enctype="multipart/form-data" method="post">
-          <div class="card shadow mb-3">
-            <div class="card-header py-3">
-              <p class="text-primary m-0 fw-bold">
-                <span style="color:  #b7642d">Diligencie los siguientes datos para realizar el registro
-                  correctamente</span>
-              </p>
-            </div>
-            <div class="card-body">
-              <div class="row">
+  <div class="galeria">
+    <div class="Hoteles">
+      <h5>Registra tu hotel</h5>
+    </div>
+    <!-- Start: Ludens - Create-Edit Form -->
+    <div class="container" style="margin-top: 20px; margin-bottom: 20px">
+      <form enctype="multipart/form-data" method="post" @submit.prevent="agregarHotel">
+        <div class="card shadow mb-3">
+          <div class="card-header py-3">
+            <p class="text-primary m-0 fw-bold">
+              <span style="color:  #b7642d">Diligencie los siguientes datos para realizar el registro
+                correctamente</span>
+            </p>
+          </div>
+          <div class="card-body">
+            <div class="row">
 
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="nombre_hotel"><strong>Nombre *</strong></label><input
-                      class="form-control" type="text" id="id_price_service" placeholder="Nombre del hotel"
-                      name="nombre_hotel" required="" />
-                  </div>
+              <div class="col-sm-12 col-md-4 col-lg-4">
+                <div class="mb-3">
+                  <label class="form-label" for="nombre_hotel"><strong>Nombre *</strong></label>
+                  <input class="form-control" v-model="nombre" type="text" id="id_price_service"
+                    placeholder="Nombre del hotel" name="nombre_hotel" required="" />
                 </div>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="nombre_hotel"><strong>Descripción *</strong></label>
-                    <textarea class="form-control" type="text" id="id_price_service" placeholder="Descripción del hotel"
-                      style="height: 70px;"></textarea>
-                  </div>
+              </div>
+              <div class="col-sm-12 col-md-4 col-lg-4">
+                <div class="mb-3">
+                  <label class="form-label" for="nombre_hotel"><strong>Descripción *</strong></label>
+                  <textarea class="form-control" v-model="descripcion" type="text" id="id_price_service"
+                    placeholder="Descripción del hotel" style="height: 70px;"></textarea>
                 </div>
-                <div class="col-sm-12 col-md-8 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label><input
-                      class="form-control" type="text" id="id_name_service" placeholder="Ej: Calle 6A #3-20 Barrio Rojo"
-                      name="direccion_hotel" required="" />
-                  </div>
+              </div>
+              <div class="col-sm-12 col-md-8 col-lg-4">
+                <div class="mb-3">
+                  <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label>
+                  <input class="form-control" v-model="direccion" type="text" id="id_name_service"
+                    placeholder="Ej: Calle 6A #3-20 Barrio Rojo" name="direccion_hotel" required="" />
                 </div>
+              </div>
 
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="tel_contacto"><strong>Teléfono&nbsp;*</strong></label><input
-                      class="form-control" type="text" id="id_price_service-2" placeholder="Teléfono de contacto"
-                      name="tel_contacto" oninput="this.value = this.value.replace(/[^0-9]/g, '')" pattern="[0-9]{10,}"
-                      title="Ingresa al menos 10 números" required="" />
-                  </div>
+              <div class="col-sm-12 col-md-4 col-lg-4">
+                <div class="mb-3">
+                  <label class="form-label" for="tel_contacto"><strong>Teléfono&nbsp;*</strong></label>
+                  <input class="form-control" v-model="telefono" type="text" id="id_price_service-2"
+                    placeholder="Teléfono de contacto" name="tel_contacto"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" pattern="[0-9]{10,}"
+                    title="Ingresa al menos 10 números" required="" />
                 </div>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="email"><strong>Correo *</strong></label><input class="form-control"
-                      type="email" id="id_price_service-3" placeholder="Correo valido" name="email" required="" />
-                  </div>
+              </div>
+              <div class="col-sm-12 col-md-4 col-lg-4">
+                <div class="mb-3">
+                  <label class="form-label" for="email"><strong>Correo *</strong></label>
+                  <input class="form-control" v-model="correo" type="email" id="id_price_service-3"
+                    placeholder="Correo valido" name="email" required="" />
                 </div>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="email"><strong>Pisos</strong></label><input class="form-control"
-                      type="email" id="id_price_service-3" placeholder="Cantidad pisos del hotel" name="email"
-                      required="" />
-                  </div>
+              </div>
+              <div class="col-sm-12 col-md-4 col-lg-4">
+                <div class="mb-3">
+                  <label class="form-label" for="email"><strong>Pisos *</strong></label>
+                  <input class="form-control" v-model="pisos" type="text" id="id_price_service-3"
+                    placeholder="Cantidad pisos del hotel" name="email" required="" />
                 </div>
-                <hr>
-                <!-- <div class="col-sm-12 col-md-4 col-lg-4">
+              </div>
+              <hr>
+              <!-- <div class="col-sm-12 col-md-4 col-lg-4">
                   <div class="mb-3">
                     <label class="form-label" for="nombre_hotel"
                       ><strong>NIT</strong></label
@@ -109,86 +115,86 @@ const clearImages = () => {
                       class="form-control"
                       type="text"
                       id="id_price_service"
-                      placeholder="Numero de Identificacion Tributaria"
-                      name="nombre_hotel"
-                      required=""
-                    />
-                  </div>
-                </div>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="nombre_hotel"
-                      ><strong>RUT</strong></label
-                    ><input
-                      class="form-control"
-                      type="text"
-                      id="id_price_service"
-                      placeholder="Registro Unico Tributario"
-                      name="nombre_hotel"
-                      required=""
-                    />
-                  </div>
-                </div>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="nombre_hotel"
-                      ><strong>RNT</strong></label
-                    ><input
-                      class="form-control"
-                      type="text"
-                      id="id_price_service"
-                      placeholder="Registro Nacional de Turismo"
-                      name="nombre_hotel"
-                      required=""
-                    />
-                  </div>
-                </div>
-                <hr>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="representante_legal"
-                      ><strong>Representante&nbsp;legal *</strong></label
-                    ><input
-                      class="form-control"
-                      type="text"
-                      id="id_price_service-1"
-                      placeholder="Nombre del representante"
-                      name="representante_legal"
-                      required=""
-                    />
-                  </div>
-                </div>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="email"
-                      ><strong>Correo *</strong></label
-                    ><input
-                      class="form-control"
-                      type="email"
-                      id="id_price_service-3"
-                      placeholder="Correo valido"
-                      name="email"
-                      required=""
-                    />
-                  </div>
-                </div>
-                <div class="col-sm-12 col-md-4 col-lg-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="tel_contacto"
-                      ><strong>Teléfono&nbsp;*</strong></label
-                    ><input
-                      class="form-control"
-                      type="text"
-                      id="id_price_service-2"
-                      placeholder="Teléfono de contacto"
-                      name="tel_contacto"
-                      oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                      pattern="[0-9]{10,}"
-                      title="Ingresa al menos 10 números"
-                      required=""
-                    />
-                  </div>
-                </div> -->
+                          placeholder="Numero de Identificacion Tributaria"
+                          name="nombre_hotel"
+                          required=""
+                        />
+                      </div>
+                    </div>
+                    <div class="col-sm-12 col-md-4 col-lg-4">
+                      <div class="mb-3">
+                        <label class="form-label" for="nombre_hotel"
+                          ><strong>RUT</strong></label
+                        ><input
+                          class="form-control"
+                          type="text"
+                          id="id_price_service"
+                          placeholder="Registro Unico Tributario"
+                          name="nombre_hotel"
+                          required=""
+                        />
+                      </div>
+                    </div>
+                    <div class="col-sm-12 col-md-4 col-lg-4">
+                      <div class="mb-3">
+                        <label class="form-label" for="nombre_hotel"
+                          ><strong>RNT</strong></label
+                        ><input
+                          class="form-control"
+                            type="text"
+                            id="id_price_service"
+                            placeholder="Registro Nacional de Turismo"
+                            name="nombre_hotel"
+                            required=""
+                          />
+                        </div>
+                      </div>
+                      <hr>
+                      <div class="col-sm-12 col-md-4 col-lg-4">
+                          <div class="mb-3">
+                            <label class="form-label" for="representante_legal"
+                              ><strong>Representante&nbsp;legal *</strong></label
+                            ><input
+                              class="form-control"
+                              type="text"
+                              id="id_price_service-1"
+                              placeholder="Nombre del representante"
+                              name="representante_legal"
+                              required=""
+                            />
+                          </div>
+                        </div>
+                        <div class="col-sm-12 col-md-4 col-lg-4">
+                          <div class="mb-3">
+                            <label class="form-label" for="email"
+                              ><strong>Correo *</strong></label
+                            ><input
+                              class="form-control"
+                              type="email"
+                              id="id_price_service-3"
+                              placeholder="Correo valido"
+                              name="email"
+                              required=""
+                            />
+                          </div>
+                        </div>
+                        <div class="col-sm-12 col-md-4 col-lg-4">
+                          <div class="mb-3">
+                            <label class="form-label" for="tel_contacto"
+                              ><strong>Teléfono&nbsp;*</strong></label
+                            ><input
+                              class="form-control"
+                              type="text"
+                              id="id_price_service-2"
+                              placeholder="Teléfono de contacto"
+                              name="tel_contacto"
+                              oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                              pattern="[0-9]{10,}"
+                              title="Ingresa al menos 10 números"
+                              required=""
+                            />
+                          </div>
+                        </div> -->
                 <hr>
                 <div class="col-6">
                   <div class="mb-3">
@@ -201,8 +207,8 @@ const clearImages = () => {
                         <i style="color:  #b7642d; font-size: 30px" class="bi bi-file-earmark-arrow-up-fill"></i>
                       </p>
                       <br />
-                      <input class="foto" style="margin-top: 13px" :required="imagesSelected !== 1" type="file"
-                        ref="fileInput" accept="image/*" multiple @change="handleFileUpload" />
+                      <input class="foto" style="margin-top: 13px" type="file" ref="fileInput" accept="image/*" multiple
+                         />
                     </div>
                     <!-- Contenedor de las imágenes con margen -->
                     <div style="margin-top: 15px; display: flex" class="d-flex flex-wrap gap-1">
@@ -211,10 +217,10 @@ const clearImages = () => {
                       </div>
                     </div>
                     <button style="
-                          background-color:  #b7642d;
-                          color: #fff;
-                          margin-top: 20px;
-                        " class="btn btn-custom btn" @click="clearImages" v-if="uploadedImages.length > 0">
+                                  background-color:  #b7642d;
+                                  color: #fff;
+                                  margin-top: 20px;
+                                " class="btn btn-custom btn"  v-if="uploadedImages.length > 0">
                       <i class="bi bi-trash3-fill"></i> Limpiar Imágenes
                     </button>
                   </div>
@@ -230,8 +236,8 @@ const clearImages = () => {
                         <i style="color:  #b7642d; font-size: 30px" class="bi bi-file-earmark-arrow-up-fill"></i>
                       </p>
                       <br />
-                      <input class="foto" style="margin-top: 13px" :required="imagesSelected !== 1" type="file"
-                        ref="fileInput" accept="image/*" multiple @change="handleFileUpload" />
+                      <input class="foto" style="margin-top: 13px" type="file" ref="fileInput" accept="image/*" multiple
+                         />
                     </div>
                     <!-- Contenedor de las imágenes con margen -->
                     <div style="margin-top: 15px; display: flex" class="d-flex flex-wrap gap-1">
@@ -240,10 +246,10 @@ const clearImages = () => {
                       </div>
                     </div>
                     <button style="
-                          background-color:  #b7642d;
-                          color: #fff;
-                          margin-top: 20px;
-                        " class="btn btn-custom btn" @click="clearImages" v-if="uploadedImages.length > 0">
+                                  background-color:  #b7642d;
+                                  color: #fff;
+                                  margin-top: 20px;
+                                " class="btn btn-custom btn">
                       <i class="bi bi-trash3-fill"></i> Limpiar Imágenes
                     </button>
                   </div>
@@ -252,16 +258,13 @@ const clearImages = () => {
               </div>
             </div>
           </div>
-          <div class="text-end mb-3">
-            <center>
-              <a class="btn btn-outline-danger btn" role="button" href="#" style="margin-right: 5px">Cancelar</a><button
-                class="btn btn-outline-dark btn" type="reset" style="margin-right: 5px">
-                Limpiar</button><button class="btn btn-custom btn" type="submit"
-                style="background:  #b7642d; color: #fff">
-                <i class="bi bi-floppy-fill"></i>
-                Registrar
-              </button>
-            </center>
+          <div class="text-center mb-3">
+            <a class="btn btn-outline-danger btn" role="button" href="#" style="margin-right: 5px">Cancelar</a><button
+              class="btn btn-outline-dark btn" type="reset" style="margin-right: 5px">
+              Limpiar</button><button class="btn btn-custom btn" type="submit" style="background:  #b7642d; color: #fff">
+              <i class="bi bi-floppy-fill"></i>
+              Registrar
+            </button>
           </div>
         </form>
       </div>

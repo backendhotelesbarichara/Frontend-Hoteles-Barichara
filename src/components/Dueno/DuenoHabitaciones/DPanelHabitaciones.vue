@@ -69,29 +69,47 @@ onMounted(() => {
 
 <template>
   <div class="galeria">
-  <div class="Hoteles">
+    <div class="Hoteles">
       <h5>Administrar mis habitaciones</h5>
     </div>
     <div>
       <!-- Botón para agregar nueva habitación -->
-      <div>
-        <div class="btn-group" role="group">
-          <router-link class="link" to="/RegistroHabitaciones">
-            <button style="margin-bottom: 5px; margin-top: 30px" class="btns btn btn-dark" @click="showAddModal">
-              <i class="material-icons">add_box</i>
-            </button></router-link>
-        </div>
+      <div class="top-bar">
+        <router-link class="link" to="/RegistroHabitaciones">
+          <button style="margin-bottom: 5px; margin-top: 30px" class="btns btn btn-dark" @click="showAddModal">
+            <i class="material-icons">add_box</i>
+          </button>
+        </router-link>
         <div>
-          <select v-model="selectedPiso" @change="handlePisoChange">
-            <option v-for="piso in pisos" :key="piso._id" :value="piso">
-              Piso {{ piso.num_piso }}
-            </option>
-          </select>
+        <select v-model="selectedPiso" @change="handlePisoChange">
+          <option v-for="piso in pisos" :key="piso._id" :value="piso">
+            Piso {{ piso.num_piso }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+      <div v-if="loading" class="centered">
+        <div class="empty-state">
+          <i class="material-icons empty-state__icon">habitacion</i>
+          <h3 class="empty-state__title">Cargando...</h3>
+        </div>
+      </div>
+      <div v-else-if="habitaciones.length === 0" class="centered">
+        <div class="empty-state">
+          <i class="material-icons empty-state__icon">hotel</i>
+          <h3 class="empty-state__title">Aún no tienes habitaciones registradas</h3>
+          <p class="empty-state__description">¡Registra tus habitaciones ahora mismo para comenzar a administrarlas!</p>
+          <router-link class="link" to="/RegistroHabitaciones">
+            <button class="btn btn-dark">
+              Registrar Habitacion
+            </button>
+          </router-link>
         </div>
       </div>
 
       <!-- Tabla de habitaciones -->
-      <div style="font-size: 12px;" class="table-responsive">
+      <div v-else style="font-size: 12px;" class="table-responsive">
         <table class="table table-bordered">
           <thead style="align-items: center; text-align: center">
             <tr>
@@ -133,10 +151,10 @@ onMounted(() => {
                   <!-- separador -->
                   <!-- <div class="separator"></div>
 
-                     Agrega un select con tres opciones 
-                      <select style="width: 110px; height: 30px; font-size: 12px;" class="form-select">
-                        <option selected>Estados</option>
-                        <option value="1" v-if="habitacion.disponible">Disponible</option>
+                                 Agrega un select con tres opciones 
+                                  <select style="width: 110px; height: 30px; font-size: 12px;" class="form-select">
+                                    <option selected>Estados</option>
+                                    <option value="1" v-if="habitacion.disponible">Disponible</option>
                   <option value="2" v-else>No disponible</option>
                 </select> -->
               </div>
@@ -289,75 +307,75 @@ onMounted(() => {
                       id="h_closet"
                       name="h_closet"
                       required=""
-                              >
-                                <option value="S">Si</option>
-                                  <option value="N">No</option>
-                                </select>
-                              </div>
-                            </div>
-
-                                <div class="col-6">
-                                  <div class="mb-3">
-                                      <label class="form-label" for="bano"
-                                        ><strong>Baño *</strong></label
-                                      >
-                                      <select
-                                        class="form-select"
-                                        id="bano"
-                                        name="bano"
-                                        required=""
-                                      >
-                                        <option value="Privado">Privado</option>
-                                        <option value="Compartido">Compartido</option>
-                                      </select>
-                                    </div>
-                                  </div>
-
-                                  <div class="col-6">
-                                    <div class="mb-3">
-                                      <label class="form-label" for="h_servicios"
-                                        ><strong>Wi-Fi *</strong></label
-                                      >
-                                      <select
-                                        class="form-select"
-                                        id="wifi"
-                                            name="wifi"
-                                            required=""
                                           >
                                             <option value="S">Si</option>
-                                            <option value="N">No</option>
-                                          </select>
+                                              <option value="N">No</option>
+                                            </select>
+                                          </div>
                                         </div>
-                                      </div>
 
-                                      <div class="col-6">
-                                        <div class="mb-3">
-                                          <label class="form-label" for="h_servicios"
-                                            ><strong>TV *</strong></label
-                                          >
-                                          <select class="form-select" id="tv" name="tv" required="">
-                                            <option value="S">Si</option>
-                                            <option value="N">No</option>
-                                          </select>
-                                        </div>
-                                      </div>
+                                            <div class="col-6">
+                                              <div class="mb-3">
+                                                  <label class="form-label" for="bano"
+                                                    ><strong>Baño *</strong></label
+                                                  >
+                                                  <select
+                                                    class="form-select"
+                                                    id="bano"
+                                                    name="bano"
+                                                    required=""
+                                                  >
+                                                    <option value="Privado">Privado</option>
+                                                    <option value="Compartido">Compartido</option>
+                                                  </select>
+                                                </div>
+                                              </div>
 
-                                      <div class="col-6">
-                                        <div class="mb-3">
-                                          <label class="form-label" for="h_servicios"
-                                            ><strong>Aire AC *</strong></label
-                                          >
-                                          <select
-                                            class="form-select"
-                                            id="aire"
-                                            name="aire"
-                                            required=""
-                                          >
-                                            <option value="S">Si</option>
-                                            <option value="N">No</option>
-                                          </select>
-                                        </div>
-                                      </div> -->
+                                              <div class="col-6">
+                                                <div class="mb-3">
+                                                  <label class="form-label" for="h_servicios"
+                                                    ><strong>Wi-Fi *</strong></label
+                                                  >
+                                                  <select
+                                                    class="form-select"
+                                                    id="wifi"
+                                                        name="wifi"
+                                                        required=""
+                                                      >
+                                                        <option value="S">Si</option>
+                                                        <option value="N">No</option>
+                                                      </select>
+                                                    </div>
+                                                  </div>
+
+                                                  <div class="col-6">
+                                                    <div class="mb-3">
+                                                      <label class="form-label" for="h_servicios"
+                                                        ><strong>TV *</strong></label
+                                                      >
+                                                      <select class="form-select" id="tv" name="tv" required="">
+                                                        <option value="S">Si</option>
+                                                        <option value="N">No</option>
+                                                      </select>
+                                                    </div>
+                                                  </div>
+
+                                                  <div class="col-6">
+                                                    <div class="mb-3">
+                                                      <label class="form-label" for="h_servicios"
+                                                        ><strong>Aire AC *</strong></label
+                                                      >
+                                                      <select
+                                                        class="form-select"
+                                                        id="aire"
+                                                        name="aire"
+                                                        required=""
+                                                      >
+                                                        <option value="S">Si</option>
+                                                        <option value="N">No</option>
+                                                      </select>
+                                                    </div>
+                                                  </div> -->
 
                 <div class="col-6">
                   <div class="mb-3">
@@ -394,6 +412,47 @@ onMounted(() => {
 
 
 <style scoped>
+
+.top-bar {
+  display: flex;
+  align-items: center;
+}
+
+.top-bar .link {
+  margin-right: 10px; /* Espacio entre el botón y el select */
+}
+
+.top-bar select {
+  margin-top: 30px; /* Alineación vertical con el botón */
+}
+
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+}
+
+.empty-state {
+  max-width: 600px;
+  margin: auto;
+}
+
+.empty-state__icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state__title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state__description {
+  margin-bottom: 1rem;
+}
+
 .separator {
   width: 1px;
   /* Ancho de la línea vertical */
