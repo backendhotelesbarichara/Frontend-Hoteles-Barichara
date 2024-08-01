@@ -278,7 +278,7 @@ onMounted(() => {
 
                 </div>
                 <div class="modal-footer">
-                  <button type="button" style="background-color: #343a40; border-style: none" class="btn btn-secondary"
+                  <button type="button" style="background-color: #343a45; border-style: none" class="btn btn-secondary"
                     data-bs-dismiss="modal">
                     Cancelar
                   </button>
