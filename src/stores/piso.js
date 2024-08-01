@@ -7,6 +7,8 @@ const estatus = ref("");
 const validacion = ref("");
 const nuevoPiso = ref("");
 const idPiso = ref("");
+const idPisoSeleccionado = ref("");
+const numPisoSelec = ref("");
 
 export const useStorePiso = defineStore(
   modelo,
@@ -102,6 +104,8 @@ export const useStorePiso = defineStore(
       validacion,
       nuevoPiso,
       idPiso,
+      idPisoSeleccionado,
+      numPisoSelec,
     };
   },
   {

@@ -8,6 +8,7 @@ const useUsuarios = useStoreUsuarios();
 const cedula = ref("");
 const password = ref("");
 const msgValidacion = ref("");
+const loading = ref(false);
 
 const Login = async () => {
   if (!cedula.value || !password.value) {
@@ -24,37 +25,31 @@ const Login = async () => {
     password: password.value,
   };
 
+  loading.value = true; // Start loading
+
   try {
     const response = await useUsuarios.login(data);
 
     if (useUsuarios.estatus === 200) {
       goToPanelDueno();
-      console.log("Login exitoso")
-    } else if (useUsuarios.estatus === 400) {
-      msgValidacion.value = useUsuarios.validacion
+      console.log("Login exitoso");
+    } else if (useUsuarios.estatus === 400 || useUsuarios.estatus === 401) {
+      msgValidacion.value = useUsuarios.validacion;
       setTimeout(() => {
         msgValidacion.value = "";
         return;
       }, 5000);
-      return;
-    } else if (useUsuarios.estatus === 401) {
-      msgValidacion.value = useUsuarios.validacion
-      setTimeout(() => {
-        msgValidacion.value = "";
-        return;
-      }, 5000);
-      return;
     }
   } catch (error) {
     console.log('Error al logearse:', error);
+  } finally {
+    loading.value = false; // Stop loading
   }
 };
 
 function goToPanelDueno() {
-  router.push('/PanelDueno')
+  router.push('/PanelDueno');
 }
-
-
 </script>
 
 <template>
@@ -65,7 +60,7 @@ function goToPanelDueno() {
         <div class="col-md-6 col-xl-4">
           <div class="card mb-5">
             <div class="card-body d-flex flex-column align-items-center" style="border-radius: 20px">
-              <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4" style="background:  #b7642d">
+              <div class="bs-icon-xl bs-icon-circle bs-icon-primary bs-icon my-4" style="background: #b7642d">
                 <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16"
                   class="bi bi-person">
                   <path
@@ -78,19 +73,19 @@ function goToPanelDueno() {
                   <input class="form-control" type="number" name="cedula" placeholder="Cédula" v-model="cedula" />
                 </div>
                 <div class="mb-3">
-                  <input class="form-control" type="password" name="password" placeholder="Contraseña" v-model="password"
-                     />
+                  <input class="form-control" type="password" name="password" placeholder="Contraseña" v-model="password" />
                 </div>
                 <div class="mb-3">
                   <button class="btn btn-primary d-block w-100" 
-                    style="background:  #b7642d; border-style: none;">
-                    Entrar
+                    :disabled="loading"
+                    style="background: #b7642d; border-style: none;">
+                    <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span v-if="!loading">Entrar</span>
                   </button>
                   <p class="text-danger"> {{ msgValidacion }} </p>
-                 
                 </div>
                 <!-- <router-link class="link" to="/Registro">
-                  <p class="text-muted">¿No esta registrado? Regístrese&nbsp;</p>
+                  <p class="text-muted">¿No está registrado? Regístrese&nbsp;</p>
                 </router-link> -->
               </form>
             </div>
@@ -102,6 +97,6 @@ function goToPanelDueno() {
   <!-- End: Login Form Basic -->
 </template>
 
-<style>
-
+<style scoped>
+/* You can add additional styles here */
 </style>
