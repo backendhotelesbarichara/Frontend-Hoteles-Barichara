@@ -1,122 +1,153 @@
-  <script setup>
-  import { ref, onMounted } from 'vue';
-  import { useStorePiso } from '../../../stores/piso.js';
-  import { useStoreHotel } from '../../../stores/hotel.js';
-  import { useStoreHabitacion } from '../../../stores/habitacion.js';
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useStorePiso } from '../../../stores/piso.js';
+import { useStoreHotel } from '../../../stores/hotel.js';
+import { useStoreHabitacion } from '../../../stores/habitacion.js';
 
-  const usePiso = useStorePiso();
-  const useHotel = useStoreHotel();
-  const useHabitacion = useStoreHabitacion();
-  const selectedPiso = ref("");
-  const idPiso = ref("");
-  const pisos = ref([]);
-  const habitaciones = ref([]);
-  const loading = ref(true);
-  const selectedHabitacion = ref(null);
-  const numero_habitacion = ref("");
-  const descripcionHabitacion = ref("");
-  const capacidadMaxima = ref("");
-  const tipoHabitacion = ref([]);
-  const precioNoche = ref("");
-  const servicios = ref([]);
-  const disponible = ref("");
-  const showTipoHabitacionModal = ref(false);
-  const showServicioModal = ref(false);
-  const editarTipoHabitacion = ref([]);
-  const editarServicios = ref([]);
-  const tipoHabitacionModal = ref(null);
-  const serviciosModal = ref(null)
-  const editarDHabitacionesModal = ref(null);
+const usePiso = useStorePiso();
+const useHotel = useStoreHotel();
+const useHabitacion = useStoreHabitacion();
+const selectedPiso = ref("");
+const idPiso = ref("");
+const pisos = ref([]);
+const habitaciones = ref([]);
+const loading = ref(true);
+const selectedHabitacion = ref(null);
+const idHabSelec = ref("");
+const numero_habitacion = ref("");
+const descripcionHabitacion = ref("");
+const capacidadMaxima = ref("");
+const tipoHabitacion = ref([]);
+const precioNoche = ref("");
+const servicios = ref([]);
+const disponible = ref("");
+const showTipoHabitacionModal = ref(false);
+const showServicioModal = ref(false);
+const editarTipoHabitacion = ref([]);
+const editarServicios = ref([]);
+const tipoHabitacionModal = ref(null);
+const serviciosModal = ref(null)
+const editarDHabitacionesModal = ref(null);
 
 
-  async function getPisoPorHotel() {
-    try {
-      const response = await usePiso.getPisoPorHotel(useHotel.idHotel);
-      pisos.value = response;
-      if (pisos.value.length > 0) {
-        selectedPiso.value = pisos.value[0];
-        await handlePisoChange();
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      loading.value = false;
+async function getPisoPorHotel() {
+  try {
+    const response = await usePiso.getPisoPorHotel(useHotel.idHotel);
+    pisos.value = response;
+    if (pisos.value.length > 0) {
+      selectedPiso.value = pisos.value[0];
+      await handlePisoChange();
     }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loading.value = false;
   }
+}
 
-  async function getHabitacionPorPiso() {
-    try {
-      const response = await useHabitacion.getHabitacionesPorPiso(idPiso.value);
-      habitaciones.value = response;
-    } catch (error) {
-      console.log(error);
-    } finally {
-      loading.value = false;
+async function getHabitacionPorPiso() {
+  try {
+    const response = await useHabitacion.getHabitacionesPorPiso(idPiso.value);
+    habitaciones.value = response;
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loading.value = false;
+  }
+}
+
+const handlePisoChange = async () => {
+  idPiso.value = selectedPiso.value._id;
+  usePiso.idPisoSeleccionado = selectedPiso.value._id;
+  usePiso.numPisoSelec = selectedPiso.value.num_piso;
+  await getHabitacionPorPiso();
+}
+
+const selectHabitacion = (habitacion) => {
+  selectedHabitacion.value = habitacion;
+  numero_habitacion.value = habitacion.numero_habitacion;
+  descripcionHabitacion.value = habitacion.descripcion;
+  capacidadMaxima.value = habitacion.cantidad_personas;
+  editarTipoHabitacion.value = [...habitacion.tipo_habitacion]; // Crear una copia superficial del array
+  editarServicios.value = [...habitacion.servicio]; // Crear una copia superficial del array
+  precioNoche.value = habitacion.precio_noche;
+  disponible.value = habitacion.disponible;
+  idHabSelec.value =  selectedHabitacion.value._id;
+}
+
+function guardarCambios() {
+
+
+  const data = {
+    numero_habitacion: numero_habitacion.value,
+    descripcion: descripcionHabitacion.value,
+    tipo_habitacion: editarTipoHabitacion.value,
+    cantidad_personas: capacidadMaxima.value,
+    servicio: editarServicios.value,
+    precio_noche: precioNoche.value,
+    idPiso: idPiso.value,
+    disponible: disponible.value,
+  };
+
+  try {
+
+    const response = useHabitacion.editar(idHabSelec.value, data)
+
+    if(useHabitacion.estatus === 200){
+      getHabitacionPorPiso();
     }
+    
+
+  } catch (error) {
+    console.log(error)
   }
 
-  const handlePisoChange = async () => {
-    idPiso.value = selectedPiso.value._id;
-    usePiso.idPisoSeleccionado = selectedPiso.value._id;
-    usePiso.numPisoSelec = selectedPiso.value.num_piso;
-    await getHabitacionPorPiso();
-  }
-
-  const selectHabitacion = (habitacion) => {
-    selectedHabitacion.value = habitacion;
-    numero_habitacion.value = habitacion.numero_habitacion;
-    descripcionHabitacion.value = habitacion.descripcion;
-    capacidadMaxima.value = habitacion.cantidad_personas;
-    tipoHabitacion.value = habitacion.tipo_habitacion;
-    precioNoche.value = habitacion.precio_noche;
-    servicios.value = habitacion.servicio;
-    disponible.value = habitacion.disponible;
-  }
-
-  const addTipoHabitacion = () => {
-    editarTipoHabitacion.value.push('');
-  };
-
-  const removeTipoHabitacion = (index) => {
-    editarTipoHabitacion.value.splice(index, 1);
-  };
-
-  const addServicio = () => {
-    editarServicios.value.push('');
-  };
-
-  const removeServicio = (index) => {
-    editarServicios.value.splice(index, 1);
-  };
-
-  const openTipoHabitacionModal = () => {
-    editarTipoHabitacion.value = tipoHabitacion.value;
-    showTipoHabitacionModal.value = true;
-  };
-
-  const openServicioModal = () => {
-    editarServicios.value = servicios.value;
-    showServicioModal.value = true;
-  };
 
 
-  onMounted(() => {
-    tipoHabitacionModal.value = document.getElementById('tipoHabitacionModal');
-    serviciosModal.value = document.getElementById('servicioModal');
-    editarDHabitacionesModal.value = document.getElementById('editarDHabitaciones');
+}
 
-    tipoHabitacionModal.value.addEventListener('hidden.bs.modal', () => {
-      new bootstrap.Modal(editarDHabitacionesModal.value).show();
-    });
+const addTipoHabitacion = () => {
+  editarTipoHabitacion.value.push('');
+};
 
-    serviciosModal.value.addEventListener('hidden.bs.modal', () => {
-      new bootstrap.Modal(editarDHabitacionesModal.value).show();
-    });
+const removeTipoHabitacion = (index) => {
+  editarTipoHabitacion.value.splice(index, 1);
+};
 
-    getPisoPorHotel();
+const addServicio = () => {
+  editarServicios.value.push('');
+};
+
+const removeServicio = (index) => {
+  editarServicios.value.splice(index, 1);
+};
+
+const openTipoHabitacionModal = () => {
+  showTipoHabitacionModal.value = true;
+};
+
+const openServicioModal = () => {
+  showServicioModal.value = true;
+};
+
+
+onMounted(() => {
+  tipoHabitacionModal.value = document.getElementById('tipoHabitacionModal');
+  serviciosModal.value = document.getElementById('servicioModal');
+  editarDHabitacionesModal.value = document.getElementById('editarDHabitaciones');
+
+  tipoHabitacionModal.value.addEventListener('hidden.bs.modal', () => {
+    new bootstrap.Modal(editarDHabitacionesModal.value).show();
   });
 
-  </script>
+  serviciosModal.value.addEventListener('hidden.bs.modal', () => {
+    new bootstrap.Modal(editarDHabitacionesModal.value).show();
+  });
+
+  getPisoPorHotel();
+});
+
+</script>
 
 <template>
   <div class="galeria">
@@ -163,16 +194,16 @@
           </div>
         </div>
 
-      <table class="table table-bordered">
-        <thead style="align-items: center; text-align: center">
-          <tr>
-            <th>Num habitación</th>
-            <th>Descripción</th>
-            <th>Tipo de habitación</th>
-            <th>Cantidad de personas</th>
-            <th>Servicios</th>
-            <th>Precio x noche</th>
-            <th>Disponible</th>
+        <table class="table table-bordered">
+          <thead style="align-items: center; text-align: center">
+            <tr>
+              <th>Num habitación</th>
+              <th>Descripción</th>
+              <th>Tipo de habitación</th>
+              <th>Cantidad de personas</th>
+              <th>Servicios</th>
+              <th>Precio x noche</th>
+              <th>Disponible</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -235,7 +266,8 @@
                 <div class="col-6">
                   <div class="mb-3">
                     <label class="form-label" for="alias_habitacion"><strong>Num habitacion</strong></label>
-                    <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion" required />
+                    <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion"
+                      required />
                   </div>
                 </div>
                 <div class="col-6">
@@ -288,7 +320,8 @@
                 <div class="col-6">
                   <div class="mb-3">
                     <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
-                    <button class="btn btn-info " data-bs-toggle="modal" data-bs-target="#servicioModal"
+                    <br />
+                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#servicioModal"
                       @click="openServicioModal">Ver servicios</button>
                   </div>
                 </div>
@@ -305,7 +338,7 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-              <button type="button" class="btn btn-primary">Guardar cambios</button>
+              <button type="button" class="btn btn-primary" @click="guardarCambios">Guardar cambios</button>
             </div>
           </div>
         </div>
