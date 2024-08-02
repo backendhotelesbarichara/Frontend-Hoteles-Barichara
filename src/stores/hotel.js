@@ -32,8 +32,8 @@ export const useStoreHotel = defineStore(
         const response = await axios.get(`${modelo}/buscarHotel/${idUsuario}`);
         console.log(response);
         estatus.value = response.status;
-        hotelSeleccionado.value = response.data[0];
-        idHotel.value = response.data[0]._id;
+        hotelSeleccionado.value = response.data;
+        idHotel.value = response.data;
         console.log("id pinia", idHotel.value)
         return response.data;
       } catch (error) {

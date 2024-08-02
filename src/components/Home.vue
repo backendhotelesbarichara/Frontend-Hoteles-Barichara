@@ -1,178 +1,151 @@
-<template>
-<!-- Start: Slider Carousel with side text -->
-<div id="carousel" class="carousel slide" data-bs-interval="3000" data-bs-ride="carousel">
-    <!-- Start: Slides -->
-    <div class="carousel-inner">
-        <div class="carousel-item active">
-            <img class="w-100 d-block" src="https://i.ibb.co/pjcNX5L/2.png" />
-            <div class="carousel-caption d-flex" style="
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            width: 50%;
-            height: 100%;
-          ">
-                <div class="d-md-block position-absolute top-50 start-50 translate-middle">
-                    <h1 style="
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-                font-style: italic;
-              ">
-                        Histórico
-                    </h1>
-                    <!-- <p>Paragraph</p> -->
-                </div>
-            </div>
-        </div>
-        <div class="carousel-item">
-            <img class="w-100 d-block" src="https://i.ibb.co/NLb0D2Z/1.png" />
-            <div class="carousel-caption d-flex" style="
-            position: absolute;
-            top: 0px;
-            left: 50%;
-            width: 50%;
-            height: 100%;
-          ">
-                <div class="d-md-block position-absolute top-50 start-50 translate-middle">
-                    <h1 style="
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-                font-style: italic;
-              ">
-                        Pintoresco
-                    </h1>
-                    <!-- <p>Lleno de magia</p> -->
-                </div>
-            </div>
-        </div>
-        <div class="carousel-item">
-            <img class="w-100 d-block" src="https://i.ibb.co/KjjL7xM/3.png" />
-            <div class="carousel-caption d-flex" style="
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            width: 50%;
-            height: 100%;
-          ">
-                <div class="d-md-block position-absolute top-50 start-50 translate-middle">
-                    <h1 style="
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-                font-style: italic;
-              ">
-                        Encantador
-                    </h1>
-                    <!-- <p>Paragraph</p> -->
-                </div>
-            </div>
-        </div>
-        <div class="carousel-item">
-            <img class="w-100 d-block" src="https://i.ibb.co/H2bzWzv/4.png" />
-            <div class="carousel-caption d-flex" style="
-            position: absolute;
-            top: 0px;
-            left: 50%;
-            width: 50%;
-            height: 100%;
-          ">
-                <div class="d-md-block position-absolute top-50 start-50 translate-middle">
-                    <h1 style="
-                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-                font-style: italic;
-              ">
-                        Tranquilo
-                    </h1>
-                    <!-- <p>Paragraph</p> -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- End: Slides -->
-</div>
-<!-- End: Slider Carousel with side text -->
-
-<!-- Inicio de scroll de hoteles y sitios -->
-
-<div class="galeria">
-    <div class="Busquedas">
-
-        <div class="row" style="text-align: center; margin-bottom: 25px">
-            <h5>Busqueda de alojamientos en general</h5>
-            <div class="col-6 col-md-4" style="margin-bottom: 20px; display: inline-block">
-                <div class="input-group">
-                    <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Ingreso</span>
-                    <input type="date" class="form-control" />
-                </div>
-            </div>
-
-            <div class="col-6 col-md-4" style="display: inline-block">
-                <div class="input-group">
-                    <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Salida</span>
-                    <input type="date" class="form-control" />
-                </div>
-            </div>
-            <div class="col-12 col-md-4"><button class="btncafe"><i class="bi bi-search"></i> Buscar Habitaciones Disponibles </button></div>
-        </div>
-
-    </div>
-    <div class="Hoteles">
-        <h5>Hoteles</h5>
-    </div>
-    <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(-100, 'hotel')">
-        <i style="color: black" class="bi bi-arrow-left-circle-fill"></i>
-    </button>
-
-    <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(100, 'hotel')">
-        <i style="color: black" class="bi bi-arrow-right-circle-fill"></i>
-    </button>
-    <!-----------------------------------------------PASARELA HOTELES-----------------------------------  -->
-    <div class="lista-imagenes hotel-images">
-        <div class="imagen-con-texto" v-for="hotel in datahotel" bind:key="hotel.nombre.">
-            <router-link class="link" to="/GaleriaHabitaciones">
-                <img :src="`${hotel.img1}`" alt="imagen-principal" />
-                <p class="text-hotel">{{hotel.nombre}}</p>
-            </router-link>
-        </div>
-
-    </div>
-    <!--  -->
-    <br />
-
-    <div class="Sitios">
-        <h5>Sitios Turísticos</h5>
-    </div>
-
-    <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(-100, 'sitios')">
-        <i style="color: black" class="bi bi-arrow-left-circle-fill"></i>
-    </button>
-
-    <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(100, 'sitios')">
-        <i style="color: black" class="bi bi-arrow-right-circle-fill"></i>
-    </button>
-    <!-----------------------------------------------PASARELA SITIOS TURISTICOS-----------------------------------  -->
-    <div class="lista-imagenes sitios-images">
-        <div class="imagen-con-texto" v-for="sitio in datasitios" bind:key="sitio.nombre">
-            <router-link class="link" to="/SaltoDelMico">
-                <img :src="`${sitio.img1}`" alt="imagen-principal" />
-               
-                <p class="text-hotel">{{sitio.nombre}}</p>
-
-            </router-link>
-        </div>
-
-    </div>
-</div>
-</template>
-
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { hoteles, Sturisticos } from './../components/BD/bd';
+import { useStoreHotel } from '../stores/hotel.js';
 
+const useHotel = useStoreHotel();
+const listaHoteles = ref("");
 const datahotel = ref(hoteles);
 const datasitios = ref(Sturisticos);
+const img = ref("")
 
-function scrollImages(offset, galleryType) {
-  const imageList = document.querySelector(`.${galleryType}-images`);
-  imageList.scrollLeft += offset;
+async function getHoteles() {
+    try {
+        const response = await useHotel.getAll()
+        listaHoteles.value = response
+        console.log(response);
+    } catch (error) {
+        console.log(error);
+    }
 }
+
+onMounted(() => {
+    getHoteles();
+})
 </script>
+
+<template>
+    <!-- Start: Slider Carousel with side text -->
+    <div id="carousel" class="carousel slide" data-bs-interval="3000" data-bs-ride="carousel">
+        <!-- Start: Slides -->
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img class="w-100 d-block" src="https://i.ibb.co/pjcNX5L/2.png" />
+                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 0px;width: 50%;height: 100%;">
+                    <div class="d-md-block position-absolute top-50 start-50 translate-middle">
+                        <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
+                            Histórico
+                        </h1>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img class="w-100 d-block" src="https://i.ibb.co/NLb0D2Z/1.png" />
+                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 50%;width: 50%;height: 100%;">
+                    <div class="d-md-block position-absolute top-50 start-50 translate-middle">
+                        <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
+                            Pintoresco
+                        </h1>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img class="w-100 d-block" src="https://i.ibb.co/KjjL7xM/3.png" />
+                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 0px;width: 50%;height: 100%;">
+                    <div class="d-md-block position-absolute top-50 start-50 translate-middle">
+                        <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
+                            Encantador
+                        </h1>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img class="w-100 d-block" src="https://i.ibb.co/H2bzWzv/4.png" />
+                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 50%;width: 50%;height: 100%;">
+                    <div class="d-md-block position-absolute top-50 start-50 translate-middle">
+                        <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
+                            Tranquilo
+                        </h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End: Slides -->
+    </div>
+    <!-- End: Slider Carousel with side text -->
+
+    <!-- Inicio de scroll de hoteles y sitios -->
+    <div class="galeria">
+        <div class="Busquedas">
+            <div class="row" style="text-align: center; margin-bottom: 25px">
+                <h5>Busqueda de alojamientos en general</h5>
+                <div class="col-6 col-md-4" style="margin-bottom: 20px; display: inline-block">
+                    <div class="input-group">
+                        <span style="background-color: #b7642d; color: #fff" class="input-group-text"
+                            id="addon-wrapping">Ingreso</span>
+                        <input type="date" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4" style="display: inline-block">
+                    <div class="input-group">
+                        <span style="background-color: #b7642d; color: #fff" class="input-group-text"
+                            id="addon-wrapping">Salida</span>
+                        <input type="date" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <button class="btncafe"><i class="bi bi-search"></i> Buscar Habitaciones Disponibles </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="Hoteles">
+            <h5>Hoteles</h5>
+        </div>
+        <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(-100, 'hotel')">
+            <i style="color: black" class="bi bi-arrow-left-circle-fill"></i>
+        </button>
+
+        <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(100, 'hotel')">
+            <i style="color: black" class="bi bi-arrow-right-circle-fill"></i>
+        </button>
+
+        <!-----------------------------------------------PASARELA HOTELES----------------------------------->
+        <div class="lista-imagenes hotel-images">
+            <div class="imagen-con-texto" v-for="hotel in listaHoteles" :key="hotel._id" :value="hotel._id">
+                <router-link class="link" to="/GaleriaHabitaciones">
+                    <img :src="hotel.imagen" alt="imagen-principal" />
+                    <p class="text-hotel">{{ hotel.nombre }}</p>
+                </router-link>
+            </div>
+        </div>
+
+        <br />
+
+        <div class="Sitios">
+            <h5>Sitios Turísticos</h5>
+        </div>
+
+        <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(-100, 'sitios')">
+            <i style="color: black" class="bi bi-arrow-left-circle-fill"></i>
+        </button>
+
+        <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(100, 'sitios')">
+            <i style="color: black" class="bi bi-arrow-right-circle-fill"></i>
+        </button>
+
+        <!-----------------------------------------------PASARELA SITIOS TURISTICOS----------------------------------->
+        <div class="lista-imagenes sitios-images">
+            <div class="imagen-con-texto" v-for="sitio in datasitios" :key="sitio.nombre">
+                <router-link class="link" to="/SaltoDelMico">
+                    <img :src="sitio.img1" alt="imagen-principal" />
+                    <p class="text-hotel">{{ sitio.nombre }}</p>
+                </router-link>
+            </div>
+        </div>
+    </div>
+</template>
 
 <style scoped>
 .btncafe {

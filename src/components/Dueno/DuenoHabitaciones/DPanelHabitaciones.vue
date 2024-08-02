@@ -17,9 +17,7 @@ const idHabSelec = ref("");
 const numero_habitacion = ref("");
 const descripcionHabitacion = ref("");
 const capacidadMaxima = ref("");
-const tipoHabitacion = ref([]);
 const precioNoche = ref("");
-const servicios = ref([]);
 const disponible = ref("");
 const showTipoHabitacionModal = ref(false);
 const showServicioModal = ref(false);
@@ -28,7 +26,8 @@ const editarServicios = ref([]);
 const tipoHabitacionModal = ref(null);
 const serviciosModal = ref(null)
 const editarDHabitacionesModal = ref(null);
-
+const guardando = ref(false);
+const habitacionEditada = ref(false);
 
 async function getPisoPorHotel() {
   try {
@@ -48,7 +47,7 @@ async function getPisoPorHotel() {
 async function getHabitacionPorPiso() {
   try {
     const response = await useHabitacion.getHabitacionesPorPiso(idPiso.value);
-    habitaciones.value = response;
+    habitaciones.value = response.reverse();
   } catch (error) {
     console.log(error);
   } finally {
@@ -68,16 +67,15 @@ const selectHabitacion = (habitacion) => {
   numero_habitacion.value = habitacion.numero_habitacion;
   descripcionHabitacion.value = habitacion.descripcion;
   capacidadMaxima.value = habitacion.cantidad_personas;
-  editarTipoHabitacion.value = [...habitacion.tipo_habitacion]; // Crear una copia superficial del array
-  editarServicios.value = [...habitacion.servicio]; // Crear una copia superficial del array
+  editarTipoHabitacion.value = [...habitacion.tipo_habitacion];
+  editarServicios.value = [...habitacion.servicio];
   precioNoche.value = habitacion.precio_noche;
   disponible.value = habitacion.disponible;
-  idHabSelec.value =  selectedHabitacion.value._id;
+  idHabSelec.value = selectedHabitacion.value._id;
 }
 
 function guardarCambios() {
-
-
+  guardando.value = true;
   const data = {
     numero_habitacion: numero_habitacion.value,
     descripcion: descripcionHabitacion.value,
@@ -93,17 +91,19 @@ function guardarCambios() {
 
     const response = useHabitacion.editar(idHabSelec.value, data)
 
-    if(useHabitacion.estatus === 200){
+    if (useHabitacion.estatus === 200) {
       getHabitacionPorPiso();
-    }
-    
+      habitacionEditada.value = true; // Set habitacionEditada to true
+      setTimeout(() => {
+        habitacionEditada.value = false; // Reset habitacionEditada after 3 seconds
+      }, 3000);
 
+    }
   } catch (error) {
     console.log(error)
+  } finally {
+    guardando.value = false;
   }
-
-
-
 }
 
 const addTipoHabitacion = () => {
@@ -204,6 +204,7 @@ onMounted(() => {
               <th>Servicios</th>
               <th>Precio x noche</th>
               <th>Disponible</th>
+              <th>Estado Habitacion</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -221,6 +222,7 @@ onMounted(() => {
               <td>{{ habitacion.servicio.join(', ') }}</td>
               <td>{{ habitacion.precio_noche }}</td>
               <td>{{ habitacion.disponible ? "Si" : "No" }}</td>
+              <td>{{ habitacion.estado ? "Activa" : "Desactivada" }}</td>
               <td>
                 <div class="btn-container">
                   <button style="max-height: 30px" type="button" class="btns btn btn-dark" data-bs-toggle="modal"
@@ -266,38 +268,29 @@ onMounted(() => {
                 <div class="col-6">
                   <div class="mb-3">
                     <label class="form-label" for="alias_habitacion"><strong>Num habitacion</strong></label>
-                    <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion"
-                      required />
+                    <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion" required />
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="direccion_habitacion"><strong>Dirección *</strong></label>
-                    <input class="form-control" type="text" id="direccion_habitacion" v-model="descripcionHabitacion"
-                      required />
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="mb-3">
-                    <label class="form-label" for="capacidad_maxima"><strong>Capacidad max *</strong></label>
-                    <select class="form-select" id="capacidad_maxima" v-model="capacidadMaxima" required>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                      <option value="6">6</option>
-                      <option value="7">7</option>
-                      <option value="8">8</option>
-                      <option value="9">9</option>
-                      <option value="10">10</option>
-                    </select>
+                    <label class="form-label" for="direccion_habitacion"><strong>Descripción *</strong></label>
+                    <textarea class="form-control" v-model="descripcionHabitacion" id="descripcionSitio"
+                      placeholder="Describa la habitación..." name="descripcionSitio" rows="1" required></textarea>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
                     <label class="form-label" for="tipo_habitacion"><strong>Tipo de habitación *</strong></label>
-                    <button class="btn btn-info " data-bs-toggle="modal" data-bs-target="#tipoHabitacionModal"
-                      @click="openTipoHabitacionModal">Ver tipos de habitación</button>
+                    <button class="btn text-light " data-bs-toggle="modal" data-bs-target="#tipoHabitacionModal"
+                      @click="openTipoHabitacionModal" style="background: #b7642d">Ver tipos de habitación</button>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="mb-3">
+                    <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
+                    <br />
+                    <button class="btn text-light" data-bs-toggle="modal" data-bs-target="#servicioModal"
+                      @click="openServicioModal" style="background: #b7642d">Ver servicios</button>
                   </div>
                 </div>
                 <div class="col-6">
@@ -306,23 +299,11 @@ onMounted(() => {
                     <input class="form-control" type="number" id="precio_noche" v-model="precioNoche" required />
                   </div>
                 </div>
-                <!-- <div class="col-6">
-                          <div class="mb-3">
-                            <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
-                            <div v-for="(servicio, index) in servicios" :key="index" class="d-flex align-items-center mb-2">
-                              <input class="form-control" type="text" v-model="servicios[index]" required />
-                              <button class="btn btn-danger ms-2" @click="removeServicio(index)">Eliminar</button>
-                            </div>
-                            <button class="btn btn-success" @click="addServicio">Agregar servicio</button>
-                            <button class="btn btn-info mt-2" @click="openServicioModal">Ver servicios</button>
-                          </div>
-                        </div> -->
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
-                    <br />
-                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#servicioModal"
-                      @click="openServicioModal">Ver servicios</button>
+                    <label class="form-label" for="capacidad_maxima"><strong>Capacidad max *</strong></label>
+                    <input class="form-control" type="Number" id="direccion_habitacion" v-model="capacidadMaxima"
+                      required />
                   </div>
                 </div>
                 <div class="col-6">
@@ -338,7 +319,14 @@ onMounted(() => {
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-              <button type="button" class="btn btn-primary" @click="guardarCambios">Guardar cambios</button>
+              <button type="button" class="btn text-light" @click="guardarCambios" style="background: #b7642d"
+                :disabled="guardando">
+                <span v-if="guardando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+              </button>
+            </div>
+            <div v-if="habitacionEditada" class="alert alert-success" role="alert">
+              Habitación editada exitosamente!
             </div>
           </div>
         </div>
@@ -366,7 +354,7 @@ onMounted(() => {
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn text-light" data-bs-dismiss="modal">Aceptar</button>
             </div>
           </div>
         </div>
@@ -395,7 +383,8 @@ onMounted(() => {
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn text-light" data-bs-dismiss="modal"
+              style="background: #b7642d">Aceptar</button>
           </div>
         </div>
       </div>

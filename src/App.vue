@@ -33,11 +33,11 @@ defineProps({
                     </router-link>
 
                     <!-- Icono carrito -->
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#carrito">
                             <i style="color: black" class="bi bi-cart4"></i> Carrito
                         </a>
-                    </li>
+                    </li> -->
 
                     <!--  gestion hotel -->
                     <div style="margin-bottom: 15px" class="dropdown">

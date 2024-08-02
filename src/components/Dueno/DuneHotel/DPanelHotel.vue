@@ -109,13 +109,13 @@ function guardarCambios() {
     nombre: nombre.value,
     descripcion: descripcion.value,
     direccion: direccion.value,
-    correo: correo.value, 
+    correo: correo.value,
     telefono: telefono.value,
     pisos: piso.value,
     idUsuario: useUsuario.usuario._id
   };
 
-  useHotel.editar(useHotel.idHotel, data)
+  useHotel.editar(idHotel.value, data)
     .then((res) => {
       useHotel.hotelSeleccionado = res
       getHotelPorUsuario();
@@ -125,7 +125,9 @@ function guardarCambios() {
     })
 }
 
-function goToHabitaciones() {
+function goToHabitaciones(hotel) {
+  idHotel.value = hotel._id;
+  useHotel.idHotel = idHotel.value;
   router.push('/DPanelHabitaciones')
 }
 
@@ -139,6 +141,13 @@ onMounted(() => {
   <div class="galeria">
     <div class="Hoteles">
       <h5>Admistrar mi hotel</h5>
+    </div>
+    <div class="">
+      <router-link class="link" to="/RegitroHotel">
+        <button class="btns btn btn-dark top-bar__button" @click="showAddModal">
+          <i class="material-icons">add_box</i>
+        </button>
+      </router-link>
     </div>
     <div v-if="loading" class="centered">
       <div class="empty-state">
@@ -187,7 +196,7 @@ onMounted(() => {
                     @click="editaHotel(hotel)">
                     <i class="material-icons">edit</i>
                   </button>
-                  <button type="button" class="btns btn btn-dark" @click="goToHabitaciones()">
+                  <button type="button" class="btns btn btn-dark" @click="goToHabitaciones(hotel)">
                     <i class="material-icons">hotel</i>
                   </button>
                 </div>

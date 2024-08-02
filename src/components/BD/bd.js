@@ -3,7 +3,7 @@
 export const hoteles = [
     {
         id: 1,
-        nombre: "bellavista",
+        nombre: "Laurel y Tomillo",
         direccion: "",
         replegal: "",
         telefono: "",

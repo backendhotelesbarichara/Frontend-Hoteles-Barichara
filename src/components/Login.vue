@@ -80,7 +80,7 @@ function goToPanelDueno() {
                     :disabled="loading"
                     style="background: #b7642d; border-style: none;">
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span v-if="!loading">Entrar</span>
+                    <span v-if="!loading">Ingresar</span>
                   </button>
                   <p class="text-danger"> {{ msgValidacion }} </p>
                 </div>
