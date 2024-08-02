@@ -1,114 +1,122 @@
-<script setup>
-import { ref, onMounted } from 'vue';
-import { useStorePiso } from '../../../stores/piso.js';
-import { useStoreHotel } from '../../../stores/hotel.js';
-import { useStoreHabitacion } from '../../../stores/habitacion.js';
+  <script setup>
+  import { ref, onMounted } from 'vue';
+  import { useStorePiso } from '../../../stores/piso.js';
+  import { useStoreHotel } from '../../../stores/hotel.js';
+  import { useStoreHabitacion } from '../../../stores/habitacion.js';
 
-const usePiso = useStorePiso();
-const useHotel = useStoreHotel();
-const useHabitacion = useStoreHabitacion();
-const selectedPiso = ref("");
-const idPiso = ref("");
-const pisos = ref([]);
-const habitaciones = ref([]);
-const loading = ref(true);
-const selectedHabitacion = ref(null);
-const numero_habitacion = ref("");
-const descripcionHabitacion = ref("");
-const capacidadMaxima = ref("");
-const tipoHabitacion = ref([]);
-const precioNoche = ref("");
-const servicios = ref([]);
-const disponible = ref("");
-const showTipoHabitacionModal = ref(false);
-const showServicioModal = ref(false);
-const currentTipoHabitacion = ref([]);
-const currentServicios = ref([]);
-const tipoHabitacionModal = ref(null);
-const editarDHabitacionesModal = ref(null);
+  const usePiso = useStorePiso();
+  const useHotel = useStoreHotel();
+  const useHabitacion = useStoreHabitacion();
+  const selectedPiso = ref("");
+  const idPiso = ref("");
+  const pisos = ref([]);
+  const habitaciones = ref([]);
+  const loading = ref(true);
+  const selectedHabitacion = ref(null);
+  const numero_habitacion = ref("");
+  const descripcionHabitacion = ref("");
+  const capacidadMaxima = ref("");
+  const tipoHabitacion = ref([]);
+  const precioNoche = ref("");
+  const servicios = ref([]);
+  const disponible = ref("");
+  const showTipoHabitacionModal = ref(false);
+  const showServicioModal = ref(false);
+  const editarTipoHabitacion = ref([]);
+  const editarServicios = ref([]);
+  const tipoHabitacionModal = ref(null);
+  const serviciosModal = ref(null)
+  const editarDHabitacionesModal = ref(null);
 
-async function getPisoPorHotel() {
-  try {
-    const response = await usePiso.getPisoPorHotel(useHotel.idHotel);
-    pisos.value = response;
-    if (pisos.value.length > 0) {
-      selectedPiso.value = pisos.value[0];
-      await handlePisoChange();
+
+  async function getPisoPorHotel() {
+    try {
+      const response = await usePiso.getPisoPorHotel(useHotel.idHotel);
+      pisos.value = response;
+      if (pisos.value.length > 0) {
+        selectedPiso.value = pisos.value[0];
+        await handlePisoChange();
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      loading.value = false;
     }
-  } catch (error) {
-    console.log(error);
-  } finally {
-    loading.value = false;
   }
-}
 
-async function getHabitacionPorPiso() {
-  try {
-    const response = await useHabitacion.getHabitacionesPorPiso(idPiso.value);
-    habitaciones.value = response;
-  } catch (error) {
-    console.log(error);
-  } finally {
-    loading.value = false;
+  async function getHabitacionPorPiso() {
+    try {
+      const response = await useHabitacion.getHabitacionesPorPiso(idPiso.value);
+      habitaciones.value = response;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      loading.value = false;
+    }
   }
-}
 
-const handlePisoChange = async () => {
-  idPiso.value = selectedPiso.value._id;
-  usePiso.idPisoSeleccionado = selectedPiso.value._id;
-  usePiso.numPisoSelec = selectedPiso.value.num_piso;
-  await getHabitacionPorPiso();
-}
+  const handlePisoChange = async () => {
+    idPiso.value = selectedPiso.value._id;
+    usePiso.idPisoSeleccionado = selectedPiso.value._id;
+    usePiso.numPisoSelec = selectedPiso.value.num_piso;
+    await getHabitacionPorPiso();
+  }
 
-const selectHabitacion = (habitacion) => {
-  selectedHabitacion.value = habitacion;
-  numero_habitacion.value = habitacion.numero_habitacion;
-  descripcionHabitacion.value = habitacion.descripcion;
-  capacidadMaxima.value = habitacion.cantidad_personas;
-  tipoHabitacion.value = habitacion.tipo_habitacion;
-  precioNoche.value = habitacion.precio_noche;
-  servicios.value = habitacion.servicio;
-  disponible.value = habitacion.disponible;
-}
+  const selectHabitacion = (habitacion) => {
+    selectedHabitacion.value = habitacion;
+    numero_habitacion.value = habitacion.numero_habitacion;
+    descripcionHabitacion.value = habitacion.descripcion;
+    capacidadMaxima.value = habitacion.cantidad_personas;
+    tipoHabitacion.value = habitacion.tipo_habitacion;
+    precioNoche.value = habitacion.precio_noche;
+    servicios.value = habitacion.servicio;
+    disponible.value = habitacion.disponible;
+  }
 
-const addTipoHabitacion = () => {
-  tipoHabitacion.value.push('');
-};
+  const addTipoHabitacion = () => {
+    editarTipoHabitacion.value.push('');
+  };
 
-const removeTipoHabitacion = (index) => {
-  tipoHabitacion.value.splice(index, 1);
-};
+  const removeTipoHabitacion = (index) => {
+    editarTipoHabitacion.value.splice(index, 1);
+  };
 
-const addServicio = () => {
-  servicios.value.push('');
-};
+  const addServicio = () => {
+    editarServicios.value.push('');
+  };
 
-const removeServicio = (index) => {
-  servicios.value.splice(index, 1);
-};
+  const removeServicio = (index) => {
+    editarServicios.value.splice(index, 1);
+  };
 
-const openTipoHabitacionModal = () => {
-  currentTipoHabitacion.value = [...tipoHabitacion.value];
-  showTipoHabitacionModal.value = true;
-};
+  const openTipoHabitacionModal = () => {
+    editarTipoHabitacion.value = tipoHabitacion.value;
+    showTipoHabitacionModal.value = true;
+  };
 
-const openServicioModal = () => {
-  currentServicios.value = [...servicios.value];
-  showServicioModal.value = true;
-};
+  const openServicioModal = () => {
+    editarServicios.value = servicios.value;
+    showServicioModal.value = true;
+  };
 
 
-onMounted(() => {
-  tipoHabitacionModal.value = document.getElementById('tipoHabitacionModal');
-  editarDHabitacionesModal.value = document.getElementById('editarDHabitaciones');
+  onMounted(() => {
+    tipoHabitacionModal.value = document.getElementById('tipoHabitacionModal');
+    serviciosModal.value = document.getElementById('servicioModal');
+    editarDHabitacionesModal.value = document.getElementById('editarDHabitaciones');
 
-  tipoHabitacionModal.value.addEventListener('hidden.bs.modal', () => {
-    new bootstrap.Modal(editarDHabitacionesModal.value).show();
+    tipoHabitacionModal.value.addEventListener('hidden.bs.modal', () => {
+      new bootstrap.Modal(editarDHabitacionesModal.value).show();
+    });
+
+    serviciosModal.value.addEventListener('hidden.bs.modal', () => {
+      new bootstrap.Modal(editarDHabitacionesModal.value).show();
+    });
+
+    getPisoPorHotel();
   });
-  getPisoPorHotel();
-});
 
-</script>
+  </script>
 
 <template>
   <div class="galeria">
@@ -256,7 +264,7 @@ onMounted(() => {
                 <div class="col-6">
                   <div class="mb-3">
                     <label class="form-label" for="tipo_habitacion"><strong>Tipo de habitación *</strong></label>
-                    <button class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#tipoHabitacionModal"
+                    <button class="btn btn-info " data-bs-toggle="modal" data-bs-target="#tipoHabitacionModal"
                       @click="openTipoHabitacionModal">Ver tipos de habitación</button>
                   </div>
                 </div>
@@ -267,20 +275,20 @@ onMounted(() => {
                   </div>
                 </div>
                 <!-- <div class="col-6">
-                      <div class="mb-3">
-                        <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
-                        <div v-for="(servicio, index) in servicios" :key="index" class="d-flex align-items-center mb-2">
-                          <input class="form-control" type="text" v-model="servicios[index]" required />
-                          <button class="btn btn-danger ms-2" @click="removeServicio(index)">Eliminar</button>
-                        </div>
-                        <button class="btn btn-success" @click="addServicio">Agregar servicio</button>
-                        <button class="btn btn-info mt-2" @click="openServicioModal">Ver servicios</button>
-                      </div>
-                    </div> -->
+                          <div class="mb-3">
+                            <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
+                            <div v-for="(servicio, index) in servicios" :key="index" class="d-flex align-items-center mb-2">
+                              <input class="form-control" type="text" v-model="servicios[index]" required />
+                              <button class="btn btn-danger ms-2" @click="removeServicio(index)">Eliminar</button>
+                            </div>
+                            <button class="btn btn-success" @click="addServicio">Agregar servicio</button>
+                            <button class="btn btn-info mt-2" @click="openServicioModal">Ver servicios</button>
+                          </div>
+                        </div> -->
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="tipo_habitacion"><strong>Servicios *</strong></label>
-                    <button class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#servicioModal"
+                    <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
+                    <button class="btn btn-info " data-bs-toggle="modal" data-bs-target="#servicioModal"
                       @click="openServicioModal">Ver servicios</button>
                   </div>
                 </div>
@@ -315,11 +323,13 @@ onMounted(() => {
             </div>
             <div class="modal-body">
               <div class="mt-3">
-                <div v-for="(tipo, index) in tipoHabitacion" :key="index" class="d-flex align-items-center mb-2">
-                  <input class="form-control" type="text" v-model="tipoHabitacion[index]" required />
+                <div v-for="(tipo, index) in editarTipoHabitacion" :key="index" class="d-flex align-items-center mb-2">
+                  <input class="form-control" type="text" v-model="editarTipoHabitacion[index]" required />
                   <button class="btn btn-danger ms-2" @click="removeTipoHabitacion(index)">Eliminar</button>
                 </div>
-                <button class="btn btn-success" @click="addTipoHabitacion">Agregar tipo de habitación</button>
+                <div class="text-center">
+                  <button class="btn btn-success" @click="addTipoHabitacion">Agregar tipo de habitación</button>
+                </div>
               </div>
             </div>
             <div class="modal-footer">
@@ -342,11 +352,13 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <div class="mt-3">
-              <div v-for="(tipo, index) in servicios" :key="index" class="d-flex align-items-center mb-2">
-                <input class="form-control" type="text" v-model="servicios[index]" required />
+              <div v-for="(tipo, index) in editarServicios" :key="index" class="d-flex align-items-center mb-2">
+                <input class="form-control" type="text" v-model="editarServicios[index]" required />
                 <button class="btn btn-danger ms-2" @click="removeServicio(index)">Eliminar</button>
               </div>
-              <button class="btn btn-success" @click="addServicio">Agregar servicio</button>
+              <div class="text-center">
+                <button class="btn btn-success" @click="addServicio">Agregar servicio</button>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
