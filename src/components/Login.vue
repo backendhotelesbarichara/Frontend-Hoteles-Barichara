@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStoreUsuarios } from '../stores/usuario.js';
 
-let router = useRouter();
+const router = useRouter();
 const useUsuarios = useStoreUsuarios();
 const cedula = ref("");
 const password = ref("");

@@ -2,7 +2,9 @@
 import { ref, onMounted } from 'vue';
 import { useStoreHotel } from '../../stores/hotel.js';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const useHotel = useStoreHotel();
 const useHabitacion = useStoreHabitacion();
 const hotelInfo = ref("");
@@ -10,12 +12,15 @@ const habitacionInfo = ref([])
 const imagenSeleccionada = ref("");
 const mostrarModal = ref(false);
 const cargando = ref(true);
+const cargandoHabitaciones = ref(true);
 
 async function getHotelSeleccionado() {
   try {
     const response = await useHotel.getPorId(useHotel.HotelHome);
-    cargando.value = false;
-    hotelInfo.value = response;
+    if (useHabitacion.estatus === 200) {
+      cargando.value = false;
+      hotelInfo.value = response;
+    }
     console.log(hotelInfo);
   } catch (error) {
     console.log(error);
@@ -25,7 +30,10 @@ async function getHotelSeleccionado() {
 async function getHabitaciones() {
   try {
     const response = await useHabitacion.getHabitacionesPorHotel(useHotel.HotelHome);
-    habitacionInfo.value = response;
+    if (useHabitacion.estatus === 200) {
+      cargandoHabitaciones.value = false;
+      habitacionInfo.value = response;
+    }
     console.log(habitacionInfo);
   } catch (error) {
     console.log(error);
@@ -35,6 +43,12 @@ async function getHabitaciones() {
 function abrirModal(imagen) {
   imagenSeleccionada.value = imagen;
   mostrarModal.value = true;
+}
+
+async function irDetalleHabitacion(habitacion) {
+  useHabitacion.habitacionSelecionada = habitacion
+  console.log(useHabitacion.habitacionSelecionada)
+  await router.push('/detallehabitaciones')
 }
 
 
@@ -53,28 +67,29 @@ onMounted(() => {
     <p>Por favor espere...</p>
   </div>
   <div v-else class="container my-5">
-    <h2 class="text-center mb-4 text-uppercase">{{ hotelInfo.nombre }}</h2>
-    <p class="text-center text-muted mb-4">{{ hotelInfo.descripcion }}</p>
     <div class="row no-gutters">
       <div v-for="foto in hotelInfo.fotos" :key="foto.url" class="col-md-4">
         <img :src="foto.url" alt="Imagen del hotel" class="img-fluid w-100 h-100" @click="abrirModal(foto.url)"
           data-bs-toggle="modal" data-bs-target="#modalImagen">
       </div>
     </div>
+    <h2 class="text-center mb-4 text-uppercase" id="h2">{{ hotelInfo.nombre }}</h2>
+    <p class="text-center text-muted mb-4">{{ hotelInfo.descripcion }}</p>
+
     <div class="row text-center mt-3">
       <div class="col-md-6 mb-3">
-        <i class="bi bi-geo-alt-fill"></i> Dirección: {{ hotelInfo.direccion }}
+        <i class="bi bi-geo-alt-fill"></i>{{ hotelInfo.direccion }}
       </div>
       <div class="col-md-6 mb-3">
-        <i class="bi bi-telephone-fill"></i> Teléfono: {{ hotelInfo.telefono }}
+        <i class="bi bi-telephone-fill"></i>{{ hotelInfo.telefono }}
       </div>
       <div class="col-md-6 mb-3">
-        <i class="bi bi-envelope-fill"></i> Correo: {{ hotelInfo.correo }}
+        <i class="bi bi-envelope-fill"></i>{{ hotelInfo.correo }}
       </div>
     </div>
 
     <div>
-      <h2 class="text-center mb-4">HABITACIONES</h2>
+      <h2 class="text-center mb-4" id="h2">HABITACIONES</h2>
       <div class="d-flex justify-content-center">
         <div style="text-align: center; margin-bottom: 25px">
           <div style="margin-bottom: 20px; display: inline-block">
@@ -98,62 +113,43 @@ onMounted(() => {
           <!-- Added the 'ms-2' class for margin -->
         </div>
       </div>
-      <div>
 
+      <div v-if="cargandoHabitaciones" class="d-flex justify-content-center flex-column align-items-center">
+        <div class="spinner-border" style="color: #b7642d " role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p>Cargando habitaciones...</p>
+      </div>
+      <div v-else>
         <div class="d-flex flex-column mt-5">
           <div v-for="habitacion in habitacionInfo" :key="habitacion.id" class="mb-4">
-            <div class="card">
-              <div class="row no-gutters">
-                <div class="col-md-4">
-                  <img :src="habitacion.foto_principal" alt="Imagen de la habitación" class="img-fluid w-100 h-100">
+            <div class="card h-100" style="overflow: hidden;">
+              <div class="row no-gutters h-100">
+                <div class="col-md-4 d-flex align-items-center">
+                  <img :src="habitacion.imagen_principal" alt="Imagen de la habitación" class="img-fluid w-100"
+                    style="object-fit: cover; height: 100%;" @click="irDetalleHabitacion(habitacion)">
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-8 d-flex flex-column justify-content-between">
                   <div class="card-body">
-                    <h4 class="card-title">{{ habitacion.tipo_habitacion[0] }}</h4>
+                    <h2 class="card-title text-uppercase">{{ habitacion.tipo_habitacion[0] }}</h2>
                     <h5 class="card-subtitle mb-2 text-muted"> {{ habitacion.descripcion }}</h5>
-                    <p class="card-text">
-                      <i class="bi bi-person-fill"></i> x{{ habitacion.cantidad_personas }}
-                    </p>
-                    <p class="card-text">$ {{ habitacion.precio_noche }}</p>
+                  </div>
+                  <div class="d-flex justify-content-between gap-5 p-3">
+                    <div class="d-flex gap-5">
+                      <p class="card-text">
+                        <i class="bi bi-person-fill"></i> x{{ habitacion.cantidad_personas }}
+                      </p>
+                      <p class="card-text">$ {{ habitacion.precio_noche }}</p>
+                    </div>
+                    <button class="btn text-light" style="background-color: #b7642d"
+                      @click="irDetalleHabitacion(habitacion)">
+                      Ver más...
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="contenedor-imagenes">
-          <!-- Img 1 -->
-          <div class="imagen">
-            <img src="https://i.ibb.co/tHb1LJf/1.jpg" alt="" />
-            <div class="overlay">
-              <h2>
-                <i class="material-icons" style="margin-top: -2.2px; margin-left: -3px">person</i>
-                2
-                <i class="material-icons" style="margin-right: -1px; margin-left: 5px">single_bed</i>
-
-                <i class="material-icons" style="margin-right: -1px; margin-left: 5px">single_bed</i>
-              </h2>
-              <h3 style="
-            display: inline-flex;
-            align-items: center;
-            margin-top: 15px;
-            background-color: #b7642d;
-            border-radius: 10px;
-            padding: 2px;
-          ">
-                <i class="material-icons" style="margin-right: -5px; margin-left: -5px">attach_money</i>
-                50.000
-              </h3>
-
-              <router-link class="link" to="/detallehabitaciones">
-                <button type="button" class="btn btn-light round-btn">
-                  <i class="material-icons">add</i>
-                </button>
-              </router-link>
-            </div>
-          </div>
-
-
         </div>
       </div>
     </div>
@@ -180,7 +176,14 @@ onMounted(() => {
 </template>
 
 <style scoped>
-h2 {
+.Hoteles {
+  background: linear-gradient(to right, #b7642d, transparent);
+  align-items: center;
+  border-radius: 10px;
+  transition: 1s;
+}
+
+#h2 {
   font-size: 2rem;
   color: #b7642d;
 }

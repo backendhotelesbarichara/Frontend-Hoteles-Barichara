@@ -7,6 +7,7 @@ const estatus = ref("");
 const validacion = ref("");
 const nuevaHabitacion = ref("");
 const idHabitacion = ref("");
+const habitacionSelecionada = ref("");
 
 export const useStoreHabitacion = defineStore(
   modelo,
@@ -112,6 +113,7 @@ export const useStoreHabitacion = defineStore(
       validacion,
       nuevaHabitacion,
       idHabitacion,
+      habitacionSelecionada,
     };
   },
   {

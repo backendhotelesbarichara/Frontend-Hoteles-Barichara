@@ -2,7 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { hoteles, Sturisticos } from './../components/BD/bd';
 import { useStoreHotel } from '../stores/hotel.js';
-import {useRouter} from 'vue-router'
+import { useRouter } from 'vue-router';
+
 
 const router = useRouter();
 const useHotel = useStoreHotel();
@@ -10,18 +11,23 @@ const listaHoteles = ref("");
 const datahotel = ref(hoteles);
 const datasitios = ref(Sturisticos);
 const img = ref("")
+const cargando = ref(true);
 
 async function getHoteles() {
     try {
         const response = await useHotel.getAll()
-        listaHoteles.value = response
+        if (useHotel.estatus === 200) {
+            listaHoteles.value = response;
+            cargando.value = false;
+        }
+
         console.log(response);
     } catch (error) {
         console.log(error);
     }
 }
 
-function irInfoHotel(hotel){
+function irInfoHotel(hotel) {
     useHotel.HotelHome = hotel._id
     console.log("hola idhotel", hotel)
     router.push('/GaleriaHabitaciones')
@@ -120,10 +126,17 @@ onMounted(() => {
         </button>
 
         <!-----------------------------------------------PASARELA HOTELES----------------------------------->
-        <div class="lista-imagenes hotel-images">
-            <div class="imagen-con-texto" v-for="hotel in listaHoteles" :key="hotel._id" :value="hotel._id" @click="irInfoHotel(hotel)">
-                    <img :src="hotel.imagen" alt="imagen-principal" />
-                    <p class="text-hotel">{{ hotel.nombre }}</p>
+        <div v-if="cargando" class="d-flex justify-content-center flex-column align-items-center">
+            <div class="spinner-border" style="color: #b7642d " role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p>Por favor espere...</p>
+        </div>
+        <div v-else class="lista-imagenes hotel-images">
+            <div class="imagen-con-texto" v-for="hotel in listaHoteles" :key="hotel._id" :value="hotel._id"
+                @click="irInfoHotel(hotel)">
+                <img :src="hotel.imagen" alt="imagen-principal" />
+                <p class="text-hotel">{{ hotel.nombre }}</p>
             </div>
         </div>
 
