@@ -13,8 +13,6 @@ const imagenSeleccionada = ref("");
 const mostrarModal = ref(false);
 const cargando = ref(true);
 const cargandoHabitaciones = ref(true);
-
-
 const paginaActual = ref(1);
 const numHabitacionPag = ref(5);
 
@@ -61,6 +59,32 @@ function abrirModal(imagen) {
   mostrarModal.value = true;
 }
 
+const iconosServicios = {
+  'televisor': 'bi bi-tv',
+  'wi-fi': 'bi bi-wifi',
+  'cocina': 'bi bi-egg-fried',
+  'baño': 'bi bi-droplet',
+  'ducha': 'bi bi-droplet',
+  'jacuzzi': 'bi bi-droplet-half', 
+  'aire acondicionado': 'bi bi-snow',
+  'calefacción': 'bi bi-thermometer',
+  'servicio de habitación': 'bi bi-bell',
+  'minibar': 'bi bi-cocktail',
+  'caja fuerte': 'bi bi-safe',
+  'escritorio': 'bi bi-laptop', 
+  'silla de ruedas': 'bi bi-wheelchair',
+  'acceso a internet': 'bi bi-globe',
+  'teléfono': 'bi bi-phone',
+  'radio': 'bi bi-broadcast', 
+  'alarma de incendios': 'bi bi-alarm',
+  'xbox': 'bi bi-controller',
+  'dvd': 'bi bi-disc',
+};
+
+const getIconClass = (servicio) => {
+  return iconosServicios[servicio.toLowerCase()] || 'bi bi-info-circle';
+};
+
 async function irDetalleHabitacion(habitacion) {
   useHabitacion.habitacionSelecionada = habitacion
   console.log(useHabitacion.habitacionSelecionada)
@@ -93,14 +117,17 @@ onMounted(() => {
     </div>
     <p>Por favor espere...</p>
   </div>
-  <div v-else class="container my-5">
+  <div v-else style="padding: 16px; margin-top: 8px; transform: 1s;">
+    <div class="Hoteles">
+      <h5>INFORMACION HOTEL</h5>
+    </div>
     <div class="row no-gutters">
       <div v-for="foto in hotelInfo.fotos" :key="foto.url" class="col-md-4">
         <img :src="foto.url" alt="Imagen del hotel" class="img-fluid w-100 h-100" @click="abrirModal(foto.url)"
           data-bs-toggle="modal" data-bs-target="#modalImagen">
       </div>
     </div>
-    <h2 class="text-center mb-4 text-uppercase" id="h2">{{ hotelInfo.nombre }}</h2>
+    <h2 class="text-center mt-4 mb-4 text-uppercase" id="h2">{{ hotelInfo.nombre }}</h2>
     <p class="text-center text-muted mb-4">{{ hotelInfo.descripcion }}</p>
 
     <div class="row text-center mt-3">
@@ -116,8 +143,10 @@ onMounted(() => {
     </div>
 
     <div>
-      <h2 class="text-center mb-4" id="h2">HABITACIONES</h2>
-      <div class="d-flex justify-content-center">
+      <div class="Hoteles">
+        <h5>HABITACIONES</h5>
+      </div>
+      <div class="d-flex justify-content-center mt-4">
         <div style="text-align: center; margin-bottom: 25px">
           <div style="margin-bottom: 20px; display: inline-block">
             <div class="input-group">
@@ -158,13 +187,20 @@ onMounted(() => {
                   <div class="card-body">
                     <h2 class="card-title text-uppercase">{{ habitacion.tipo_habitacion[0] }}</h2>
                     <h5 class="card-subtitle mb-2 text-muted">{{ habitacion.descripcion }}</h5>
+                    <div class="servicios " style="margin-left: 20px">
+                      <ul>
+                        <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)" :key="servicio" >
+                          <i  :class="getIconClass(servicio)"></i> {{ servicio }}
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                   <div class="d-flex justify-content-between gap-5 p-3">
                     <div class="d-flex gap-5">
                       <p class="card-text">
                         <i class="bi bi-person-fill"></i> x{{ habitacion.cantidad_personas }}
                       </p>
-                      <p class="card-text">$ {{ habitacion.precio_noche }}</p>
+                      <p class="card-text"> <span class="fw-bold" style="  color: #b7642d;">$</span> {{ habitacion.precio_noche }}</p>
                     </div>
                     <button class="btn text-light" style="background-color: #b7642d"
                       @click="irDetalleHabitacion(habitacion)">
@@ -205,7 +241,6 @@ onMounted(() => {
 
 
 <style scoped>
-
 .pagination-container {
   display: flex;
   align-items: center;
@@ -243,6 +278,7 @@ onMounted(() => {
   .pagination-container {
     flex-direction: column;
   }
+
   .btn {
     width: 100%;
     margin-bottom: 5px;
@@ -256,6 +292,11 @@ onMounted(() => {
   transition: 1s;
 }
 
+h5 {
+  margin-left: 5px;
+  color: #fff;
+}
+
 #h2 {
   font-size: 2rem;
   color: #b7642d;
@@ -267,7 +308,7 @@ p {
 
 .bi {
   color: #b7642d;
-  margin-right: 8px;
+  margin-right: 3px;
 }
 
 .row {
@@ -427,6 +468,20 @@ h3 {
   padding: 2px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   /* Agrega la sombra de fondo */
+}
+
+.servicios ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.servicios li {
+  width: 50%;
+  margin-bottom: 10px;
 }
 
 @media screen and (max-width: 2000px) {
