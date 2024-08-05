@@ -8,6 +8,7 @@ const validacion = ref("");
 const nuevoHotel = ref("");
 const idHotel = ref("");
 const hotelSeleccionado = ref("");
+const HotelHome = ref("");
 
 export const useStoreHotel = defineStore(
   modelo,
@@ -19,6 +20,18 @@ export const useStoreHotel = defineStore(
         const response = await axios.get(`${modelo}/all`);
         console.log(response);
         hoteles.value = response.data;
+        estatus.value = response.status;
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+      }
+    };
+
+    const getPorId = async (id) => {
+      try {
+        const response = await axios.get(`${modelo}/buscarId/${id}`);
+        console.log(response);
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -122,6 +135,7 @@ export const useStoreHotel = defineStore(
 
     return {
       getAll,
+      getPorId,
       getPorUsuario,
       agregar,
       editar,
@@ -133,6 +147,7 @@ export const useStoreHotel = defineStore(
       nuevoHotel,
       idHotel,
       hotelSeleccionado,
+      HotelHome,
       subirFotos,
     };
   },

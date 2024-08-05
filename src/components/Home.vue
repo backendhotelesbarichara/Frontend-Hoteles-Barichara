@@ -2,7 +2,9 @@
 import { ref, onMounted } from 'vue';
 import { hoteles, Sturisticos } from './../components/BD/bd';
 import { useStoreHotel } from '../stores/hotel.js';
+import {useRouter} from 'vue-router'
 
+const router = useRouter();
 const useHotel = useStoreHotel();
 const listaHoteles = ref("");
 const datahotel = ref(hoteles);
@@ -17,6 +19,12 @@ async function getHoteles() {
     } catch (error) {
         console.log(error);
     }
+}
+
+function irInfoHotel(hotel){
+    useHotel.HotelHome = hotel._id
+    console.log("hola idhotel", hotel)
+    router.push('/GaleriaHabitaciones')
 }
 
 onMounted(() => {
@@ -113,11 +121,9 @@ onMounted(() => {
 
         <!-----------------------------------------------PASARELA HOTELES----------------------------------->
         <div class="lista-imagenes hotel-images">
-            <div class="imagen-con-texto" v-for="hotel in listaHoteles" :key="hotel._id" :value="hotel._id">
-                <router-link class="link" to="/GaleriaHabitaciones">
+            <div class="imagen-con-texto" v-for="hotel in listaHoteles" :key="hotel._id" :value="hotel._id" @click="irInfoHotel(hotel)">
                     <img :src="hotel.imagen" alt="imagen-principal" />
                     <p class="text-hotel">{{ hotel.nombre }}</p>
-                </router-link>
             </div>
         </div>
 

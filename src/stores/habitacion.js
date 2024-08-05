@@ -38,6 +38,18 @@ export const useStoreHabitacion = defineStore(
       }
     };
 
+    const getHabitacionesPorHotel = async (idHotel) => {
+      try {
+        const response = await axios.get(`${modelo}/habitaciones/${idHotel}`);
+        console.log(response);
+        estatus.value = response.status;
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+      }
+    };
+
     const agregar = async (data) => {
       try {
         const response = await axios.post(`${modelo}/registro`, data);
@@ -90,6 +102,7 @@ export const useStoreHabitacion = defineStore(
     return {
       getAll,
       getHabitacionesPorPiso,
+      getHabitacionesPorHotel,
       agregar,
       editar,
       activar,
