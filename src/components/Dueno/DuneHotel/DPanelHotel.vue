@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router';
 import { useStoreHotel } from '../../../stores/hotel.js';
 import { useStoreUsuarios } from '../../../stores/usuario.js';
@@ -19,11 +19,13 @@ const direccion = ref();
 const correo = ref();
 const telefono = ref();
 const piso = ref();
+const validacion = ref("");
 const loading = ref(true);
+const dataHotel = ref({ ...useHotel.editarHotelSelec });
 
-async function getHotelPorUsuario() {
+async function getHoteles() {
   try {
-    const response = await useHotel.getPorUsuario(useUsuario.usuario._id)
+    const response = await useHotel.getAll()
     hoteles.value = response
     console.log(response);
   } catch (error) {
@@ -34,7 +36,7 @@ async function getHotelPorUsuario() {
 }
 
 async function editaHotel(hotel) {
-  console.log("id hotel componente", idHotel)
+  useHotel.editarHotelSelec = hotel;
   idHotel.value = hotel._id
   nombre.value = hotel.nombre
   descripcion.value = hotel.descripcion
@@ -46,8 +48,15 @@ async function editaHotel(hotel) {
   telefono.value = hotel.telefono
   piso.value = hotel.pisos
   hotelSeleccionado.value = hotel
-  console.log("h", hotel.nombre)
+  useHotel.editarHotelSelec = hotel;
+  console.log("h", hotel)
 }
+
+watch(hotelSeleccionado, (value) => {
+  dataHotel.value = {...value };
+  useHotel.editarHotelSelec = value;
+  console.log("hotel selec", value);
+})
 
 /* async function editarHotel() {
   try {
@@ -61,69 +70,45 @@ async function editaHotel(hotel) {
   }
 } */
 
-const subirFotos = async (id, file) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'qcxzi3kl');
-    const response = await axios.post(`https://api.cloudinary.com/v1_1/dep417oku/image/upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-    const logo = response.data.secure_url;
-    const imagenPrincipal = response.data.secure_url;
-    const fotos = response.data.secure_url;
-
-    hotelSeleccionado.logo = logo;
-    hotelSeleccionado.imagen = imagenPrincipal;
-    hotelSeleccionado.fotos = fotos;
 
 
-    const data = { logo, imagenPrincipal, fotos };
-    hotelSeleccionado.logo = logo;
-    hotelSeleccionado.imagen = imagenPrincipal;
-    hotelSeleccionado.fotos = fotos;
-    useHotel.hotelSeleccionado.logo = fotoPerfil
-    return response.data.secure_url;
-  } catch (error) {
-    console.error('Error al subir la foto:', error);
-    return null;
-  }
-};
 
 const cambiarFoto = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
-  await useHotel.subirFotos(useHotel.idHotel, file);
+
+  try {
+    // Subir la imagen y obtener la URL
+    const imageUrl = await useHotel.subirFotos(dataHotel.value._id, file);
+
+    // Actualizar el campo de la imagen principal en dataHotel con la nueva URL
+    dataHotel.value.imagen = imageUrl;
+
+    // Guardar todos los cambios, asegurándose de incluir todos los datos del hotel
+  } catch (error) {
+    console.error("Error al cambiar la foto:", error);
+  }
 };
 
-
 function guardarCambios() {
-  if (!nombre.value || !descripcion.value || !direccion.value || !correo.value || !telefono.value) {
-    console.log("No se pueden enviar campos vacios");
+  if (!dataHotel.value.nombre || !dataHotel.value.descripcion || !dataHotel.value.direccion || !dataHotel.value.correo || !dataHotel.value.telefono) {
+    validacion.value = "No se pueden enviar campos vacíos";
     return;
   }
 
-  const data = {
-    nombre: nombre.value,
-    descripcion: descripcion.value,
-    direccion: direccion.value,
-    correo: correo.value,
-    telefono: telefono.value,
-    pisos: piso.value,
-    idUsuario: useUsuario.usuario._id
-  };
 
-  useHotel.editar(idHotel.value, data)
+  useHotel.editar(dataHotel.value._id, dataHotel.value)
     .then((res) => {
-      useHotel.hotelSeleccionado = res
-      getHotelPorUsuario();
+      console.log("soy res", res);
+      useHotel.editarHotelSelec = res;
+      getHoteles();
     })
     .catch((error) => {
-      console.log(error)
-    })
+      console.log(error);
+    });
 }
+
+
 
 function goToHabitaciones(hotel) {
   idHotel.value = hotel._id;
@@ -131,8 +116,12 @@ function goToHabitaciones(hotel) {
   router.push('/DPanelHabitaciones')
 }
 
+function goToRegistroHotel() {
+  router.push('/RegitroHotel')
+}
+
 onMounted(() => {
-  getHotelPorUsuario();
+  getHoteles();
 });
 
 </script>
@@ -140,14 +129,12 @@ onMounted(() => {
 <template>
   <div class="galeria">
     <div class="Hoteles">
-      <h5>Admistrar mi hotel</h5>
+      <h5>Admistrar Hotel - Vista usuario</h5>
     </div>
     <div class="">
-      <router-link class="link" to="/RegitroHotel">
-        <button class="btns btn btn-dark top-bar__button" @click="showAddModal">
+        <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
           <i class="material-icons">add_box</i>
         </button>
-      </router-link>
     </div>
     <div v-if="loading" class="centered">
       <div class="empty-state">
@@ -160,11 +147,9 @@ onMounted(() => {
         <i class="material-icons empty-state__icon">hotel</i>
         <h3 class="empty-state__title">Aún no tienes un hotel registrado</h3>
         <p class="empty-state__description">¡Registra tu hotel ahora mismo para comenzar a administrarlo!</p>
-        <router-link class="link" to="/RegitroHotel">
-          <button class="btn btn-dark">
-            Registrar Hotel
-          </button>
-        </router-link>
+        <button class="btn btn-dark" @click="goToRegistroHotel">
+          Registrar Hotel
+        </button>
       </div>
     </div>
     <div v-else>
@@ -208,7 +193,7 @@ onMounted(() => {
       <!-- ... resto del componente ... -->
 
 
-      <!-- espacio para el modal -->
+      <!-- Modal editar hotel -->
       <div class="modal fade modal-small" id="editarDHotel" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -225,15 +210,15 @@ onMounted(() => {
                   <div class="col-15">
                     <div class="mb-3">
                       <label class="form-label" for="nombre_hotel"><strong>Nombre *</strong></label>
-                      <input class="form-control" type="text" id="nombre_hotel" name="nombre_hotel" v-model="nombre"
-                        required="" />
+                      <input class="form-control" type="text" id="nombre_hotel" name="nombre_hotel"
+                        v-model="dataHotel.nombre" required="" />
                     </div>
                   </div>
                   <div class="col-15">
                     <div class="mb-3">
                       <label class="form-label" for="descripcion_hotel"><strong>Descripción *</strong></label>
-                      <textarea class="form-control" id="descripcion_hotel" name="descripcion_hotel" v-model="descripcion"
-                        required=""></textarea>
+                      <textarea class="form-control" id="descripcion_hotel" name="descripcion_hotel"
+                        v-model="dataHotel.descripcion" required=""></textarea>
                     </div>
                   </div>
                 </div>
@@ -248,8 +233,8 @@ onMounted(() => {
                   <div class="col-15">
                     <div class="mb-3">
                       <label class="form-label" for="logo_hotel"><strong>Logo</strong></label>
-                      <input class="form-control" type="file" @change="cambiarFoto" accept="image/*" id="logo_hotel"
-                        name="logo_hotel" required="" />
+                      <input class="form-control" type="file" accept="image/*" id="logo_hotel" name="logo_hotel"
+                        required="" />
                     </div>
                   </div>
                 </div>
@@ -257,22 +242,22 @@ onMounted(() => {
                   <div class="col-15">
                     <div class="mb-3">
                       <label class="form-label" for="pisos_hotel"><strong>Fotos hotel *</strong></label>
-                      <input class="form-control" type="file" @change="cambiarFoto" accept="image/*" id="imagen_hotel"
-                        name="imagen_hotel" required="" />
+                      <input class="form-control" type="file" accept="image/*" id="imagen_hotel" name="imagen_hotel"
+                        required="" />
                     </div>
                   </div>
                   <div class="col-15">
                     <div class="mb-3">
                       <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label>
                       <input class="form-control" type="text" id="direccion_hotel" name="direccion_hotel"
-                        v-model="direccion" required="" />
+                        v-model="dataHotel.direccion" required="" />
                     </div>
                   </div>
                   <div class="col-15">
                     <div class="mb-3">
                       <label class="form-label" for="correo_hotel"><strong>Correo *</strong></label>
-                      <input class="form-control" type="email" id="correo_hotel" name="correo_hotel" v-model="correo"
-                        required="" />
+                      <input class="form-control" type="email" id="correo_hotel" name="correo_hotel"
+                        v-model="dataHotel.correo" required="" />
                     </div>
                   </div>
                 </div>
@@ -281,7 +266,7 @@ onMounted(() => {
                     <div class="mb-3">
                       <label class="form-label" for="telefono_hotel"><strong>Teléfono *</strong></label>
                       <input class="form-control" type="number" id="telefono_hotel" name="telefono_hotel"
-                        v-model="telefono" required="" />
+                        v-model="dataHotel.telefono" required="" />
                     </div>
                   </div>
 
@@ -295,7 +280,9 @@ onMounted(() => {
                     @click="guardarCambios">
                     Editar
                   </button>
+
                 </div>
+                <p class="fs-5 fw-bold text-danger text-center">{{ validacion }}</p>
               </form>
             </div>
           </div>
@@ -305,8 +292,6 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-
 
 <style scoped>
 /* Estilo para el modal más pequeño */

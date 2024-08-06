@@ -8,6 +8,7 @@ const validacion = ref("");
 const nuevoHotel = ref("");
 const idHotel = ref("");
 const hotelSeleccionado = ref("");
+const editarHotelSelec = ref("");
 const HotelHome = ref("");
 
 export const useStoreHotel = defineStore(
@@ -47,7 +48,7 @@ export const useStoreHotel = defineStore(
         estatus.value = response.status;
         hotelSeleccionado.value = response.data;
         idHotel.value = response.data;
-        console.log("id pinia", idHotel.value)
+        console.log("id pinia", idHotel.value);
         return response.data;
       } catch (error) {
         console.log(error);
@@ -108,28 +109,30 @@ export const useStoreHotel = defineStore(
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "qcxzi3kl");
+        formData.append("upload_preset", "fotoprincipalhotel");
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
         const response = await axios.post(
           `https://api.cloudinary.com/v1_1/dep417oku/image/upload`,
           formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
+          config
         );
-        const imagenPrincipal = response.data.secure_url;
+        console.log(response);
+        const imagen = response.data.secure_url;
 
         // Actualizar la foto de perfil del usuario
-        hotelSeleccionado.value.imagen = imagenPrincipal;
+        editarHotelSelec.value.imagen = imagen;
 
         // Guardar la foto de perfil en el servidor
-        await editar(id, { imagenPrincipal });
+        
 
-        return { imagenPrincipal };
+        return  imagen ;
       } catch (error) {
         console.error("Error al subir la foto:", error);
-        return null;
+        throw error; // Re-lanzar el error para que se pueda manejar en el llamador
       }
     };
 
@@ -149,6 +152,7 @@ export const useStoreHotel = defineStore(
       hotelSeleccionado,
       HotelHome,
       subirFotos,
+      editarHotelSelec,
     };
   },
   {
