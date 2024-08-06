@@ -21,6 +21,9 @@ const telefono = ref();
 const piso = ref();
 const validacion = ref("");
 const loading = ref(true);
+const uploadingPrincipal = ref(false); // Estado de carga para imagen principal
+const uploadingFotos = ref(false); // Estado de carga para fotos
+const uploadingLogo = ref(false);
 const dataHotel = ref({ ...useHotel.editarHotelSelec });
 
 async function getHoteles() {
@@ -53,42 +56,10 @@ async function editaHotel(hotel) {
 }
 
 watch(hotelSeleccionado, (value) => {
-  dataHotel.value = {...value };
+  dataHotel.value = { ...value };
   useHotel.editarHotelSelec = value;
   console.log("hotel selec", value);
 })
-
-/* async function editarHotel() {
-  try {
-    const response = await useHotel.getPorUsuario(useUsuario.usuario._id)
-    hoteles.value = response
-    console.log(response);
-  } catch (error) {
-    console.log(error);
-  } finally {
-    loading.value = false;
-  }
-} */
-
-
-
-
-const cambiarFoto = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  try {
-    // Subir la imagen y obtener la URL
-    const imageUrl = await useHotel.subirFotos(dataHotel.value._id, file);
-
-    // Actualizar el campo de la imagen principal en dataHotel con la nueva URL
-    dataHotel.value.imagen = imageUrl;
-
-    // Guardar todos los cambios, asegurándose de incluir todos los datos del hotel
-  } catch (error) {
-    console.error("Error al cambiar la foto:", error);
-  }
-};
 
 function guardarCambios() {
   if (!dataHotel.value.nombre || !dataHotel.value.descripcion || !dataHotel.value.direccion || !dataHotel.value.correo || !dataHotel.value.telefono) {
@@ -96,8 +67,13 @@ function guardarCambios() {
     return;
   }
 
+  // Prepara los datos para incluir solo las imágenes no eliminadas
+  const datosParaGuardar = {
+    ...dataHotel.value,
+    fotos: dataHotel.value.fotos.filter(foto => !foto.eliminada),
+  };
 
-  useHotel.editar(dataHotel.value._id, dataHotel.value)
+  useHotel.editar(dataHotel.value._id, datosParaGuardar)
     .then((res) => {
       console.log("soy res", res);
       useHotel.editarHotelSelec = res;
@@ -108,7 +84,68 @@ function guardarCambios() {
     });
 }
 
+/* Subir imagenes cloudinary */
 
+const cambiarLogo = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  uploadingLogo.value = true; 
+
+  try {
+    const imageUrl = await useHotel.subirLogo(dataHotel.value._id, file);
+    dataHotel.value.logo = imageUrl;
+  } catch (error) {
+    console.error("Error al cambiar el logo:", error);
+  } finally {
+    uploadingLogo.value = false; 
+  }
+};
+
+
+const cambiarFoto = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  uploadingPrincipal.value = true;
+
+  try {
+    const imageUrl = await useHotel.subirFotos(dataHotel.value._id, file);
+    dataHotel.value.imagen = imageUrl;
+  } catch (error) {
+    console.error("Error al cambiar la foto:", error);
+  } finally {
+    uploadingPrincipal.value = false; 
+  }
+};
+
+async function subirFotosHotel(event) {
+  const files = event.target.files;
+  if (files.length === 0) return;
+
+  uploadingFotos.value = true; 
+  const fotosAntesDeSubir = [...dataHotel.value.fotos];
+
+  try {
+    dataHotel.value.fotos = fotosAntesDeSubir.filter(foto => !foto.eliminada);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imageUrl = await useHotel.subirGrupoFotos(dataHotel.value._id, file);
+
+      const fotoObj = { url: imageUrl };
+      dataHotel.value.fotos.push(fotoObj);
+    }
+  } catch (error) {
+    console.error("Error al subir las fotos:", error);
+  } finally {
+    uploadingFotos.value = false; 
+  }
+}
+
+
+function marcarComoEliminada(index) {
+  dataHotel.value.fotos[index].eliminada = true;
+}
 
 function goToHabitaciones(hotel) {
   idHotel.value = hotel._id;
@@ -129,12 +166,7 @@ onMounted(() => {
 <template>
   <div class="galeria">
     <div class="Hoteles">
-      <h5>Admistrar Hotel - Vista usuario</h5>
-    </div>
-    <div class="">
-        <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
-          <i class="material-icons">add_box</i>
-        </button>
+      <h5>Admistrar Hotel - Vista Usuario</h5>
     </div>
     <div v-if="loading" class="centered">
       <div class="empty-state">
@@ -153,6 +185,11 @@ onMounted(() => {
       </div>
     </div>
     <div v-else>
+      <div class="">
+        <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
+          <i class="material-icons">add_box</i>
+        </button>
+      </div>
       <!-- Tabla de hoteles -->
       <div style="font-size: 12px" class="table-responsive">
         <table class="table table-bordered">
@@ -163,18 +200,16 @@ onMounted(() => {
               <th>Descripción</th>
               <th>Teléfono</th>
               <th>Dirección</th>
-              <th>Pisos</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="hotel in hoteles">
+            <tr v-for="hotel in hoteles" :key="hotel._id">
               <td>{{ hotel.nombre }}</td>
               <td>{{ hotel.correo }}</td>
               <td>{{ hotel.descripcion }}</td>
               <td>{{ hotel.telefono }}</td>
               <td>{{ hotel.direccion }}</td>
-              <td>{{ hotel.pisos }}</td>
               <td>
                 <div class="btn-container">
                   <button type="button" class="btns btn btn-dark" data-bs-toggle="modal" data-bs-target="#editarDHotel"
@@ -190,130 +225,163 @@ onMounted(() => {
           </tbody>
         </table>
       </div>
-      <!-- ... resto del componente ... -->
-
 
       <!-- Modal editar hotel -->
-      <div class="modal fade modal-small" id="editarDHotel" tabindex="-1" aria-labelledby="exampleModalLabel"
+      <div class="modal fade modal-large" id="editarDHotel" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="exampleModalLabel">
-                Editar datos del hotel
-              </h1>
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Editar datos del hotel</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <form>
-                <div class="row">
-                  <div class="col-15">
-                    <div class="mb-3">
-                      <label class="form-label" for="nombre_hotel"><strong>Nombre *</strong></label>
-                      <input class="form-control" type="text" id="nombre_hotel" name="nombre_hotel"
-                        v-model="dataHotel.nombre" required="" />
+                <div class="row mb-3 align-items-center">
+                  <div class="col-md-3">
+                    <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image"/>
+                    <div>
+                      <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
+                      <input class="form-control mt-2" type="file" @change="cambiarLogo" accept="image/*"
+                      id="imagen_hotel" name="imagen_hotel" />
                     </div>
                   </div>
-                  <div class="col-15">
-                    <div class="mb-3">
-                      <label class="form-label" for="descripcion_hotel"><strong>Descripción *</strong></label>
-                      <textarea class="form-control" id="descripcion_hotel" name="descripcion_hotel"
-                        v-model="dataHotel.descripcion" required=""></textarea>
-                    </div>
+                  <div class="col-md-9">
+                    <h2>{{ dataHotel.nombre }}</h2>
                   </div>
                 </div>
-                <div class="row">
-                  <div class="col-15">
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label" for="imagen_hotel"><strong>Imagen Principal</strong></label>
-                      <input class="form-control" type="file" @change="cambiarFoto" accept="image/*" id="imagen_hotel"
-                        name="imagen_hotel" required="" />
+                      <div class="image-container">
+                        <img v-if="dataHotel.imagen" :src="dataHotel.imagen" alt="" class="fixed-size-image">
+                        <div v-if="uploadingPrincipal" class="loading-spinner">Cargando...</div>
+                      </div>
+                      <input class="form-control mt-2" type="file" @change="cambiarFoto" accept="image/*"
+                        id="imagen_hotel" name="imagen_hotel" />
                     </div>
                   </div>
-                  <div class="col-15">
+                  <div class="col-md-6">
                     <div class="mb-3">
-                      <label class="form-label" for="logo_hotel"><strong>Logo</strong></label>
-                      <input class="form-control" type="file" accept="image/*" id="logo_hotel" name="logo_hotel"
-                        required="" />
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-15">
-                    <div class="mb-3">
-                      <label class="form-label" for="pisos_hotel"><strong>Fotos hotel *</strong></label>
-                      <input class="form-control" type="file" accept="image/*" id="imagen_hotel" name="imagen_hotel"
-                        required="" />
-                    </div>
-                  </div>
-                  <div class="col-15">
-                    <div class="mb-3">
-                      <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label>
-                      <input class="form-control" type="text" id="direccion_hotel" name="direccion_hotel"
-                        v-model="dataHotel.direccion" required="" />
-                    </div>
-                  </div>
-                  <div class="col-15">
-                    <div class="mb-3">
-                      <label class="form-label" for="correo_hotel"><strong>Correo *</strong></label>
-                      <input class="form-control" type="email" id="correo_hotel" name="correo_hotel"
-                        v-model="dataHotel.correo" required="" />
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-15">
-                    <div class="mb-3">
-                      <label class="form-label" for="telefono_hotel"><strong>Teléfono *</strong></label>
-                      <input class="form-control" type="number" id="telefono_hotel" name="telefono_hotel"
-                        v-model="dataHotel.telefono" required="" />
+                      <label class="form-label" for="imagenes_hotel"><strong>Fotos del Hotel</strong></label>
+                      <div class="photos-container">
+                        <!-- Mostrar el spinner solo cuando se están cargando las fotos -->
+                        <div v-if="uploadingFotos" class="loading-spinner">
+                          <p>Cargando fotos...</p>
+                        </div>
+                        <!-- Mostrar las fotos solo cuando no se está cargando -->
+                        <div v-else>
+                          <div v-for="(foto, index) in dataHotel.fotos" :key="index" class="photo-container">
+                            <img v-if="!foto.eliminada" :src="foto.url" alt="" class="fixed-size-image">
+                            <div class="text-center">
+                              <button v-if="!foto.eliminada" class="btn btn-danger btn-sm mt-2 photo-delete-btn"
+                                @click="marcarComoEliminada(index)">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <input class="form-control mt-2" type="file" multiple @change="subirFotosHotel" accept="image/*"
+                        id="imagenes_hotel" name="imagenes_hotel" />
                     </div>
                   </div>
 
                 </div>
-                <div class="modal-footer">
-                  <button type="button" style="background-color: #343a45; border-style: none" class="btn btn-secondary"
-                    data-bs-dismiss="modal">
-                    Cancelar
-                  </button>
-                  <button type="button" style="background-color: #b7642d; border-style: none" class="btn btn-primary"
-                    @click="guardarCambios">
-                    Editar
-                  </button>
 
+                <div class="mb-3">
+                  <label class="form-label" for="descripcion_hotel"><strong>Descripción *</strong></label>
+                  <textarea class="form-control" id="descripcion_hotel" name="descripcion_hotel"
+                    v-model="dataHotel.descripcion" required=""></textarea>
                 </div>
-                <p class="fs-5 fw-bold text-danger text-center">{{ validacion }}</p>
+
+                <div class="mb-3">
+                  <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label>
+                  <textarea class="form-control" id="direccion_hotel" name="direccion_hotel" v-model="dataHotel.direccion"
+                    required=""></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="correo_hotel"><strong>Correo *</strong></label>
+                  <input class="form-control" type="email" id="correo_hotel" name="correo_hotel"
+                    v-model="dataHotel.correo" required="" />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="telefono_hotel"><strong>Teléfono *</strong></label>
+                  <input class="form-control" type="text" id="telefono_hotel" name="telefono_hotel"
+                    v-model="dataHotel.telefono" required="" />
+                </div>
+
+                <div v-if="validacion" class="alert alert-danger mt-3" role="alert">
+                  {{ validacion }}
+                </div>
               </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-dark" @click="guardarCambios">Guardar</button>
             </div>
           </div>
         </div>
       </div>
-      <!-- espacio para el modal -->
+
+
     </div>
   </div>
 </template>
 
+
 <style scoped>
-/* Estilo para el modal más pequeño */
-.modal-small .modal-dialog {
-  max-width: 500px;
-  /* Establece el ancho deseado */
-  margin: 0 auto;
-  /* Centra horizontalmente el modal */
-  top: 50%;
-  /* Coloca el modal en el centro vertical */
-  transform: translateY(-40%);
-  max-height: auto;
-  /* Alinea verticalmente el modal */
+.modal-large .modal-dialog {
+  max-width: 90%;
+  /* Ancho máximo del 90% del tamaño de la pantalla */
+}
+
+.logo {
+  max-width: 100%;
+  max-height: 100px;
+  /* Ajusta el tamaño máximo del logo */
+}
+
+.fixed-size-image {
+  width: 100px;
+  height: 100px;
+  /* Tamaño fijo para las imágenes */
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.image-container,
+.photos-container {
+  position: relative;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100px;
+  /* Ajusta el alto del spinner si es necesario */
+}
+
+.photo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 
-.logo {
-  position: relative;
-  max-width: 30px;
-  max-height: 40px;
-  margin-top: 5px;
-  transition: 1s;
+
+@media (max-width: 768px) {
+  .photo-delete-btn {
+    position: static;
+    margin-top: 5px;
+    display: block;
+  }
 }
 
 .logo:hover {
@@ -356,11 +424,50 @@ onMounted(() => {
   text-decoration: none !important;
 }
 
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  margin-top: 20%;
+}
+
 .btn-container {
   display: flex;
   justify-content: center;
-  gap: 5px;
-  /* Espacio entre los botones */
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 2px solid #3498db;
+  animation: spin 1s linear infinite;
+}
+
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  margin-top: 20%;
+}
+
+.btn-container {
+  display: flex;
+  justify-content: center;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 2px solid #3498db;
+  animation: spin 1s linear infinite;
 }
 
 .empty-state {
@@ -463,12 +570,6 @@ td {
 th {
   background-color: #f2f2f2;
   /* Color de fondo para las celdas del encabezado */
-}
-
-.btn-container {
-  display: flex;
-  gap: 5px;
-  /* Espacio entre los botones */
 }
 
 /* Botones de acción dentro de la tabla */

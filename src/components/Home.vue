@@ -40,7 +40,7 @@ onMounted(() => {
 
 <template>
     <!-- Start: Slider Carousel with side text -->
-    <div id="carousel" class="carousel slide" data-bs-interval="3000" data-bs-ride="carousel">
+    <div id="carousel" class="carousel slide" data-bs-interval="2800" data-bs-ride="carousel">
         <!-- Start: Slides -->
         <div class="carousel-inner">
             <div class="carousel-item active">
@@ -85,6 +85,17 @@ onMounted(() => {
             </div>
         </div>
         <!-- End: Slides -->
+
+        <!-- Start: Controls -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#carousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+        <!-- End: Controls -->
     </div>
     <!-- End: Slider Carousel with side text -->
 
@@ -92,7 +103,7 @@ onMounted(() => {
     <div class="galeria">
         <div class="Busquedas">
             <div class="row" style="text-align: center; margin-bottom: 25px">
-                <h5>Busqueda de alojamientos en general</h5>
+                <h5 class="fw-bold text-uppercase" style="color: #b7642d;">Busqueda de alojamientos en general</h5>
                 <div class="col-6 col-md-4" style="margin-bottom: 20px; display: inline-block">
                     <div class="input-group">
                         <span style="background-color: #b7642d; color: #fff" class="input-group-text"

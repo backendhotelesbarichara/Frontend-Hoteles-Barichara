@@ -119,7 +119,7 @@ onMounted(() => {
   </div>
   <div v-else style="padding: 16px; margin-top: 8px; transform: 1s;">
     <div class="Hoteles">
-      <h5>INFORMACION HOTEL</h5>
+      <h5 id="h5">INFORMACION HOTEL</h5>
     </div>
     <div class="row no-gutters">
       <div v-for="foto in hotelInfo.fotos" :key="foto.url" class="col-md-4">
@@ -144,7 +144,7 @@ onMounted(() => {
 
     <div>
       <div class="Hoteles">
-        <h5>HABITACIONES</h5>
+        <h5 id="h5">HABITACIONES</h5>
       </div>
       <div class="d-flex justify-content-center mt-4">
         <div style="text-align: center; margin-bottom: 25px">
@@ -292,7 +292,8 @@ onMounted(() => {
   transition: 1s;
 }
 
-h5 {
+#h5 {
+  padding: 8px;
   margin-left: 5px;
   color: #fff;
 }

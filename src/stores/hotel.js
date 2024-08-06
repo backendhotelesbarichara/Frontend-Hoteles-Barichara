@@ -105,6 +105,34 @@ export const useStoreHotel = defineStore(
       }
     };
 
+    const subirLogo = async (id, file) => {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "logohotel");
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/dep417oku/image/upload`,
+          formData,
+          config
+        );
+        console.log(response);
+        const logo = response.data.secure_url;
+
+        // Actualizar la foto de perfil del usuario
+        editarHotelSelec.value.logo = logo;
+      
+        return  logo ;
+      } catch (error) {
+        console.error("Error al subir la foto:", error);
+        throw error; // Re-lanzar el error para que se pueda manejar en el llamador
+      }
+    };
+
     const subirFotos = async (id, file) => {
       try {
         const formData = new FormData();
@@ -136,6 +164,33 @@ export const useStoreHotel = defineStore(
       }
     };
 
+    const subirGrupoFotos = async (id, file) => {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "fotoshotel");
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/dep417oku/image/upload`,
+          formData,
+          config
+        );
+        console.log("img", response);
+        const fotos = response.data.secure_url;
+        // Actualizar la foto de perfil del usuario
+        editarHotelSelec.value.fotos = fotos;
+        // Guardar la foto de perfil en el servidor
+        return  fotos;
+      } catch (error) {
+        console.error("Error al subir la foto:", error);
+        throw error; // Re-lanzar el error para que se pueda manejar en el llamador
+      }
+    };
+
     return {
       getAll,
       getPorId,
@@ -151,7 +206,9 @@ export const useStoreHotel = defineStore(
       idHotel,
       hotelSeleccionado,
       HotelHome,
+      subirLogo,
       subirFotos,
+      subirGrupoFotos,
       editarHotelSelec,
     };
   },
