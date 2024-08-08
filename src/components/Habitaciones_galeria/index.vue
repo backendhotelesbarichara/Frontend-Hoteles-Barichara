@@ -181,41 +181,32 @@ onMounted(() => {
         <p>Cargando habitaciones...</p>
       </div>
       <div v-else>
-        <div class="d-flex flex-column mt-5">
-          <div v-for="habitacion in paginatedHabitaciones" :key="habitacion.id" class="mb-4">
+        <div class="row mt-5">
+          <div v-for="habitacion in paginatedHabitaciones" :key="habitacion.id" class="col-md-4 mb-4">
             <div class="card h-100" style="overflow: hidden;">
-              <div class="row no-gutters h-100">
-                <div class="col-md-4 d-flex align-items-center">
-                  <img :src="habitacion.imagen_principal" alt="Imagen de la habitación" class="img-fluid w-100"
-                    style="object-fit: cover; height: 100%;" @click="irDetalleHabitacion(habitacion)">
+              <img :src="habitacion.imagen_principal" alt="Imagen de la habitación" class="card-img-top"
+                @click="irDetalleHabitacion(habitacion)">
+              <div class="card-body">
+                <h5 class="card-title text-uppercase">{{ habitacion.tipo_habitacion[0] }}</h5>
+                <p class="card-text">{{ habitacion.descripcion }}</p>
+                <div class="servicios " style="margin-left: 20px">
+                  <ul>
+                    <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)"
+                      :key="servicio">
+                      <i :class="getIconClass(servicio)"></i> {{ servicio }}
+                    </li>
+                  </ul>
                 </div>
-                <div class="col-md-8 d-flex flex-column justify-content-between">
-                  <div class="card-body">
-                    <h2 class="card-title text-uppercase">{{ habitacion.tipo_habitacion[0] }}</h2>
-                    <h5 class="card-subtitle mb-2 text-muted">{{ habitacion.descripcion }}</h5>
-                    <div class="servicios " style="margin-left: 20px">
-                      <ul>
-                        <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)"
-                          :key="servicio">
-                          <i :class="getIconClass(servicio)"></i> {{ servicio }}
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div class="d-flex justify-content-between gap-5 p-3">
-                    <div class="d-flex gap-5">
-                      <p class="card-text">
-                        <i class="bi bi-person-fill"></i> x{{ habitacion.cantidad_personas }}
-                      </p>
-                      <p class="card-text"> <span class="fw-bold" style="  color: #b7642d;">$</span> {{
-                        habitacion.precio_noche }}</p>
-                    </div>
-                    <button class="btn text-light" style="background-color: #b7642d"
-                      @click="irDetalleHabitacion(habitacion)">
-                      Ver más...
-                    </button>
-                  </div>
+              </div>
+              <div class="card-footer d-flex justify-content-between">
+                <div class="d-flex gap-5">
+                  <p class="card-text">
+                    <i class="bi bi-person-fill"></i> x{{ habitacion.cantidad_personas }}
+                  </p>
+                  <p class="card-text"> <span class="fw-bold" style="  color: #b7642d;">$</span> {{
+                    habitacion.precio_noche }}</p>
                 </div>
+                <button class="btn btn-primary" @click="irDetalleHabitacion(habitacion)">Ver más...</button>
               </div>
             </div>
           </div>
@@ -226,7 +217,6 @@ onMounted(() => {
           <button class="btn btn-secondary ms-2" @click="nextPage"
             :disabled="paginaActual === totalPages">Siguiente</button>
         </div>
-
       </div>
     </div>
 
@@ -250,18 +240,51 @@ onMounted(() => {
 
 <style scoped>
 
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+  object-fit: cover;
+  height: 200px;
+}
+
+.card-title {
+  font-weight: bold;
+  color: #b7642d;
+}
+
+.card-text {
+  color: #333;
+}
+
+.servicios ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.servicios li {
+  width: 50%;
+  margin-bottom: 10px;
+}
 /* CSS */
 .logo-title-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px; 
+  gap: 16px;
   text-align: center;
   padding: 30px;
 }
 
 .logo {
-  max-width: auto; 
+  max-width: auto;
   max-height: 150px;
 }
 

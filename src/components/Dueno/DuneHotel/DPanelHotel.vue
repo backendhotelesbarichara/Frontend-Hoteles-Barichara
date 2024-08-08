@@ -24,7 +24,18 @@ const loading = ref(true);
 const uploadingPrincipal = ref(false); // Estado de carga para imagen principal
 const uploadingFotos = ref(false); // Estado de carga para fotos
 const uploadingLogo = ref(false);
-const editMode = ref(false);
+const editMode = ref({
+  nombre: false,
+  descripcion: false,
+  direccion: false,
+  correo: false,
+  telefono: false,
+  logo: false,
+  imagen: false,
+  fotos: false
+});
+
+
 const dataHotel = ref({ ...useHotel.editarHotelSelec });
 
 async function getHoteles() {
@@ -143,6 +154,15 @@ async function subirFotosHotel(event) {
   }
 }
 
+function eliminarLogo() {
+  dataHotel.value.logo = null; // O elimina el logo según cómo manejes la eliminación en tu backend
+}
+
+function eliminarImagenPrincipal() {
+  dataHotel.value.imagen = null; // O elimina la imagen principal según cómo manejes la eliminación en tu backend
+  console.log(dataHotel)
+}
+
 
 function marcarComoEliminada(index) {
   dataHotel.value.fotos[index].eliminada = true;
@@ -208,7 +228,12 @@ onMounted(() => {
             <tr v-for="hotel in hoteles" :key="hotel._id">
               <td>{{ hotel.nombre }}</td>
               <td>{{ hotel.correo }}</td>
-              <td>{{ hotel.descripcion }}</td>
+              <VMenu class="vmenu">
+                <td class="truncated-text">{{ hotel.descripcion }}</td>
+                <template #popper>
+                  <div class="descripVmenu">{{ hotel.descripcion }}</div>
+                </template>
+              </VMenu>
               <td>{{ hotel.telefono }}</td>
               <td>{{ hotel.direccion }}</td>
               <td>
@@ -233,106 +258,138 @@ onMounted(() => {
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="exampleModalLabel">Editar datos del hotel</h1>
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Editar información del hotel</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <form>
+                <!-- Fila: Logo y Nombre del Hotel -->
                 <div class="row mb-3 align-items-center">
                   <div class="col-md-3">
-                    <div class="row flex-column">
-                      <label class="form-label" for="imagenes_hotel"><strong>Logo</strong></label>
-                      <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image" />
-                    </div>
-                    <div>
-                      <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
-                      <input class="form-control mt-2" type="file" @change="cambiarLogo" accept="image/*"
-                        id="imagen_hotel" name="imagen_hotel" />
-                    </div>
-                  </div>
-                  <div class="col-md-9">
-                    <label class="form-label" for="imagenes_hotel"><strong>Nombre Hotel</strong></label>
-
+                    <label class="form-label"><strong>Logo</strong></label>
                     <div class="d-flex align-items-center">
-                      <!-- Mostrar nombre del hotel como texto cuando no se está editando -->
-                      <h2 v-if="!editMode" class="mb-0">{{ dataHotel.nombre }}</h2>
-
-                      <!-- Mostrar campo de entrada cuando se está editando -->
-                      <input v-else class="form-control me-2" type="text" id="nombre_hotel" name="nombre_hotel"
-                        v-model="dataHotel.nombre" @blur="editMode = false" required />
-
-                      <!-- Botón para activar el modo de edición -->
-                      <button @click="editMode = true" type="button" class="btn btn-link ms-2 p-0">
+                      <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
+                      <div v-else>
+                        <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image" />
+                        <p v-if="!dataHotel.logo">Por favor suba un logo...</p>
+                        <button v-if="editMode.logo && dataHotel.logo" type="button"
+                          class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarLogo">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                        <input v-if="editMode.logo" class="form-control mt-2" type="file" @change="cambiarLogo"
+                          accept="image/*" />
+                      </div>
+                      <button @click="editMode.logo = !editMode.logo" type="button" class="btn btn-link ms-2 p-0">
                         <i class="bi bi-pencil"></i>
                       </button>
                     </div>
                   </div>
-
-                </div>
-
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label" for="imagen_hotel"><strong>Imagen Principal</strong></label>
-                      <div class="image-container">
-                        <img v-if="dataHotel.imagen" :src="dataHotel.imagen" alt="" class="fixed-size-image">
-                        <div v-if="uploadingPrincipal" class="loading-spinner">Cargando...</div>
-                      </div>
-                      <input class="form-control mt-2" type="file" @change="cambiarFoto" accept="image/*"
-                        id="imagen_hotel" name="imagen_hotel" />
+                  <div class="col-md-9">
+                    <label class="form-label"><strong>Nombre Hotel</strong></label>
+                    <div class="d-flex align-items-center">
+                      <h2 v-if="!editMode.nombre" class="mb-0">{{ dataHotel.nombre }}</h2>
+                      <input v-else class="form-control me-2" type="text" id="nombre_hotel" name="nombre_hotel"
+                        v-model="dataHotel.nombre" @blur="editMode.nombre = false" required />
+                      <button @click="editMode.nombre = true" type="button" class="btn btn-link ms-2 p-0">
+                        <i class="bi bi-pencil"></i>
+                      </button>
                     </div>
                   </div>
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label" for="imagenes_hotel"><strong>Fotos del Hotel</strong></label>
-                      <div class="photos-container">
-                        <!-- Mostrar el spinner solo cuando se están cargando las fotos -->
-                        <div v-if="uploadingFotos" class="loading-spinner">
-                          <p>Cargando fotos...</p>
-                        </div>
-                        <!-- Mostrar las fotos solo cuando no se está cargando -->
-                        <div v-else>
-                          <div v-for="(foto, index) in dataHotel.fotos" :key="index" class="photo-container">
-                            <img v-if="!foto.eliminada" :src="foto.url" alt="" class="fixed-size-image">
-                            <div class="text-center">
-                              <button v-if="!foto.eliminada" class="btn btn-danger btn-sm mt-2 photo-delete-btn"
-                                @click="marcarComoEliminada(index)">
-                                <i class="bi bi-trash"></i>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <input class="form-control mt-2" type="file" multiple @change="subirFotosHotel" accept="image/*"
-                        id="imagenes_hotel" name="imagenes_hotel" />
-                    </div>
-                  </div>
-
                 </div>
 
+                <!-- Imagen Principal -->
+                <div class="mb-3">
+                  <label class="form-label"><strong>Imagen Principal</strong></label>
+                  <div class="d-flex align-items-center">
+                    <div v-if="uploadingPrincipal" class="loading-spinner">Cargando...</div>
+                    <div v-else>
+                      <img v-if="dataHotel.imagen" :src="dataHotel.imagen" alt="" class="fixed-size-image" />
+                      <p v-if="!dataHotel.imagen">Por favor suba una imagen principal...</p>
+                      <button v-if="editMode.imagen && dataHotel.imagen" type="button"
+                        class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarImagenPrincipal">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                      <input v-if="editMode.imagen" class="form-control mt-2" type="file" @change="cambiarFoto"
+                        accept="image/*" />
+                    </div>
+                    <button @click="editMode.imagen = !editMode.imagen" type="button" class="btn btn-link ms-2 p-0">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Fotos del Hotel -->
+                <div class="mb-3">
+                  <label class="form-label"><strong>Fotos del Hotel</strong></label>
+                  <div class="d-flex align-items-center">
+                    <div v-if="uploadingFotos" class="loading-spinner">Cargando fotos...</div>
+                    <div v-else>
+                      <div v-for="(foto, index) in dataHotel.fotos" :key="index" class="photo-container">
+                        <img v-if="!foto.eliminada" :src="foto.url" alt="" class="fixed-size-image">
+                        <button v-if="!foto.eliminada && editMode.fotos" type="button"
+                          class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="marcarComoEliminada(index)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                      <input v-if="editMode.fotos" class="form-control mt-2" type="file" multiple
+                        @change="subirFotosHotel" accept="image/*" />
+                    </div>
+                    <button @click="editMode.fotos = !editMode.fotos" type="button" class="btn btn-link ms-2 p-0">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Descripción del Hotel -->
                 <div class="mb-3">
                   <label class="form-label" for="descripcion_hotel"><strong>Descripción *</strong></label>
-                  <textarea class="form-control" id="descripcion_hotel" name="descripcion_hotel"
-                    v-model="dataHotel.descripcion" required=""></textarea>
+                  <div class="d-flex align-items-center">
+                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion }}</p>
+                    <textarea v-else class="form-control me-2" id="descripcion_hotel" name="descripcion_hotel"
+                      v-model="dataHotel.descripcion" @blur="editMode.descripcion = false" required></textarea>
+                    <button @click="editMode.descripcion = true" type="button" class="btn btn-link ms-2 p-0">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
                 </div>
 
+                <!-- Dirección del Hotel -->
                 <div class="mb-3">
                   <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label>
-                  <input class="form-control" type="text" id="direccion_hotel" name="direccion_hotel"
-                    v-model="dataHotel.direccion" required="">
+                  <div class="d-flex align-items-center">
+                    <p v-if="!editMode.direccion" class="mb-0">{{ dataHotel.direccion }}</p>
+                    <input v-else class="form-control me-2" type="text" id="direccion_hotel" name="direccion_hotel"
+                      v-model="dataHotel.direccion" @blur="editMode.direccion = false" required />
+                    <button @click="editMode.direccion = true" type="button" class="btn btn-link ms-2 p-0">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
                 </div>
 
+                <!-- Correo del Hotel -->
                 <div class="mb-3">
                   <label class="form-label" for="correo_hotel"><strong>Correo *</strong></label>
-                  <input class="form-control" type="email" id="correo_hotel" name="correo_hotel"
-                    v-model="dataHotel.correo" required="" />
+                  <div class="d-flex align-items-center">
+                    <p v-if="!editMode.correo" class="mb-0">{{ dataHotel.correo }}</p>
+                    <input v-else class="form-control me-2" type="email" id="correo_hotel" name="correo_hotel"
+                      v-model="dataHotel.correo" @blur="editMode.correo = false" required />
+                    <button @click="editMode.correo = true" type="button" class="btn btn-link ms-2 p-0">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
                 </div>
 
+                <!-- Teléfono del Hotel -->
                 <div class="mb-3">
                   <label class="form-label" for="telefono_hotel"><strong>Teléfono *</strong></label>
-                  <input class="form-control" type="text" id="telefono_hotel" name="telefono_hotel"
-                    v-model="dataHotel.telefono" required="" />
+                  <div class="d-flex align-items-center">
+                    <p v-if="!editMode.telefono" class="mb-0">{{ dataHotel.telefono }}</p>
+                    <input v-else class="form-control me-2" type="text" id="telefono_hotel" name="telefono_hotel"
+                      v-model="dataHotel.telefono" @blur="editMode.telefono = false" required />
+                    <button @click="editMode.telefono = true" type="button" class="btn btn-link ms-2 p-0">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
                 </div>
 
                 <div v-if="validacion" class="alert alert-danger mt-3" role="alert">
@@ -340,6 +397,7 @@ onMounted(() => {
                 </div>
               </form>
             </div>
+
             <div class="modal-footer">
               <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cerrar</button>
               <button type="button" class="btn btn-dark" @click="guardarCambios">Guardar</button>
@@ -347,8 +405,6 @@ onMounted(() => {
           </div>
         </div>
       </div>
-
-
     </div>
   </div>
 </template>
@@ -366,13 +422,7 @@ onMounted(() => {
   /* Ajusta el tamaño máximo del logo */
 }
 
-.fixed-size-image {
-  width: 100px;
-  height: 100px;
-  /* Tamaño fijo para las imágenes */
-  object-fit: cover;
-  border-radius: 10px;
-}
+
 
 .image-container,
 .photos-container {
@@ -396,13 +446,7 @@ onMounted(() => {
 
 
 
-@media (max-width: 768px) {
-  .photo-delete-btn {
-    position: static;
-    margin-top: 5px;
-    display: block;
-  }
-}
+
 
 .logo:hover {
   position: relative;
@@ -452,11 +496,6 @@ onMounted(() => {
   margin-top: 20%;
 }
 
-.btn-container {
-  display: flex;
-  justify-content: center;
-}
-
 .loading-spinner {
   display: inline-block;
   width: 20px;
@@ -478,6 +517,7 @@ onMounted(() => {
 .btn-container {
   display: flex;
   justify-content: center;
+  gap: 7px;
 }
 
 .loading-spinner {
@@ -543,10 +583,6 @@ onMounted(() => {
   transition: background-color 0.3s ease;
 }
 
-.material-icons {
-  font-size: 20px;
-  /* Tamaño del icono */
-}
 
 .galeria {
   padding: 16px;
@@ -566,19 +602,33 @@ h5 {
   transition: 1s;
 }
 
-@media screen and (max-width: 500px) {
-  .Hoteles {
-    background-color: #b7642d;
-    align-items: left;
-    border-radius: 10px;
-  }
+.vmenu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.descripVmenu {
+  padding: 1rem;
+  word-wrap: break-word;
+  height: fit-content;
+  max-height: 250px;
+  max-width: 250px;
 }
 
 /* Estilos para la tabla */
 .table {
-  border-collapse: collapse;
-  /* Para eliminar los espacios entre las celdas */
   width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Ajusta el estilo solo para los elementos vmenu dentro de las celdas de la tabla */
+.table td .vmenu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 th,
@@ -589,7 +639,6 @@ td {
 
 th {
   background-color: #f2f2f2;
-  /* Color de fondo para las celdas del encabezado */
 }
 
 /* Botones de acción dentro de la tabla */
@@ -625,21 +674,43 @@ th {
 }
 
 .btn-link i {
-  font-size: 1.5rem; /* Tamaño del icono */
-  color: #b7642d; /* Color del icono */
+  font-size: 1.5rem;
+  /* Tamaño del icono */
+  color: #b7642d;
+  /* Color del icono */
 }
 
 .btn-link {
   text-decoration: none;
   padding: 0;
-  margin-left: 8px; /* Espacio entre el texto y el lápiz */
+  margin-left: 8px;
+  /* Espacio entre el texto y el lápiz */
 }
 
-.btn-link:hover  {
-  background-color: #000000; /* Cambia el color del icono al pasar el mouse */
+.btn-link:hover {
+  background-color: #000000;
+  /* Cambia el color del icono al pasar el mouse */
 }
 
 .btn-link:hover i {
-  color: #ffffff; /* Cambia el color del icono al pasar el mouse */
+  color: #ffffff;
+  /* Cambia el color del icono al pasar el mouse */
 }
-</style>
+
+
+/* Media query */
+@media (max-width: 768px) {
+  .photo-delete-btn {
+    position: static;
+    margin-top: 5px;
+    display: block;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .Hoteles {
+    background-color: #b7642d;
+    align-items: left;
+    border-radius: 10px;
+  }
+}</style>

@@ -223,17 +223,20 @@ form button:hover {
 }
 
 .servicios li {
-  width: 50%;
+  width: 50%; 
   margin-bottom: 10px;
+  display: flex; 
+  align-items: center; 
+}
+
+.servicios li i {
+  margin-right: 8px; 
 }
 
 hr {
   border: none;
-  /* Quita el borde predeterminado */
   background-color: #b7642d;
-  /* Cambia el color de fondo a azul (puedes usar cualquier color que desees) */
   height: 2px;
-  /* Define el grosor de la línea horizontal */
 }
 
 .galeria {
