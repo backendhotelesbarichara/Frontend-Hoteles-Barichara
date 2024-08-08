@@ -1,9 +1,43 @@
 <script setup>
-import { RouterLink } from "vue-router";
+import { ref, computed } from 'vue'
+import { useStoreUsuarios } from './stores/usuario.js'
+import { useRouter } from 'vue-router';
 
-defineProps({
-  msg: String,
-});
+const router = useRouter();
+const useUsuario = useStoreUsuarios();
+
+const isAuthenticated = computed(() => !!useUsuario.token)
+
+const logout = () => {
+    useUsuario.token = '';
+    router.push('/');
+}
+
+function irInicio() {
+    router.push('/')
+}
+
+function irHoteles() {
+    router.push('/#hoteles')
+}
+
+function irSitiosTur() {
+    router.push('/#sitiosTuristicos')
+}
+
+function irGestionHotelera() {
+    router.push('/PanelDueno')
+}
+
+function irAdministracion() {
+    router.push('/PanelAdmin')
+}
+
+function login() {
+    router.push('/login')
+}
+
+
 
 </script>
 
@@ -26,70 +60,93 @@ defineProps({
             </button>
             <div class="collapse navbar-collapse" id="navcol-1">
                 <ul class="navbar-nav me-auto">
-                    <router-link class="link" to="/">
-                        <li class="nav-item">
-                            <a class="nav-link"><i style="color: black" class="bi bi-house-fill"></i> Inicio</a>
-                        </li>
-                    </router-link>
+                    <li class="nav-item dropdown" @click="irInicio">
+                        <a class="nav-link"><i style="color: black" class="bi bi-house-fill"></i> Inicio</a>
+                    </li>
+
 
                     <!-- Icono carrito -->
                     <!-- <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#carrito">
-                            <i style="color: black" class="bi bi-cart4"></i> Carrito
-                        </a>
-                    </li> -->
+                                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#carrito">
+                                                <i style="color: black" class="bi bi-cart4"></i> Carrito
+                                            </a>
+                                        </li> -->
 
                     <!--  gestion hotel -->
+
                     <div style="margin-bottom: 15px" class="dropdown">
-                        <router-link class="link" to="/PanelDueno">
-                            <li style="margin-left: 10px" class="nav-item">
-                                <a class="nav-link"><i style="color: black" class="bi bi-house-gear-fill"></i>
-                                    Gestion Hotelera</a>
-                            </li>
-                        </router-link>
+                        <li style="margin-left: 10px;" class="nav-item" @click="irHoteles">
+                            <a class="nav-link"><i style="color: black" class="bi bi-building"></i>
+                                Hoteles</a>
+                        </li>
                     </div>
+
+                    <div style="margin-bottom: 15px" class="dropdown">
+                        <li style="margin-left: 10px" class="nav-item" @click="irSitiosTur">
+                            <a class="nav-link"><i style="color: black" class="bi bi-compass"></i>
+                                Sitios Turisticos</a>
+                        </li>
+                    </div>
+
+
+                    <div v-if="isAuthenticated" style="margin-bottom: 15px" class="dropdown">
+                        <li style="margin-left: 10px" class="nav-item" @click="irGestionHotelera">
+                        <a class="nav-link"><i style="color: black" class="bi bi-house-gear-fill"></i>
+                            Gestion Hotelera</a>
+                    </li>
+                </div>
 
                     <!-- administrador -->
 
-                    <div style="margin-bottom: 15px" class="dropdown">
-                        <router-link class="link" to="/PanelAdmin">
-                            <li style="margin-left: 10px" class="nav-item">
-                                <a class="nav-link"><i style="color: black" class="bi bi-gem"></i>
-                                    Administracion</a>
-                            </li>
-                        </router-link>
-                        <ul style="font-size: 12px" class="dropdown-menu">
+                    <div v-if="isAuthenticated" style="margin-bottom: 15px" class="dropdown">
+                        <li style="margin-left: 10px" class="nav-item" @click="irAdministracion">
+                            <a class="nav-link"><i style="color: black" class="bi bi-gem"></i>
+                                Administracion</a>
+                    </li>
+                    <ul style="font-size: 12px" class="dropdown-menu">
 
 
 
 
-                        </ul>
+                    </ul>
                 </div>
             </ul>
 
-            <router-link class="link" to="/Login">
-                <button style="
-                  margin-right: 10px;
-                  border-radius: 50px;
-                  background-color: #b7642d;
-                  border-style: none;
-                " class="btn btn-primary">
-                        <i class="bi bi-box-arrow-in-right"></i>
-                        Entrar
-                    </button>
-                </router-link>
-
-                <!-- <router-link class="link" to="/Registro">
-              <button style="border-radius: 50px" class="btn btn-dark">
-                <i class="bi bi-person-plus-fill"></i>
-                Registro
-              </button>
-            </router-link> -->
+            <div v-if="isAuthenticated" class="link ">
+                <button @click="logout" style="
+                      margin-right: 10px;
+                      border-radius: 50px;
+                      border-style: none;
+                    " class="btn btn-danger">
+                    <i class="bi bi-box-arrow-left"></i> <!-- Icon for logout -->
+                    Cerrar sesión
+                </button>
             </div>
-        </div>
 
-        <!-- Modal que hace de carrito de compras -->
-        <div class="modal fade modal-small" id="carrito" tabindex="-1">
+            <div v-if="!isAuthenticated" class="link">
+                <button style="
+                      margin-right: 10px;
+                      border-radius: 50px;
+                      background-color: #b7642d;
+                      border-style: none;
+                    " class="btn btn-primary" @click="login">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Entrar
+                </button>
+            </div>
+
+            <!-- <router-link class="link" to="/Registro">
+                      <button style="border-radius: 50px" class="btn btn-dark">
+                        <i class="bi bi-person-plus-fill"></i>
+                        Registro
+                      </button>
+                    </router-link> -->
+        </div>
+    </div>
+
+
+    <!-- Modal que hace de carrito de compras -->
+    <!-- <div class="modal fade modal-small" id="carrito" tabindex="-1">
             <div class="modal-dialog modal-lg modal-right">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -99,11 +156,11 @@ defineProps({
                     <div class="modal-body">
                         <ul id="carrito-lista" class="list-group">
                             <div style="
-                      background-color: #b7642d14;
-                      padding: 10px 10px 1px;
-                      border-radius: 5px;
-                    " id="habitaciones" class="mb-3">
-                                <!-- Habitación 1 -->
+                              background-color: #b7642d14;
+                              padding: 10px 10px 1px;
+                              border-radius: 5px;
+                            " id="habitaciones" class="mb-3">
+                             Habitación 1
                                 <div style="margin-bottom: 10px" class="d-flex justify-content-between align-items-center">
                                     <router-link class="link" to="">
                                         <p class="mb-0 limit-text">Habitación 1</p>
@@ -111,51 +168,51 @@ defineProps({
                                     <span class="badge custom-badge badge-pill"
                                         style="background-color: #343a40; color: white">$50.000</span>
                                     <button style="background: #b7642d; border-style: none" class="btn btn-danger btn-sm">
-                                        Eliminar
-                                    </button>
-                                </div>
+                                                    Eliminar
+                                                </button>
+                                            </div>
 
-                                <!-- Habitación 2 -->
-                                <div style="margin-bottom: 10px" class="d-flex justify-content-between align-items-center">
-                                    <p class="mb-0 limit-text">Habitación 2</p>
-                                    <span class="badge custom-badge badge-pill"
-                                        style="background-color: #343a40; color: white">$50.000</span>
-                                    <button style="background: #b7642d; border-style: none" class="btn btn-danger btn-sm">
-                                        Eliminar
+                                             Habitación 2 
+                                            <div style="margin-bottom: 10px" class="d-flex justify-content-between align-items-center">
+                                                <p class="mb-0 limit-text">Habitación 2</p>
+                                                <span class="badge custom-badge badge-pill"
+                                                    style="background-color: #343a40; color: white">$50.000</span>
+                                                <button style="background: #b7642d; border-style: none" class="btn btn-danger btn-sm">
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </ul>
+                                    <div class="text-center" style="display: flex; flex-direction: row; justify-content: center">
+                                        <p id="precioTotalModal" style="
+                                          font-size: 12px;
+                                          font-weight: bold;
+                                          background-color: #b7642d14;
+                                          color: rgb(0, 0, 0);
+                                          border-radius: 5px;
+                                          max-width: 140px;
+                                          margin-bottom: 1px;
+                                        ">
+                                            Total: $100.000
+                                        </p>
+                                    </div>
+
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" style="background-color: #343a40; border-style: none" class="btn btn-danger"
+                                        id="vaciarCarrito">
+                                        Vaciar Carrito
+                                    </button>
+
+                                    <button type="button" style="background-color: #b7642d; border-style: none"
+                                        class="btn btn-secondary" id="pagarReservas">
+                                        Reservar
                                     </button>
                                 </div>
                             </div>
-                        </ul>
-                        <div class="text-center" style="display: flex; flex-direction: row; justify-content: center">
-                            <p id="precioTotalModal" style="
-                      font-size: 12px;
-                      font-weight: bold;
-                      background-color: #b7642d14;
-                      color: rgb(0, 0, 0);
-                      border-radius: 5px;
-                      max-width: 140px;
-                      margin-bottom: 1px;
-                    " >
-                                Total: $100.000
-                            </p>
                         </div>
-
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" style="background-color: #343a40; border-style: none" class="btn btn-danger"
-                            id="vaciarCarrito">
-                            Vaciar Carrito
-                        </button>
-
-                        <button type="button" style="background-color: #b7642d; border-style: none"
-                            class="btn btn-secondary" id="pagarReservas">
-                            Reservar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </div> -->
         <!-- Modal que hace de carrito de compras -->
     </nav>
     <!-- End: Navbar With Button -->
@@ -247,6 +304,10 @@ defineProps({
     border-radius: 50%;
 }
 
+.dropdown {
+    cursor: pointer;
+}
+
 hr {
     border: none;
     /* Quita el borde predeterminado */
@@ -254,4 +315,5 @@ hr {
     /* Cambia el color de fondo a azul (puedes usar cualquier color que desees) */
     height: 2px;
     /* Define el grosor de la línea horizontal */
-}</style>
+}
+</style>

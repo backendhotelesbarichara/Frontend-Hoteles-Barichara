@@ -24,6 +24,7 @@ const loading = ref(true);
 const uploadingPrincipal = ref(false); // Estado de carga para imagen principal
 const uploadingFotos = ref(false); // Estado de carga para fotos
 const uploadingLogo = ref(false);
+const editMode = ref(false);
 const dataHotel = ref({ ...useHotel.editarHotelSelec });
 
 async function getHoteles() {
@@ -90,7 +91,7 @@ const cambiarLogo = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  uploadingLogo.value = true; 
+  uploadingLogo.value = true;
 
   try {
     const imageUrl = await useHotel.subirLogo(dataHotel.value._id, file);
@@ -98,7 +99,7 @@ const cambiarLogo = async (event) => {
   } catch (error) {
     console.error("Error al cambiar el logo:", error);
   } finally {
-    uploadingLogo.value = false; 
+    uploadingLogo.value = false;
   }
 };
 
@@ -115,7 +116,7 @@ const cambiarFoto = async (event) => {
   } catch (error) {
     console.error("Error al cambiar la foto:", error);
   } finally {
-    uploadingPrincipal.value = false; 
+    uploadingPrincipal.value = false;
   }
 };
 
@@ -123,7 +124,7 @@ async function subirFotosHotel(event) {
   const files = event.target.files;
   if (files.length === 0) return;
 
-  uploadingFotos.value = true; 
+  uploadingFotos.value = true;
   const fotosAntesDeSubir = [...dataHotel.value.fotos];
 
   try {
@@ -138,7 +139,7 @@ async function subirFotosHotel(event) {
   } catch (error) {
     console.error("Error al subir las fotos:", error);
   } finally {
-    uploadingFotos.value = false; 
+    uploadingFotos.value = false;
   }
 }
 
@@ -239,17 +240,36 @@ onMounted(() => {
               <form>
                 <div class="row mb-3 align-items-center">
                   <div class="col-md-3">
-                    <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image"/>
+                    <div class="row flex-column">
+                      <label class="form-label" for="imagenes_hotel"><strong>Logo</strong></label>
+                      <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image" />
+                    </div>
                     <div>
                       <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
                       <input class="form-control mt-2" type="file" @change="cambiarLogo" accept="image/*"
-                      id="imagen_hotel" name="imagen_hotel" />
+                        id="imagen_hotel" name="imagen_hotel" />
                     </div>
                   </div>
                   <div class="col-md-9">
-                    <h2>{{ dataHotel.nombre }}</h2>
+                    <label class="form-label" for="imagenes_hotel"><strong>Nombre Hotel</strong></label>
+
+                    <div class="d-flex align-items-center">
+                      <!-- Mostrar nombre del hotel como texto cuando no se está editando -->
+                      <h2 v-if="!editMode" class="mb-0">{{ dataHotel.nombre }}</h2>
+
+                      <!-- Mostrar campo de entrada cuando se está editando -->
+                      <input v-else class="form-control me-2" type="text" id="nombre_hotel" name="nombre_hotel"
+                        v-model="dataHotel.nombre" @blur="editMode = false" required />
+
+                      <!-- Botón para activar el modo de edición -->
+                      <button @click="editMode = true" type="button" class="btn btn-link ms-2 p-0">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                    </div>
                   </div>
+
                 </div>
+
 
                 <div class="row mb-3">
                   <div class="col-md-6">
@@ -299,8 +319,8 @@ onMounted(() => {
 
                 <div class="mb-3">
                   <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label>
-                  <textarea class="form-control" id="direccion_hotel" name="direccion_hotel" v-model="dataHotel.direccion"
-                    required=""></textarea>
+                  <input class="form-control" type="text" id="direccion_hotel" name="direccion_hotel"
+                    v-model="dataHotel.direccion" required="">
                 </div>
 
                 <div class="mb-3">
@@ -602,5 +622,24 @@ th {
 .table-responsive::-webkit-scrollbar-thumb {
   background-color: #b7642d;
   border-radius: 20px;
+}
+
+.btn-link i {
+  font-size: 1.5rem; /* Tamaño del icono */
+  color: #b7642d; /* Color del icono */
+}
+
+.btn-link {
+  text-decoration: none;
+  padding: 0;
+  margin-left: 8px; /* Espacio entre el texto y el lápiz */
+}
+
+.btn-link:hover  {
+  background-color: #000000; /* Cambia el color del icono al pasar el mouse */
+}
+
+.btn-link:hover i {
+  color: #ffffff; /* Cambia el color del icono al pasar el mouse */
 }
 </style>

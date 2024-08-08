@@ -40,7 +40,7 @@ onMounted(() => {
 
 <template>
     <!-- Start: Slider Carousel with side text -->
-    <div id="carousel" class="carousel slide" data-bs-interval="2800" data-bs-ride="carousel">
+    <div id="carousel" class="carousel slide" data-bs-interval="2500" data-bs-ride="carousel" >
         <!-- Start: Slides -->
         <div class="carousel-inner">
             <div class="carousel-item active">
@@ -125,7 +125,7 @@ onMounted(() => {
             </div>
         </div>
 
-        <div class="Hoteles">
+        <div class="Hoteles" id="hoteles">
             <h5>Hoteles</h5>
         </div>
         <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(-100, 'hotel')">
@@ -154,7 +154,7 @@ onMounted(() => {
         <br />
 
         <div class="Sitios">
-            <h5>Sitios Turísticos</h5>
+            <h5 id="sitiosTuristicos">Sitios Turísticos</h5>
         </div>
 
         <button type="button" class="btn btn-custom btn-sm scroll-button" @click="scrollImages(-100, 'sitios')">
@@ -178,6 +178,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
 .btncafe {
     margin-right: 10px;
     border-radius: 50px;

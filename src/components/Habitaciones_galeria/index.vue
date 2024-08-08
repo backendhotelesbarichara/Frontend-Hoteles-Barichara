@@ -65,17 +65,17 @@ const iconosServicios = {
   'cocina': 'bi bi-egg-fried',
   'baño': 'bi bi-droplet',
   'ducha': 'bi bi-droplet',
-  'jacuzzi': 'bi bi-droplet-half', 
+  'jacuzzi': 'bi bi-droplet-half',
   'aire acondicionado': 'bi bi-snow',
   'calefacción': 'bi bi-thermometer',
   'servicio de habitación': 'bi bi-bell',
   'minibar': 'bi bi-cocktail',
   'caja fuerte': 'bi bi-safe',
-  'escritorio': 'bi bi-laptop', 
+  'escritorio': 'bi bi-laptop',
   'silla de ruedas': 'bi bi-wheelchair',
   'acceso a internet': 'bi bi-globe',
   'teléfono': 'bi bi-phone',
-  'radio': 'bi bi-broadcast', 
+  'radio': 'bi bi-broadcast',
   'alarma de incendios': 'bi bi-alarm',
   'xbox': 'bi bi-controller',
   'dvd': 'bi bi-disc',
@@ -127,7 +127,13 @@ onMounted(() => {
           data-bs-toggle="modal" data-bs-target="#modalImagen">
       </div>
     </div>
-    <h2 class="text-center mt-4 mb-4 text-uppercase" id="h2">{{ hotelInfo.nombre }}</h2>
+    <!-- HTML -->
+    <div class="logo-title-container">
+      <img :src="hotelInfo.logo" alt="Logo del hotel" class="logo">
+      <h2 class="title">{{ hotelInfo.nombre }}</h2>
+    </div>
+
+
     <p class="text-center text-muted mb-4">{{ hotelInfo.descripcion }}</p>
 
     <div class="row text-center mt-3">
@@ -189,8 +195,9 @@ onMounted(() => {
                     <h5 class="card-subtitle mb-2 text-muted">{{ habitacion.descripcion }}</h5>
                     <div class="servicios " style="margin-left: 20px">
                       <ul>
-                        <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)" :key="servicio" >
-                          <i  :class="getIconClass(servicio)"></i> {{ servicio }}
+                        <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)"
+                          :key="servicio">
+                          <i :class="getIconClass(servicio)"></i> {{ servicio }}
                         </li>
                       </ul>
                     </div>
@@ -200,7 +207,8 @@ onMounted(() => {
                       <p class="card-text">
                         <i class="bi bi-person-fill"></i> x{{ habitacion.cantidad_personas }}
                       </p>
-                      <p class="card-text"> <span class="fw-bold" style="  color: #b7642d;">$</span> {{ habitacion.precio_noche }}</p>
+                      <p class="card-text"> <span class="fw-bold" style="  color: #b7642d;">$</span> {{
+                        habitacion.precio_noche }}</p>
                     </div>
                     <button class="btn text-light" style="background-color: #b7642d"
                       @click="irDetalleHabitacion(habitacion)">
@@ -241,6 +249,28 @@ onMounted(() => {
 
 
 <style scoped>
+
+/* CSS */
+.logo-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px; 
+  text-align: center;
+  padding: 30px;
+}
+
+.logo {
+  max-width: auto; 
+  max-height: 150px;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  color: #b7642d;
+}
+
 .pagination-container {
   display: flex;
   align-items: center;
