@@ -215,6 +215,8 @@ function login() {
                     </div> -->
         <!-- Modal que hace de carrito de compras -->
     </nav>
+
+   
     <!-- End: Navbar With Button -->
     <router-view></router-view>
 </template>

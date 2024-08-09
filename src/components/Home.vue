@@ -1,3 +1,4 @@
+<!-- Elaborado por Tecnoparque Nodo Socorro -->
 <script setup>
 import { ref, onMounted } from 'vue';
 import { hoteles, Sturisticos } from './../components/BD/bd';
@@ -27,6 +28,8 @@ async function getHoteles() {
     }
 }
 
+    
+
 function irInfoHotel(hotel) {
     useHotel.HotelHome = hotel._id
     console.log("hola idhotel", hotel)
@@ -39,6 +42,7 @@ onMounted(() => {
 </script>
 
 <template>
+    <!--  -->
     <!-- Start: Slider Carousel with side text -->
     <div id="carousel" class="carousel slide" data-bs-interval="2500" data-bs-ride="carousel" >
         <!-- Start: Slides -->

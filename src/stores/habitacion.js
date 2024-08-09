@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { defineStore } from "pinia";
 
 const modelo = "habitacion";
@@ -8,6 +8,11 @@ const validacion = ref("");
 const nuevaHabitacion = ref("");
 const idHabitacion = ref("");
 const habitacionSelecionada = ref("");
+const fechaIngreso = ref();
+
+watch(fechaIngreso, (value) => {
+  console.log("new fecha", value)
+})
 
 export const useStoreHabitacion = defineStore(
   modelo,
@@ -114,6 +119,7 @@ export const useStoreHabitacion = defineStore(
       nuevaHabitacion,
       idHabitacion,
       habitacionSelecionada,
+      fechaIngreso,
     };
   },
   {

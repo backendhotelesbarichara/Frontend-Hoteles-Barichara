@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useStoreHotel } from '../../stores/hotel.js';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
 import { useRouter } from 'vue-router';
@@ -9,6 +9,8 @@ const useHotel = useStoreHotel();
 const useHabitacion = useStoreHabitacion();
 const hotelInfo = ref("");
 const habitacionInfo = ref([]);
+const fechaIngreso = ref();
+const fechaEgreso = ref();
 const imagenSeleccionada = ref("");
 const mostrarModal = ref(false);
 const cargando = ref(true);
@@ -59,6 +61,30 @@ function abrirModal(imagen) {
   mostrarModal.value = true;
 }
 
+const numeroDeNoches = computed(() => {
+  if (fechaIngreso.value && fechaEgreso.value) {
+    console.log(fechaIngreso);
+    useHabitacion.fechaIngreso = fechaIngreso.value;
+    const diffTime = Math.abs(new Date(fechaEgreso.value) - new Date(fechaIngreso.value));
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+  return 0;
+});
+
+function calcularPrecioTotal(habitacion, personas) {
+  const total = habitacion.precio_noche * numeroDeNoches.value * personas;
+  return formatCurrency(total);
+}
+
+
+const formatCurrency = (amount) => {
+  // Formatea el número usando locales para obtener el formato correcto sin el símbolo de dólar
+  const formattedAmount = amount.toLocaleString('es-CO');
+  return `COP ${formattedAmount}`;
+};
+
+
+
 const iconosServicios = {
   'televisor': 'bi bi-tv',
   'wi-fi': 'bi bi-wifi',
@@ -104,6 +130,14 @@ function prevPage() {
 }
 
 onMounted(() => {
+  const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowFormatted = tomorrow.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+  fechaIngreso.value = today;
+  fechaEgreso.value = tomorrowFormatted;
+
   getHotelSeleccionado();
   getHabitaciones();
 });
@@ -158,7 +192,7 @@ onMounted(() => {
             <div class="input-group">
               <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Fecha de
                 ingreso</span>
-              <input type="date" class="form-control" />
+              <input type="date" class="form-control" v-model="fechaIngreso" />
             </div>
           </div>
 
@@ -166,11 +200,11 @@ onMounted(() => {
             <div class="input-group">
               <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Fecha
                 del egreso</span>
-              <input type="date" class="form-control" />
+              <input type="date" class="form-control" v-model="fechaEgreso" />
             </div>
           </div>
 
-          <button class="btncafe ms-2">Buscar Habitaciones</button>
+          <!-- <button class="btncafe ms-2" @click="calcularPrecioTotal">Buscar Habitaciones</button> -->
         </div>
       </div>
 
@@ -189,34 +223,49 @@ onMounted(() => {
               <div class="card-body">
                 <h5 class="card-title text-uppercase">{{ habitacion.tipo_habitacion[0] }}</h5>
                 <p class="card-text">{{ habitacion.descripcion }}</p>
-                <div class="servicios " style="margin-left: 20px">
+                <div class="servicios" style="margin-left: 20px">
                   <ul>
-                    <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)"
-                      :key="servicio">
+                    <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)" :key="servicio">
                       <i :class="getIconClass(servicio)"></i> {{ servicio }}
                     </li>
                   </ul>
                 </div>
               </div>
-              <div class="card-footer d-flex justify-content-between">
-                <div class="d-flex gap-5">
-                  <p class="card-text">
-                    <i class="bi bi-person-fill"></i> x{{ habitacion.cantidad_personas }}
-                  </p>
-                  <p class="card-text"> <span class="fw-bold" style="  color: #b7642d;">$</span> {{
-                    habitacion.precio_noche }}</p>
+              <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="d-flex gap-5">
+                    <p class="card-text">
+                      <i class="bi bi-person-fill"></i> Máximo {{ habitacion.cantidad_personas }}
+                    </p>
+                    <p class="card-text">
+                      <span class="fw-bold" style="color: #b7642d;">$</span> {{ habitacion.precio_noche }} x noche
+                    </p>
+                  </div>
+                  <button class="btn btn-primary" @click="irDetalleHabitacion(habitacion)">Ver más...</button>
                 </div>
-                <button class="btn btn-primary" @click="irDetalleHabitacion(habitacion)">Ver más...</button>
+                <div class="price-breakdown mt-3">
+                  <h6>Tarifa por ocupación:</h6>
+                  <ul>
+                    <li v-for="personas in Array.from({ length: habitacion.cantidad_personas }, (_, i) => i + 1)"
+                      :key="personas" style="list-style: none;">
+                      <p>
+                        <i class="bi bi-person"></i> <span class="fw-bold" style="color: #b7642d"> x{{ personas }} {{
+                          calcularPrecioTotal(habitacion, personas) }} </span>
+                        Total para {{ numeroDeNoches }} noche(s)
+                      </p>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="d-flex justify-content-center mt-4 pagination-container">
-          <button class="btn btn-secondary me-2" @click="prevPage" :disabled="paginaActual === 1">Anterior</button>
-          <span class="pagination-info">{{ paginaActual }} / {{ totalPages }}</span>
-          <button class="btn btn-secondary ms-2" @click="nextPage"
-            :disabled="paginaActual === totalPages">Siguiente</button>
-        </div>
+      </div>
+      <div class="d-flex justify-content-center mt-4 pagination-container">
+        <button class="btn btn-secondary me-2" @click="prevPage" :disabled="paginaActual === 1">Anterior</button>
+        <span class="pagination-info">{{ paginaActual }} / {{ totalPages }}</span>
+        <button class="btn btn-secondary ms-2" @click="nextPage"
+          :disabled="paginaActual === totalPages">Siguiente</button>
       </div>
     </div>
 
@@ -239,7 +288,6 @@ onMounted(() => {
 
 
 <style scoped>
-
 .card {
   border: none;
   border-radius: 10px;
@@ -273,6 +321,7 @@ onMounted(() => {
   width: 50%;
   margin-bottom: 10px;
 }
+
 /* CSS */
 .logo-title-container {
   display: flex;
@@ -302,8 +351,8 @@ onMounted(() => {
 
 .btn {
   border: 1px solid #b7642d;
-  color: #b7642d;
-  background-color: #fff;
+  color: #fff;
+  background-color: #b7642d;
   font-size: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -311,8 +360,8 @@ onMounted(() => {
 }
 
 .btn:hover {
-  background-color: #b7642d;
-  color: #fff;
+  background-color: #fff;
+  color: #b7642d;
 }
 
 .btn:disabled {
