@@ -140,31 +140,16 @@ const getIconClass = (servicio) => {
     </div>
 
 
-    <!-- Modal --> 
-    <div
-      class="modal fade"
-      id="modalImagen"
-      tabindex="-1"
-      aria-labelledby="modalImagenLabel"
-      aria-hidden="true"
-    >
+    <!-- Modal -->
+    <div class="modal fade" id="modalImagen" tabindex="-1" aria-labelledby="modalImagenLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="modalImagenLabel">Imagen</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <img
-              :src="imagenSeleccionada"
-              alt="Imagen del hotel"
-              class="img-fluid"
-            />
+            <img :src="imagenSeleccionada" alt="Imagen del hotel" class="img-fluid" />
           </div>
         </div>
       </div>
@@ -223,14 +208,14 @@ form button:hover {
 }
 
 .servicios li {
-  width: 50%; 
+  width: 50%;
   margin-bottom: 10px;
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
 }
 
 .servicios li i {
-  margin-right: 8px; 
+  margin-right: 8px;
 }
 
 hr {

@@ -9,6 +9,7 @@ const nuevaHabitacion = ref("");
 const idHabitacion = ref("");
 const habitacionSelecionada = ref("");
 const fechaIngreso = ref();
+const habitacionesFiltradas = ref([]);
 
 watch(fechaIngreso, (value) => {
   console.log("new fecha", value)
@@ -48,6 +49,19 @@ export const useStoreHabitacion = defineStore(
       try {
         const response = await axios.get(`${modelo}/habitaciones/${idHotel}`);
         console.log(response);
+        estatus.value = response.status;
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+      }
+    };
+
+    const getHabitacionesPorCantPerson = async (filters) => {
+      try {
+        const response = await axios.get(`${modelo}/habitacionPersona`, {
+          params: filters,
+        });
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -109,6 +123,7 @@ export const useStoreHabitacion = defineStore(
       getAll,
       getHabitacionesPorPiso,
       getHabitacionesPorHotel,
+      getHabitacionesPorCantPerson,
       agregar,
       editar,
       activar,
@@ -118,6 +133,7 @@ export const useStoreHabitacion = defineStore(
       validacion,
       nuevaHabitacion,
       idHabitacion,
+      habitacionesFiltradas,
       habitacionSelecionada,
       fechaIngreso,
     };

@@ -11,6 +11,7 @@ const hotelSeleccionado = ref("");
 const editarHotelSelec = ref("");
 const HotelHome = ref("");
 
+
 export const useStoreHotel = defineStore(
   modelo,
   () => {

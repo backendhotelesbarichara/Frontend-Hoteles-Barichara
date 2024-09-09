@@ -17,17 +17,25 @@ const cargando = ref(true);
 const cargandoHabitaciones = ref(true);
 const paginaActual = ref(1);
 const numHabitacionPag = ref(5);
+const adults = ref(1);
+const children = ref(0);
+const totalPersona = ref();
+const dropdownVisible = ref(false);
 
 
 const totalPages = computed(() => {
-  return Math.ceil(habitacionInfo.value.length / numHabitacionPag.value);
+  if (useHabitacion.habitacionesFiltradas) {
+    return Math.ceil(useHabitacion.habitacionesFiltradas.length / numHabitacionPag.value);
+  }
 });
 
 
 const paginatedHabitaciones = computed(() => {
   const start = (paginaActual.value - 1) * numHabitacionPag.value;
   const end = start + numHabitacionPag.value;
-  return habitacionInfo.value.slice(start, end);
+  if (useHabitacion.habitacionesFiltradas) {
+    return useHabitacion.habitacionesFiltradas.slice(start, end);
+  }
 });
 
 async function getHotelSeleccionado() {
@@ -56,6 +64,24 @@ async function getHabitaciones() {
   }
 }
 
+const filtrarHabitacion = async () => {
+
+  const filters = {
+    idHotel: useHotel.HotelHome || null,
+    cantidad_personas: totalPersona.value || null,
+  };
+
+  try {
+    console.log("filtros nav ", filters);
+    const filteredHabitaciones = await useHabitacion.getHabitacionesPorCantPerson(filters);
+    useHabitacion.habitacionesFiltradas = filteredHabitaciones;
+    console.log('Habitaciones filtrados:', filteredHabitaciones);
+  } catch (error) {
+    console.error("Error al filtrar habitaciones:", error);
+  }
+}
+
+
 function abrirModal(imagen) {
   imagenSeleccionada.value = imagen;
   mostrarModal.value = true;
@@ -82,6 +108,30 @@ const formatCurrency = (amount) => {
   const formattedAmount = amount.toLocaleString('es-CO');
   return `COP ${formattedAmount}`;
 };
+
+const toggleDropdown = () => {
+  dropdownVisible.value = !dropdownVisible.value
+}
+
+const closeDropdown = () => {
+  dropdownVisible.value = false
+}
+
+const incrementAdults = () => {
+  adults.value++
+}
+
+const decrementAdults = () => {
+  if (adults.value > 1) adults.value--
+}
+
+const incrementChildren = () => {
+  children.value++
+}
+
+const decrementChildren = () => {
+  if (children.value > 0) children.value--
+}
 
 
 
@@ -112,10 +162,14 @@ const getIconClass = (servicio) => {
 };
 
 async function irDetalleHabitacion(habitacion) {
-  useHabitacion.habitacionSelecionada = habitacion
-  console.log(useHabitacion.habitacionSelecionada)
-  await router.push('/detallehabitaciones')
+  useHabitacion.habitacionSelecionada = habitacion;
+  console.log(useHabitacion.habitacionSelecionada);
+
+  // En lugar de router.push, abrimos una nueva pestaña
+  const url = router.resolve({ path: '/detallehabitaciones' }).href;
+  window.open(url, '_blank');
 }
+
 
 function nextPage() {
   if (paginaActual.value < totalPages.value) {
@@ -129,6 +183,15 @@ function prevPage() {
   }
 }
 
+const pluralize = (count, singular) => {
+  return count === 1 ? singular : `${singular}s`;
+};
+
+watch([adults, children], ([newAdults, newChildren]) => {
+  totalPersona.value = newAdults + newChildren;
+  filtrarHabitacion();
+});
+
 onMounted(() => {
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
   const tomorrow = new Date();
@@ -140,9 +203,9 @@ onMounted(() => {
 
   getHotelSeleccionado();
   getHabitaciones();
+  filtrarHabitacion();
 });
 </script>
-
 
 <template>
   <div v-if="cargando" class="d-flex justify-content-center flex-column align-items-center">
@@ -204,6 +267,56 @@ onMounted(() => {
             </div>
           </div>
 
+          <div class="form-group" style="display: inline-block;">
+            <div class="input-group">
+              <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">
+                Cantidad Personas
+              </span>
+              <!-- Botón que abre el dropdown -->
+              <div class="btn-group">
+                <button class="form-control" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  {{ adults }} {{ pluralize(adults, 'Adulto') }} · {{ children }} {{ pluralize(children, 'Niño') }}
+                </button>
+                <!-- Contenido del dropdown -->
+                <ul class="dropdown-menu p-3" style="min-width: 15rem;">
+                  <!-- Controles para adultos -->
+                  <li>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span>Adultos</span>
+                      <div>
+                        <!-- Se añade .stop para prevenir el cierre del dropdown al hacer clic -->
+                        <button class="btn btn-outline-secondary" @click.stop="decrementAdults">-</button>
+                        <span class="mx-2">{{ adults }}</span>
+                        <button class="btn btn-outline-secondary" @click.stop="incrementAdults">+</button>
+                      </div>
+                    </div>
+                  </li>
+                  <!-- Controles para niños -->
+                  <li>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span>Niños</span>
+                      <div>
+                        <button class="btn btn-outline-secondary" @click.stop="decrementChildren">-</button>
+                        <span class="mx-2">{{ children }}</span>
+                        <button class="btn btn-outline-secondary" @click.stop="incrementChildren">+</button>
+                      </div>
+                    </div>
+                  </li>
+                  <!-- Botón "Listo" -->
+                  <li>
+                    <div class="text-center">
+                      <!-- Aquí puedes permitir que el dropdown se cierre con un clic en el botón "Listo" -->
+                      <button class="btn btn-primary btn-block mt-2" @click="closeDropdown">Listo</button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+
+
+
           <!-- <button class="btncafe ms-2" @click="calcularPrecioTotal">Buscar Habitaciones</button> -->
         </div>
       </div>
@@ -225,7 +338,8 @@ onMounted(() => {
                 <p class="card-text">{{ habitacion.descripcion }}</p>
                 <div class="servicios" style="margin-left: 20px">
                   <ul>
-                    <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)" :key="servicio">
+                    <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)"
+                      :key="servicio">
                       <i :class="getIconClass(servicio)"></i> {{ servicio }}
                     </li>
                   </ul>
@@ -241,7 +355,6 @@ onMounted(() => {
                       <span class="fw-bold" style="color: #b7642d;">$</span> {{ habitacion.precio_noche }} x noche
                     </p>
                   </div>
-                  <button class="btn btn-primary" @click="irDetalleHabitacion(habitacion)">Ver más...</button>
                 </div>
                 <div class="price-breakdown mt-3">
                   <h6>Tarifa por ocupación:</h6>
@@ -255,6 +368,10 @@ onMounted(() => {
                       </p>
                     </li>
                   </ul>
+                </div>
+                <div style="display: flex; justify-content: end;">
+                  <button class="btn btn-primary row justify-content-end" @click="irDetalleHabitacion(habitacion)">Ver
+                    más...</button>
                 </div>
               </div>
             </div>
@@ -586,6 +703,16 @@ h3 {
   width: 50%;
   margin-bottom: 10px;
 }
+
+.dropdown-menu {
+  width: 100%;
+  max-width: 300px;
+}
+
+input.form-control {
+  cursor: pointer;
+}
+
 
 @media screen and (max-width: 2000px) {
   .contenedor-imagenes {

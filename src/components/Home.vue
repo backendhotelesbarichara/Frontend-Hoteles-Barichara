@@ -28,12 +28,15 @@ async function getHoteles() {
     }
 }
 
-    
+
 
 function irInfoHotel(hotel) {
     useHotel.HotelHome = hotel._id
     console.log("hola idhotel", hotel)
-    router.push('/GaleriaHabitaciones')
+    /* router.push('/GaleriaHabitaciones') */
+    // En lugar de router.push, abrimos una nueva pestaña
+    const url = router.resolve({ path: '/GaleriaHabitaciones' }).href;
+    window.open(url, '_blank');
 }
 
 onMounted(() => {
@@ -44,12 +47,13 @@ onMounted(() => {
 <template>
     <!--  -->
     <!-- Start: Slider Carousel with side text -->
-    <div id="carousel" class="carousel slide" data-bs-interval="2500" data-bs-ride="carousel" >
+    <div id="carousel" class="carousel slide" data-bs-interval="2500" data-bs-ride="carousel">
         <!-- Start: Slides -->
         <div class="carousel-inner">
             <div class="carousel-item active">
                 <img class="w-100 d-block" src="https://i.ibb.co/pjcNX5L/2.png" />
-                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 0px;width: 50%;height: 100%;">
+                <div class="carousel-caption d-flex"
+                    style="position: absolute;top: 0px;left: 0px;width: 50%;height: 100%;">
                     <div class="d-md-block position-absolute top-50 start-50 translate-middle">
                         <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
                             Histórico
@@ -59,7 +63,8 @@ onMounted(() => {
             </div>
             <div class="carousel-item">
                 <img class="w-100 d-block" src="https://i.ibb.co/NLb0D2Z/1.png" />
-                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 50%;width: 50%;height: 100%;">
+                <div class="carousel-caption d-flex"
+                    style="position: absolute;top: 0px;left: 50%;width: 50%;height: 100%;">
                     <div class="d-md-block position-absolute top-50 start-50 translate-middle">
                         <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
                             Pintoresco
@@ -69,7 +74,8 @@ onMounted(() => {
             </div>
             <div class="carousel-item">
                 <img class="w-100 d-block" src="https://i.ibb.co/KjjL7xM/3.png" />
-                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 0px;width: 50%;height: 100%;">
+                <div class="carousel-caption d-flex"
+                    style="position: absolute;top: 0px;left: 0px;width: 50%;height: 100%;">
                     <div class="d-md-block position-absolute top-50 start-50 translate-middle">
                         <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
                             Encantador
@@ -79,7 +85,8 @@ onMounted(() => {
             </div>
             <div class="carousel-item">
                 <img class="w-100 d-block" src="https://i.ibb.co/H2bzWzv/4.png" />
-                <div class="carousel-caption d-flex" style="position: absolute;top: 0px;left: 50%;width: 50%;height: 100%;">
+                <div class="carousel-caption d-flex"
+                    style="position: absolute;top: 0px;left: 50%;width: 50%;height: 100%;">
                     <div class="d-md-block position-absolute top-50 start-50 translate-middle">
                         <h1 style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);font-style: italic;">
                             Tranquilo
@@ -182,7 +189,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-
 .btncafe {
     margin-right: 10px;
     border-radius: 50px;
