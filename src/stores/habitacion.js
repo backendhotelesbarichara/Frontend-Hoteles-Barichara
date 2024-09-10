@@ -9,6 +9,7 @@ const nuevaHabitacion = ref("");
 const idHabitacion = ref("");
 const habitacionSelecionada = ref("");
 const fechaIngreso = ref();
+const fechaEgreso = ref();
 const habitacionesFiltradas = ref([]);
 
 watch(fechaIngreso, (value) => {
@@ -136,6 +137,7 @@ export const useStoreHabitacion = defineStore(
       habitacionesFiltradas,
       habitacionSelecionada,
       fechaIngreso,
+      fechaEgreso,
     };
   },
   {

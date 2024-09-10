@@ -20,23 +20,6 @@ const numHabitacionPag = ref(5);
 const adults = ref(1);
 const children = ref(0);
 const totalPersona = ref();
-const dropdownVisible = ref(false);
-
-
-const totalPages = computed(() => {
-  if (useHabitacion.habitacionesFiltradas) {
-    return Math.ceil(useHabitacion.habitacionesFiltradas.length / numHabitacionPag.value);
-  }
-});
-
-
-const paginatedHabitaciones = computed(() => {
-  const start = (paginaActual.value - 1) * numHabitacionPag.value;
-  const end = start + numHabitacionPag.value;
-  if (useHabitacion.habitacionesFiltradas) {
-    return useHabitacion.habitacionesFiltradas.slice(start, end);
-  }
-});
 
 async function getHotelSeleccionado() {
   try {
@@ -55,7 +38,6 @@ async function getHabitaciones() {
   try {
     const response = await useHabitacion.getHabitacionesPorHotel(useHotel.HotelHome);
     if (useHabitacion.estatus === 200) {
-      cargandoHabitaciones.value = false;
       habitacionInfo.value = response;
     }
     console.log(habitacionInfo);
@@ -78,19 +60,25 @@ const filtrarHabitacion = async () => {
     console.log('Habitaciones filtrados:', filteredHabitaciones);
   } catch (error) {
     console.error("Error al filtrar habitaciones:", error);
+  } finally {
+    cargandoHabitaciones.value = false;
   }
 }
 
+//Abrir imagen con modal
 
 function abrirModal(imagen) {
   imagenSeleccionada.value = imagen;
   mostrarModal.value = true;
 }
 
+//Calcular noches y formatear precio x noche
+
 const numeroDeNoches = computed(() => {
   if (fechaIngreso.value && fechaEgreso.value) {
     console.log(fechaIngreso);
     useHabitacion.fechaIngreso = fechaIngreso.value;
+
     const diffTime = Math.abs(new Date(fechaEgreso.value) - new Date(fechaIngreso.value));
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
@@ -109,31 +97,29 @@ const formatCurrency = (amount) => {
   return `COP ${formattedAmount}`;
 };
 
-const toggleDropdown = () => {
-  dropdownVisible.value = !dropdownVisible.value
-}
+//Filtrar habitaciones e incrementar/disminuir cantidad adultos y ninos
 
 const closeDropdown = () => {
-  dropdownVisible.value = false
-}
+  filtrarHabitacion();
+};
 
-const incrementAdults = () => {
+const incrementarAdultos = () => {
   adults.value++
-}
+};
 
-const decrementAdults = () => {
+const disminuirAdultos = () => {
   if (adults.value > 1) adults.value--
-}
+};
 
-const incrementChildren = () => {
+const aumentarNinos = () => {
   children.value++
-}
+};
 
-const decrementChildren = () => {
+const disminuirNinos = () => {
   if (children.value > 0) children.value--
-}
+};
 
-
+//Funcion para los iconos
 
 const iconosServicios = {
   'televisor': 'bi bi-tv',
@@ -161,6 +147,8 @@ const getIconClass = (servicio) => {
   return iconosServicios[servicio.toLowerCase()] || 'bi bi-info-circle';
 };
 
+//Función ir detalle habitacion
+
 async function irDetalleHabitacion(habitacion) {
   useHabitacion.habitacionSelecionada = habitacion;
   console.log(useHabitacion.habitacionSelecionada);
@@ -169,6 +157,22 @@ async function irDetalleHabitacion(habitacion) {
   const url = router.resolve({ path: '/detallehabitaciones' }).href;
   window.open(url, '_blank');
 }
+
+//Funciones paginacion habitaciones
+
+const totalPages = computed(() => {
+  if (useHabitacion.habitacionesFiltradas) {
+    return Math.ceil(useHabitacion.habitacionesFiltradas.length / numHabitacionPag.value);
+  }
+});
+
+const paginatedHabitaciones = computed(() => {
+  const start = (paginaActual.value - 1) * numHabitacionPag.value;
+  const end = start + numHabitacionPag.value;
+  if (useHabitacion.habitacionesFiltradas) {
+    return useHabitacion.habitacionesFiltradas.slice(start, end);
+  }
+});
 
 
 function nextPage() {
@@ -183,14 +187,21 @@ function prevPage() {
   }
 }
 
+//Pluralizar palabra 
+
 const pluralize = (count, singular) => {
   return count === 1 ? singular : `${singular}s`;
 };
 
+//Ver cambios en cada variable
+
 watch([adults, children], ([newAdults, newChildren]) => {
   totalPersona.value = newAdults + newChildren;
+  cargandoHabitaciones.value = true;
   filtrarHabitacion();
 });
+
+
 
 onMounted(() => {
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
@@ -200,6 +211,7 @@ onMounted(() => {
 
   fechaIngreso.value = today;
   fechaEgreso.value = tomorrowFormatted;
+  useHabitacion.fechaEgreso = fechaEgreso.value;
 
   getHotelSeleccionado();
   getHabitaciones();
@@ -285,9 +297,9 @@ onMounted(() => {
                       <span>Adultos</span>
                       <div>
                         <!-- Se añade .stop para prevenir el cierre del dropdown al hacer clic -->
-                        <button class="btn btn-outline-secondary" @click.stop="decrementAdults">-</button>
+                        <button class="btn btn-outline-secondary" @click.stop="disminuirAdultos">-</button>
                         <span class="mx-2">{{ adults }}</span>
-                        <button class="btn btn-outline-secondary" @click.stop="incrementAdults">+</button>
+                        <button class="btn btn-outline-secondary" @click.stop="incrementarAdultos">+</button>
                       </div>
                     </div>
                   </li>
@@ -296,9 +308,9 @@ onMounted(() => {
                     <div class="d-flex justify-content-between align-items-center mb-2">
                       <span>Niños</span>
                       <div>
-                        <button class="btn btn-outline-secondary" @click.stop="decrementChildren">-</button>
+                        <button class="btn btn-outline-secondary" @click.stop="disminuirNinos">-</button>
                         <span class="mx-2">{{ children }}</span>
-                        <button class="btn btn-outline-secondary" @click.stop="incrementChildren">+</button>
+                        <button class="btn btn-outline-secondary" @click.stop="aumentarNinos">+</button>
                       </div>
                     </div>
                   </li>
@@ -313,14 +325,14 @@ onMounted(() => {
               </div>
             </div>
           </div>
-
-
-
-
           <!-- <button class="btncafe ms-2" @click="calcularPrecioTotal">Buscar Habitaciones</button> -->
         </div>
       </div>
 
+
+      <div v-if="useHabitacion.habitacionesFiltradas.length === 0" class="no-salones">
+        <p>No se encontraron habitaciones...</p>
+      </div>
       <div v-if="cargandoHabitaciones" class="d-flex justify-content-center flex-column align-items-center">
         <div class="spinner-border" style="color: #b7642d" role="status">
           <span class="visually-hidden">Cargando...</span>
@@ -711,6 +723,22 @@ h3 {
 
 input.form-control {
   cursor: pointer;
+}
+
+.no-salones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgb(0, 0, 0);
+  text-align: center;
+  font-weight: bold;
+}
+
+.no-salones p {
+  font-size: 1.5em;
+  margin-top: 10px;
 }
 
 

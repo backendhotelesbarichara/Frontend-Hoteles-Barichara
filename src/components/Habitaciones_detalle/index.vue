@@ -4,18 +4,12 @@ import { useStoreHabitacion } from '../../stores/habitacion.js';
 
 const useHabitacion = useStoreHabitacion();
 const habitacionDetalle = ref(useHabitacion.habitacionSelecionada);
-const mostrarFormulario = ref(false);
-const imagenSeleccionada = ref(''); // Reference for the selected image
-
+const imagenSeleccionada = ref('');
+const primeraParte = ref(true);
+const segundaParte = ref(false);
+const tituloForm = ref('Formulario de Reserva');
+const mensaje = ref("Hola, vi su hotel en Hoteles Barichara y estoy interesado en hospedarnme allí. ¿Podrían enviarme más información sobre las habitacion que escogí y las tarifas? Muchas gracias.");
 console.log("hola soy h", habitacionDetalle);
-
-const mostrarReserva = () => {
-  mostrarFormulario.value = true;
-};
-
-const cancelarReserva = () => {
-  mostrarFormulario.value = false;
-};
 
 const abrirModal = (url) => {
   imagenSeleccionada.value = url;
@@ -47,6 +41,13 @@ const iconosServicios = {
 const getIconClass = (servicio) => {
   return iconosServicios[servicio.toLowerCase()] || 'bi bi-info-circle';
 };
+
+function continuar() {
+  segundaParte.value = true;
+  primeraParte.value = false;
+  tituloForm.value = "Confirmar Información";
+}
+
 </script>
 
 
@@ -60,7 +61,15 @@ const getIconClass = (servicio) => {
       </div>
 
       <main class="w-100">
-        <h1 class="text-uppercase text-center">{{ habitacionDetalle.tipo_habitacion[0] }}</h1>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+          <h1 class="text-uppercase text-center">{{ habitacionDetalle.tipo_habitacion[0] }}</h1>
+          <div class="">
+            <button class="btn btn-custom" data-bs-toggle="modal" data-bs-target="#modalReserva">
+              <i class="bi bi-backpack2-fill"></i> RESERVAR
+            </button>
+          </div>
+        </div>
+
         <div class="galeria">
           <div class="Hoteles w-100">
             <h5>Descripción</h5>
@@ -86,56 +95,90 @@ const getIconClass = (servicio) => {
     <hr />
 
     <div>
-      <div class="text-center">
-        <button @click="mostrarReserva" class="btn btn-custom" v-if="!mostrarFormulario">
-          <i class="bi bi-backpack2-fill"></i> Reservar
-        </button>
-      </div>
 
-      <div v-if="mostrarFormulario" class="container">
-        <form style="padding-left: 30px; padding-right: 30px">
-          <div style="background-color: #b7642d14; border-radius: 10px; font-size: 12px;" class="row">
-            <p class="fw-bold fs-5">Por favor digite los siguientes datos:</p>
 
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="fw-bold fs-5 mb-2" for="nombre">Nombre:</label>
-                <input style="height: 40px; font-size: 12px" type="text" id="nombre" name="nombre" class="form-control"
-                  placeholder="Ingrese su nombre.." required />
-              </div>
-
-              <div class="col-md-6 mb-2">
-                <label class="fw-bold fs-5 mb-2" for="apellido">Apellido:</label>
-                <input style="height: 40px; font-size: 12px" type="text" id="apellido" name="apellido"
-                  class="form-control" placeholder="Ingrese su apellido.." required />
-              </div>
+      <!-- Modal for the form -->
+      <div class="modal fade" id="modalReserva" tabindex="-1" aria-labelledby="modalReservaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title text-dark fw-bold" id="modalReservaLabel">{{ tituloForm }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body">
+              <form style="padding-left: 30px; padding-right: 30px">
+                <div class="row" v-if="primeraParte">
+                  <p class="fs-5">Por favor digite los siguientes datos:</p>
+                  <div class="row">
+                    <div class="col-md-12 mb-2">
+                      <label class="fw-bold fs-5 mb-2" for="nombre">Nombre <span
+                          class="text-danger fw-bold">*</span></label>
+                      <input style="height: 40px; font-size: 12px" type="text" id="nombre" name="nombre"
+                        class="form-control" placeholder="Ingrese su nombre.." required />
+                    </div>
 
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="fw-bold fs-5 mb-2" for="telefono">Teléfono:</label>
-                <input style="height: 40px; font-size: 12px" type="number" id="telefono" name="telefono"
-                  class="form-control" placeholder="Ingrese su teléfono.." required />
-              </div>
+                    <div class="col-md-12 mb-2">
+                      <label class="fw-bold fs-5 mb-2" for="apellido">Apellido <span
+                          class="text-danger fw-bold">*</span></label>
+                      <input style="height: 40px; font-size: 12px" type="text" id="apellido" name="apellido"
+                        class="form-control" placeholder="Ingrese su apellido.." required />
+                    </div>
+                  </div>
 
-              <div class="col-md-6 mb-2">
-                <label class="fw-bold fs-5 mb-2" for="correo">Correo:</label>
-                <input style="height: 40px; font-size: 12px" type="email" id="correo" name="correo" class="form-control"
-                  placeholder="Ingrese su correo.." required />
-              </div>
+                  <div class="row">
+                    <div class="col-md-12 mb-2">
+                      <label class="fw-bold fs-5 mb-2" for="telefono">Teléfono <span
+                          class="text-danger fw-bold">*</span></label>
+                      <input style="height: 40px; font-size: 12px" type="number" id="telefono" name="telefono"
+                        class="form-control" placeholder="Ingrese su teléfono.." required />
+                    </div>
+
+                    <div class="col-md-12 mb-2">
+                      <label class="fw-bold fs-5 mb-2" for="correo">Correo <span
+                          class="text-danger fw-bold">*</span></label>
+                      <input style="height: 40px; font-size: 12px" type="email" id="correo" name="correo"
+                        class="form-control" placeholder="Ingrese su correo.." required />
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <button style="margin-top: 15px; margin-right: 10px" type="submit" class="btn btn-customwhat"
+                      @click="continuar()">
+                      Continuar
+                    </button>
+
+                    <button style="margin-top: 15px" type="button" class="btn btn-custom" data-bs-dismiss="modal">
+                      <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                  </div>
+                </div>
+
+                <div class="row" v-if="segundaParte">
+                  <div class="row">
+                    <div class="col-md-12 mb-2">
+                      <label class="fw-bold fs-5 mb-2" for="mensaje">Mensaje:</label>
+                      <textarea style="font-size: 12px;" id="mensaje" name="mensaje" v-model="mensaje"
+                        class="form-control" placeholder="Digite cualquier información adicional..."></textarea>
+                    </div>
+
+                    <div class="col-md-12 mb-2">
+                      <label class="fw-bold fs-5 mb-2" for="mensaje">Fecha Ingreso:</label>
+                      <input type="date" class="form-control" v-model="useHabitacion.fechaIngreso" />
+                    </div>
+
+                    <div class="col-md-12 mb-2">
+                      <label class="fw-bold fs-5 mb-2" for="mensaje">Fecha Egreso:</label>
+                      <input type="date" class="form-control" v-model="useHabitacion.fechaEgreso" />
+                    </div>
+                  </div>
+
+                  <button style="margin-top: 15px; margin-right: 10px" type="submit" class="btn btn-customwhat">
+                    <i class="bi bi-whatsapp"></i> Ir a Whatsapp
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-
-          <div class="text-center">
-            <button style="margin-top: 15px; margin-right: 10px" type="submit" class="btn btn-customwhat">
-              <i class="bi bi-whatsapp"></i> Ir a Whatsapp
-            </button>
-
-            <button style="margin-top: 15px" type="button" class="btn btn-custom" @click="cancelarReserva">
-              <i class="bi bi-x-circle"></i> Cancelar
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
 
