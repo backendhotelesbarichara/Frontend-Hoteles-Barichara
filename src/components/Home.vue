@@ -5,7 +5,6 @@ import { hoteles, Sturisticos } from './../components/BD/bd';
 import { useStoreHotel } from '../stores/hotel.js';
 import { useRouter } from 'vue-router';
 
-
 const router = useRouter();
 const useHotel = useStoreHotel();
 const listaHoteles = ref("");
@@ -157,7 +156,7 @@ onMounted(() => {
         <div v-else class="lista-imagenes hotel-images">
             <div class="imagen-con-texto" v-for="hotel in listaHoteles" :key="hotel._id" :value="hotel._id"
                 @click="irInfoHotel(hotel)">
-                <img :src="hotel.imagen" alt="imagen-principal" />
+                <img :src="hotel.fotos[0].url" alt="imagen-principal" />
                 <p class="text-hotel">{{ hotel.nombre }}</p>
             </div>
         </div>
@@ -189,6 +188,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
+
+
 .btncafe {
     margin-right: 10px;
     border-radius: 50px;
