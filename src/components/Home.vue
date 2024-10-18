@@ -34,7 +34,7 @@ function irInfoHotel(hotel) {
     useHotel.HotelHome = hotel._id
     console.log("hola idhotel", hotel)
     /* router.push('/GaleriaHabitaciones') */
-    // En lugar de router.push, abrimos una nueva pestana
+    // En lugar de router.push, abrimos una nueva pestaña
     const url = router.resolve({ path: '/GaleriaHabitaciones' }).href;
     window.open(url, '_blank');
 }
