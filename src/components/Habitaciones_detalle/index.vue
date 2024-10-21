@@ -1,21 +1,76 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
+import { useStoreReserva } from '../../stores/reserva.js';
+import { useRouter, useRoute } from 'vue-router';
 
 const useHabitacion = useStoreHabitacion();
-const habitacionDetalle = ref(useHabitacion.habitacionSelecionada);
+const useReserva = useStoreReserva();
+const habitacionDetalle = ref();
 const imagenSeleccionada = ref('');
-const primeraParte = ref(true);
-const segundaParte = ref(false);
+const idHabitacion = ref('');
+const fechaEntrada = ref(useHabitacion.fechaIngreso);
+const fechaSalida = ref(useHabitacion.fechaEgreso);
 const tituloForm = ref('Formulario de Reserva');
 const mensaje = ref("Hola, vi su hotel en Hoteles Barichara y estoy interesado en hospedarnme allí. ¿Podrían enviarme más información sobre las habitacion que escogí y las tarifas? Muchas gracias.");
+const minDate = ref(obtenerFechaActual());
+const router = useRouter();
+const route = useRoute();
+const loading = ref(false);
 console.log("hola soy h", habitacionDetalle);
+
 
 const abrirModal = (url) => {
   imagenSeleccionada.value = url;
   const modal = new bootstrap.Modal(document.getElementById('modalImagen'));
   modal.show();
 };
+
+const enviarFormulario = async () => {
+  loading.value = true;
+  const data = {
+    nombre_cliente: nombre.value,
+    cedula_cliente: identificacion.value,
+    telefono_cliente: telefono.value,
+    correo_cliente: email.value,
+    fecha_entrada: fechaEntrada.value,
+    fecha_salida: fechaSalida.value,
+    cantidad_noches: cantidadNoches.value,
+    cantidad_adulto: cantidadAdulto.value,
+    costo_total: costo.value,
+    mensaje: mensaje.value,
+    idHabitacion: habitacionDetalle.value._id,
+  };
+
+
+  try {
+    const response = await useReserva.registro(data);
+    if (useReserva.estatus === 200) {
+      console.log("Reserva enviada");
+      limpiar();
+    } else if (useReserva.estatus === 400) {
+      console.log(useReserva.validacion);
+    }
+  } catch (error) {
+    console.log(error);
+    notificar('negative', 'Error al enviar la reserva. Intenta nuevamente.');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const limpiar = () => {
+  nombre.value = '';
+  email.value = '';
+  telefono.value = '';
+  mensaje.value = 'Hola, me gustaría solicitar más información sobre este servicio y su disponibilidad. ¿Podrían proporcionarme detalles, por favor?';
+  dialogoAbierto.value = false;
+}
+
+function obtenerFechaActual() {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
 
 const iconosServicios = {
   'televisor': 'bi bi-tv',
@@ -42,20 +97,53 @@ const getIconClass = (servicio) => {
   return iconosServicios[servicio.toLowerCase()] || 'bi bi-info-circle';
 };
 
-function continuar() {
-  segundaParte.value = true;
-  primeraParte.value = false;
-  tituloForm.value = "Confirmar Información";
+async function cargarHabitacion(id) {
+  try {
+    console.log("hola")
+    const response = await useHabitacion.getPorId(id);
+
+    if (response) {
+      habitacionDetalle.value = response;
+    }
+  } catch (error) {
+    notificar('negative', 'Error al cargar el servicio');
+    console.error('Error al cargar', error);
+  }
 }
 
+const numeroDeNoches = computed(() => {
+  if (fechaEntrada.value && fechaSalida.value) {
+    useHabitacion.fechaIngreso = fechaEntrada.value;
+    useHabitacion
+
+    const diffTime = Math.abs(new Date(fechaSalida.value) - new Date(fechaEntrada.value));
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+  return 0;
+});
+
+function calcularPrecioTotal(habitacion, personas) {
+  const total = habitacion.precio_noche * numeroDeNoches.value * personas;
+  return total;
+}
+
+onMounted(async () => {
+  const Habitacion = route.query.id;
+  console.log("hola batiacion", Habitacion)
+  if (Habitacion) {
+    idHabitacion.value = Habitacion;
+    await cargarHabitacion(Habitacion);
+  }
+});
 </script>
 
 
 <template>
-  <div>
+  <div v-if="habitacionDetalle">
     <div class="contenedor-imagenes">
       <div class="d-flex flex-row gap-1">
-        <div v-for="foto in habitacionDetalle.imagenes" :key="foto.url" class="flex-fill" @click="abrirModal(foto.url)">
+        <div v-if="habitacionDetalle.imagenes" v-for="foto in habitacionDetalle.imagenes" :key="foto.url"
+          class="flex-fill" @click="abrirModal(foto.url)">
           <img :src="foto.url" alt="Imagen del hotel" class="img-fluid" style="cursor: pointer;" />
         </div>
       </div>
@@ -78,6 +166,21 @@ function continuar() {
             {{ habitacionDetalle.descripcion }}
           </p>
 
+          <div class="detalles-habitacion">
+            <div class="info-container d-flex gap-5">
+              <div class="info-item">
+                <i class="bi bi-person-fill" style="  color: #b7642d; margin-right: 3px;"></i> Hasta {{
+                  habitacionDetalle.cantidad_personas }} personas
+              </div>
+              <div class="info-item">
+                <i class="bi bi-cash" style="  color: #b7642d; margin-right: 3px;"></i> x Noche: {{
+                  habitacionDetalle.precio_noche.toLocaleString('es-CO') }} COP
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
           <div class="Hoteles w-100">
             <h5>Servicios</h5>
           </div>
@@ -85,7 +188,7 @@ function continuar() {
           <div class="servicios text-center">
             <ul>
               <li class="fw-bold" v-for="servicio in habitacionDetalle.servicio" :key="servicio">
-                <i :class="getIconClass(servicio)"></i> {{ servicio }}
+                <i class="bi bi-check-circle-fill" id="bi"></i>{{ servicio }}
               </li>
             </ul>
           </div>
@@ -95,84 +198,90 @@ function continuar() {
     <hr />
 
     <div>
-
-
-      <!-- Modal for the form -->
+      <!-- Modal de Reserva Unificado -->
       <div class="modal fade" id="modalReserva" tabindex="-1" aria-labelledby="modalReservaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">
+            <!-- Encabezado del Modal -->
             <div class="modal-header">
               <h5 class="modal-title text-dark fw-bold" id="modalReservaLabel">{{ tituloForm }}</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
+            <!-- Cuerpo del Modal -->
             <div class="modal-body">
               <form style="padding-left: 30px; padding-right: 30px">
-                <div class="row" v-if="primeraParte">
-                  <p class="fs-5">Por favor digite los siguientes datos:</p>
-                  <div class="row">
-                    <div class="col-md-12 mb-2">
-                      <label class="fw-bold fs-5 mb-2" for="nombre">Nombre <span
-                          class="text-danger fw-bold">*</span></label>
-                      <input style="height: 40px; font-size: 12px" type="text" id="nombre" name="nombre"
-                        class="form-control" placeholder="Ingrese su nombre.." required />
-                    </div>
+                <!-- Información del Cliente y Reserva en un solo paso -->
+                <p class="fs-5">
+                  Por favor digite los siguientes datos para que <strong>{{ habitacionDetalle.idPiso.idHotel.nombre
+                    }}</strong> se ponga en contacto contigo en breves...
+                </p>
 
-                    <div class="col-md-12 mb-2">
-                      <label class="fw-bold fs-5 mb-2" for="apellido">Apellido <span
-                          class="text-danger fw-bold">*</span></label>
-                      <input style="height: 40px; font-size: 12px" type="text" id="apellido" name="apellido"
-                        class="form-control" placeholder="Ingrese su apellido.." required />
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-12 mb-2">
-                      <label class="fw-bold fs-5 mb-2" for="telefono">Teléfono <span
-                          class="text-danger fw-bold">*</span></label>
-                      <input style="height: 40px; font-size: 12px" type="number" id="telefono" name="telefono"
-                        class="form-control" placeholder="Ingrese su teléfono.." required />
-                    </div>
-
-                    <div class="col-md-12 mb-2">
-                      <label class="fw-bold fs-5 mb-2" for="correo">Correo <span
-                          class="text-danger fw-bold">*</span></label>
-                      <input style="height: 40px; font-size: 12px" type="email" id="correo" name="correo"
-                        class="form-control" placeholder="Ingrese su correo.." required />
-                    </div>
-                  </div>
-                  <div class="text-center">
-                    <button style="margin-top: 15px; margin-right: 10px" type="submit" class="btn btn-customwhat"
-                      @click="continuar()">
-                      Continuar
-                    </button>
-
-                    <button style="margin-top: 15px" type="button" class="btn btn-custom" data-bs-dismiss="modal">
-                      <i class="bi bi-x-circle"></i> Cancelar
-                    </button>
+                <!-- Mensaje Adicional -->
+                <div class="row">
+                  <div class="col-md-12 mb-3">
+                    <label class="fw-bold fs-6 mb-2" for="mensaje">Mensaje:</label>
+                    <textarea id="mensaje" v-model="mensaje" class="form-control form-control-lg"
+                      placeholder="Digite cualquier información adicional..."></textarea>
                   </div>
                 </div>
 
-                <div class="row" v-if="segundaParte">
-                  <div class="row">
-                    <div class="col-md-12 mb-2">
-                      <label class="fw-bold fs-5 mb-2" for="mensaje">Mensaje:</label>
-                      <textarea style="font-size: 12px;" id="mensaje" name="mensaje" v-model="mensaje"
-                        class="form-control" placeholder="Digite cualquier información adicional..."></textarea>
-                    </div>
-
-                    <div class="col-md-12 mb-2">
-                      <label class="fw-bold fs-5 mb-2" for="mensaje">Fecha Ingreso:</label>
-                      <input type="date" class="form-control" v-model="useHabitacion.fechaIngreso" />
-                    </div>
-
-                    <div class="col-md-12 mb-2">
-                      <label class="fw-bold fs-5 mb-2" for="mensaje">Fecha Egreso:</label>
-                      <input type="date" class="form-control" v-model="useHabitacion.fechaEgreso" />
-                    </div>
+                <!-- Nombre y Apellido -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="fw-bold fs-6 mb-2" for="nombre">Nombre <span
+                        class="text-danger fw-bold">*</span></label>
+                    <input type="text" id="nombre" class="form-control form-control-lg"
+                      placeholder="Ingrese su nombre.." required />
                   </div>
 
-                  <button style="margin-top: 15px; margin-right: 10px" type="submit" class="btn btn-customwhat">
-                    <i class="bi bi-whatsapp"></i> Ir a Whatsapp
+                  <div class="col-md-6 mb-3">
+                    <label class="fw-bold fs-6 mb-2" for="apellido">Apellido <span
+                        class="text-danger fw-bold">*</span></label>
+                    <input type="text" id="apellido" class="form-control form-control-lg"
+                      placeholder="Ingrese su apellido.." required />
+                  </div>
+                </div>
+
+                <!-- Teléfono y Correo -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="fw-bold fs-6 mb-2" for="telefono">Teléfono <span
+                        class="text-danger fw-bold">*</span></label>
+                    <input type="number" id="telefono" class="form-control form-control-lg"
+                      placeholder="Ingrese su teléfono.." required />
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label class="fw-bold fs-6 mb-2" for="correo">Correo <span
+                        class="text-danger fw-bold">*</span></label>
+                    <input type="email" id="correo" class="form-control form-control-lg"
+                      placeholder="Ingrese su correo.." required />
+                  </div>
+                </div>
+                <!-- Fecha de Ingreso y Egreso -->
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="fw-bold fs-6 mb-2" for="fechaIngreso">Fecha de Ingreso:</label>
+                    <input type="date" id="fechaIngreso" class="form-control form-control-lg" :min="minDate"
+                      v-model="useHabitacion.fechaIngreso" />
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label class="fw-bold fs-6 mb-2" for="fechaEgreso">Fecha de Egreso:</label>
+                    <input type="date" id="fechaEgreso" class="form-control form-control-lg" :min="minDate"
+                      v-model="useHabitacion.fechaEgreso" />
+                  </div>
+                </div>
+
+                <!-- Botones para enviar o cancelar -->
+                <div class="text-center mt-4">
+                  <button type="submit" class="btn btn-custom me-3 text-uppercase fw-bold">
+                    Reservar
+                  </button>
+
+                  <button type="button" class="btn btn-custom" style="background-color: black;" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
                   </button>
                 </div>
               </form>
@@ -180,6 +289,7 @@ function continuar() {
           </div>
         </div>
       </div>
+
     </div>
 
 
@@ -223,6 +333,11 @@ form input {
   box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
 }
 
+#bi {
+  color: #b7642d;
+  margin-right: 3px;
+}
+
 form button {
   background-color: #b7642d;
   color: #fff;
@@ -240,6 +355,7 @@ form button:hover {
   width: 100%;
   margin-bottom: 20px;
 }
+
 
 .servicios ul {
   display: flex;

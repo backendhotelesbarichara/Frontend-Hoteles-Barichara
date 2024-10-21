@@ -76,7 +76,6 @@ function abrirModal(imagen) {
 
 const numeroDeNoches = computed(() => {
   if (fechaIngreso.value && fechaEgreso.value) {
-    console.log(fechaIngreso);
     useHabitacion.fechaIngreso = fechaIngreso.value;
 
     const diffTime = Math.abs(new Date(fechaEgreso.value) - new Date(fechaIngreso.value));
@@ -148,13 +147,9 @@ const getIconClass = (servicio) => {
 };
 
 //Función ir detalle habitacion
+async function irDetalleHabitacion(idHabitacion) {
 
-async function irDetalleHabitacion(habitacion) {
-  useHabitacion.habitacionSelecionada = habitacion;
-  console.log(useHabitacion.habitacionSelecionada);
-
-  // En lugar de router.push, abrimos una nueva pestaña
-  const url = router.resolve({ path: '/detallehabitaciones' }).href;
+  const url = router.resolve({ path: '/detallehabitaciones', query: { id: idHabitacion } }).href;
   window.open(url, '_blank');
 }
 
@@ -201,6 +196,13 @@ watch([adults, children], ([newAdults, newChildren]) => {
   filtrarHabitacion();
 });
 
+function chunkArray(array, size) {
+  const chunkedArr = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunkedArr.push(array.slice(i, i + size));
+  }
+  return chunkedArr;
+}
 
 
 onMounted(() => {
@@ -238,12 +240,27 @@ onMounted(() => {
     </div>
     <!-- HTML -->
     <div class="logo-title-container">
-      <img :src="hotelInfo.logo" alt="Logo del hotel" class="logo">
+      <img :src="hotelInfo.logo.url" alt="Logo del hotel" class="logo">
       <h2 class="title">{{ hotelInfo.nombre }}</h2>
     </div>
 
 
     <p class="text-center text-muted mb-4">{{ hotelInfo.descripcion }}</p>
+
+    <div class="text-center">
+      <p class="text-h5 fw-bold text-uppercase">Servicios del hotel</p>
+      <p>El Hotel {{ hotelInfo.nombre }} cuenta con los siguientes servicios:</p>
+
+      <table class="table-servicios">
+        <tbody>
+          <tr v-for="(chunk, index) in chunkArray(hotelInfo.servicio, 5)" :key="index">
+            <td v-for="servicio in chunk" :key="servicio._id" style="text-align: center;">
+              <i class="bi bi-check-circle-fill"></i> {{ servicio.descrip }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div class="row text-center mt-3">
       <div class="col-md-6 mb-3">
@@ -256,6 +273,8 @@ onMounted(() => {
         <i class="bi bi-envelope-fill"></i>{{ hotelInfo.correo }}
       </div>
     </div>
+
+
 
     <div>
       <div class="Hoteles">
@@ -344,7 +363,7 @@ onMounted(() => {
           <div v-for="habitacion in paginatedHabitaciones" :key="habitacion.id" class="col-md-4 mb-4">
             <div class="card h-100" style="overflow: hidden;">
               <img :src="habitacion.imagen_principal" alt="Imagen de la habitación" class="card-img-top"
-                @click="irDetalleHabitacion(habitacion)">
+                @click="irDetalleHabitacion(habitacion._id)">
               <div class="card-body">
                 <h5 class="card-title text-uppercase">{{ habitacion.tipo_habitacion[0] }}</h5>
                 <p class="card-text">{{ habitacion.descripcion }}</p>
@@ -382,7 +401,7 @@ onMounted(() => {
                   </ul>
                 </div>
                 <div style="display: flex; justify-content: end;">
-                  <button class="btn btn-primary row justify-content-end" @click="irDetalleHabitacion(habitacion)">Ver
+                  <button class="btn btn-primary row justify-content-end" @click="irDetalleHabitacion(habitacion._id)">Ver
                     más...</button>
                 </div>
               </div>
@@ -471,6 +490,18 @@ onMounted(() => {
   font-size: 2rem;
   color: #b7642d;
 }
+
+.table-servicios {
+  width: 20%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.table-servicios td {
+  padding: 10px;
+  vertical-align: middle;
+}
+
 
 .pagination-container {
   display: flex;

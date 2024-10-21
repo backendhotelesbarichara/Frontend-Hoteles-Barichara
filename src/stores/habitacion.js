@@ -71,6 +71,17 @@ export const useStoreHabitacion = defineStore(
       }
     };
 
+    const getPorId = async (id) => {
+      try {
+        const response = await axios.get(`/${modelo}/buscarId/${id}`);
+        estatus.value = response.status;
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response?.status || 400;
+      }
+    };
+
     const agregar = async (data) => {
       try {
         const response = await axios.post(`${modelo}/registro`, data);
@@ -125,6 +136,7 @@ export const useStoreHabitacion = defineStore(
       getHabitacionesPorPiso,
       getHabitacionesPorHotel,
       getHabitacionesPorCantPerson,
+      getPorId,
       agregar,
       editar,
       activar,
