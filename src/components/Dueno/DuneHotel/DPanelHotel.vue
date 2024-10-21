@@ -7,6 +7,7 @@ import { useStoreUsuarios } from '../../../stores/usuario.js';
 const router = useRouter();
 const useHotel = useStoreHotel();
 const useUsuario = useStoreUsuarios();
+const idUsuario = ref(useUsuario.usuario._id)
 const idHotel = ref();
 const hotelSeleccionado = ref();
 const nombre = ref();
@@ -40,7 +41,7 @@ const dataHotel = ref({ ...useHotel.editarHotelSelec });
 
 async function getHoteles() {
   try {
-    const response = await useHotel.getAll()
+    const response = await useHotel.getPorUsuario(idUsuario.value)
     hoteles.value = response
     console.log(response);
   } catch (error) {
@@ -187,7 +188,7 @@ onMounted(() => {
 <template>
   <div class="galeria">
     <div class="Hoteles">
-      <h5>Admistrar Hotel - Vista Usuario</h5>
+      <h5>Administrar Hotel</h5>
     </div>
     <div v-if="loading" class="centered">
       <div class="empty-state">
@@ -200,18 +201,11 @@ onMounted(() => {
         <i class="material-icons empty-state__icon">hotel</i>
         <h3 class="empty-state__title">Aún no tienes un hotel registrado</h3>
         <p class="empty-state__description">¡Registra tu hotel ahora mismo para comenzar a administrarlo!</p>
-        <button class="btn btn-dark" @click="goToRegistroHotel">
-          Registrar Hotel
-        </button>
       </div>
     </div>
     <div v-else>
-      <div class="">
-        <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
-          <i class="material-icons">add_box</i>
-        </button>
-      </div>
       <!-- Tabla de hoteles -->
+      <h1 class="text-center m-4">TUS HOTELES</h1>
       <div style="font-size: 12px" class="table-responsive">
         <table class="table table-bordered">
           <thead>
@@ -227,13 +221,30 @@ onMounted(() => {
           <tbody>
             <tr v-for="hotel in hoteles" :key="hotel._id">
               <td>{{ hotel.nombre }}</td>
-              <td>{{ hotel.correo }}</td>
-              <VMenu class="vmenu">
-                <td class="truncated-text">{{ hotel.descripcion }}</td>
-                <template #popper>
-                  <div class="descripVmenu">{{ hotel.descripcion }}</div>
-                </template>
-              </VMenu>
+              <td>
+                <VMenu class="vmenu">
+                  <!-- Texto truncado visible en la celda -->
+                  <span class="truncated-text">{{ hotel.correo }}</span>
+                  <!-- Menú desplegable al hacer clic o pasar el mouse -->
+                  <template #popper>
+                    <div class="descripVmenu">
+                      {{ hotel.correo }}
+                    </div>
+                  </template>
+                </VMenu>
+              </td>
+              <td>
+                <VMenu class="vmenu">
+                  <!-- Texto truncado visible en la celda -->
+                  <span class="truncated-text">{{ hotel.descripcion }}</span>
+                  <!-- Menú desplegable al hacer clic o pasar el mouse -->
+                  <template #popper>
+                    <div class="descripVmenu">
+                      {{ hotel.descripcion }}
+                    </div>
+                  </template>
+                </VMenu>
+              </td>
               <td>{{ hotel.telefono }}</td>
               <td>{{ hotel.direccion }}</td>
               <td>
@@ -270,7 +281,7 @@ onMounted(() => {
                     <div class="d-flex align-items-center">
                       <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
                       <div v-else>
-                        <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image" />
+                        <img v-if="dataHotel.logo" :src="dataHotel.logo.url" alt="" class="fixed-size-image" />
                         <p v-if="!dataHotel.logo">Por favor suba un logo...</p>
                         <button v-if="editMode.logo && dataHotel.logo" type="button"
                           class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarLogo">
@@ -297,7 +308,7 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <!-- Imagen Principal -->
+                <!--                 <!-- Imagen Principal 
                 <div class="mb-3">
                   <label class="form-label"><strong>Imagen Principal</strong></label>
                   <div class="d-flex align-items-center">
@@ -316,14 +327,14 @@ onMounted(() => {
                       <i class="bi bi-pencil"></i>
                     </button>
                   </div>
-                </div>
+                </div> -->
 
                 <!-- Fotos del Hotel -->
-                <div class="mb-3">
+                <div class="mb-3 text-center">
                   <label class="form-label"><strong>Fotos del Hotel</strong></label>
                   <div class="d-flex align-items-center">
                     <div v-if="uploadingFotos" class="loading-spinner">Cargando fotos...</div>
-                    <div v-else>
+                    <div v-else class="gap-5">
                       <div v-for="(foto, index) in dataHotel.fotos" :key="index" class="photo-container">
                         <img v-if="!foto.eliminada" :src="foto.url" alt="" class="fixed-size-image">
                         <button v-if="!foto.eliminada && editMode.fotos" type="button"
@@ -474,10 +485,9 @@ onMounted(() => {
 }
 
 .fixed-size-image {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   overflow: hidden;
-  /* Para manejar el desbordamiento de la imagen */
   object-fit: cover;
   border-radius: 10px;
   border-style: solid;
@@ -602,11 +612,7 @@ h5 {
   transition: 1s;
 }
 
-.vmenu {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+
 
 .descripVmenu {
   padding: 1rem;
@@ -713,4 +719,5 @@ th {
     align-items: left;
     border-radius: 10px;
   }
-}</style>
+}
+</style>

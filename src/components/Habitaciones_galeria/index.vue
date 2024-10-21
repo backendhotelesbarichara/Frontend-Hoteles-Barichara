@@ -2,11 +2,13 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStoreHotel } from '../../stores/hotel.js';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
+import { useStoreReserva } from '../../stores/reserva.js'
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const useHotel = useStoreHotel();
 const useHabitacion = useStoreHabitacion();
+const useReserva = useStoreReserva();
 const hotelInfo = ref("");
 const habitacionInfo = ref([]);
 const fechaIngreso = ref();
@@ -20,7 +22,12 @@ const numHabitacionPag = ref(5);
 const adults = ref(1);
 const children = ref(0);
 const totalPersona = ref();
+const minDate = ref(obtenerFechaActual());
 
+function obtenerFechaActual() {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
 async function getHotelSeleccionado() {
   try {
     const response = await useHotel.getPorId(useHotel.HotelHome);
@@ -76,7 +83,8 @@ function abrirModal(imagen) {
 
 const numeroDeNoches = computed(() => {
   if (fechaIngreso.value && fechaEgreso.value) {
-    useHabitacion.fechaIngreso = fechaIngreso.value;
+    useReserva.fechaIngreso = fechaIngreso.value;
+    useReserva.fechaEgreso = fechaEgreso.value;
 
     const diffTime = Math.abs(new Date(fechaEgreso.value) - new Date(fechaIngreso.value));
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -194,6 +202,19 @@ watch([adults, children], ([newAdults, newChildren]) => {
   totalPersona.value = newAdults + newChildren;
   cargandoHabitaciones.value = true;
   filtrarHabitacion();
+  useReserva.adultos = newAdults;
+  useReserva.ninos = newChildren;
+});
+
+watch([fechaIngreso, fechaEgreso], ([newFechaIngreso, newFechaEgreso]) => {
+  if (fechaIngreso.value && fechaEgreso.value) {
+    useReserva.fechaIngreso = fechaIngreso.value;
+    useReserva.fechaEgreso = fechaEgreso.value;
+    const diffTime = Math.abs(new Date(fechaEgreso.value) - new Date(fechaIngreso.value));
+    useReserva.numero_noche = diffTime / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+  return 0;
 });
 
 function chunkArray(array, size) {
@@ -210,7 +231,10 @@ onMounted(() => {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowFormatted = tomorrow.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
+  adults.value = 1;
+  children.value = 0;
+  useReserva.adultos = 1;
+  useReserva.ninos = 0;
   fechaIngreso.value = today;
   fechaEgreso.value = tomorrowFormatted;
   useHabitacion.fechaEgreso = fechaEgreso.value;
@@ -281,20 +305,20 @@ onMounted(() => {
         <h5 id="h5">HABITACIONES</h5>
       </div>
       <div class="d-flex justify-content-center mt-4">
-        <div style="text-align: center; margin-bottom: 25px">
-          <div style="margin-bottom: 20px; display: inline-block">
+        <div style="text-align: center; margin-bottom: 25px; gap: 10px;">
+          <div style="display: inline-block">
             <div class="input-group">
               <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Fecha de
                 ingreso</span>
-              <input type="date" class="form-control" v-model="fechaIngreso" />
+              <input type="date" class="form-control" v-model="fechaIngreso" :min="minDate" />
             </div>
           </div>
 
-          <div style="display: inline-block">
+          <div style="display: inline-block; margin: 0px 15px;">
             <div class="input-group">
               <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Fecha
                 del egreso</span>
-              <input type="date" class="form-control" v-model="fechaEgreso" />
+              <input type="date" class="form-control" v-model="fechaEgreso" :min="minDate" />
             </div>
           </div>
 
@@ -362,7 +386,7 @@ onMounted(() => {
         <div class="row mt-5">
           <div v-for="habitacion in paginatedHabitaciones" :key="habitacion.id" class="col-md-4 mb-4">
             <div class="card h-100" style="overflow: hidden;">
-              <img :src="habitacion.imagen_principal" alt="Imagen de la habitación" class="card-img-top"
+              <img :src="habitacion.imagenes[0].url" alt="Imagen de la habitación" class="card-img-top"
                 @click="irDetalleHabitacion(habitacion._id)">
               <div class="card-body">
                 <h5 class="card-title text-uppercase">{{ habitacion.tipo_habitacion[0] }}</h5>
@@ -371,7 +395,7 @@ onMounted(() => {
                   <ul>
                     <li class="fw-bold fs-5" v-for="(servicio, index) in habitacion.servicio.slice(0, 4)"
                       :key="servicio">
-                      <i :class="getIconClass(servicio)"></i> {{ servicio }}
+                      <i class="bi bi-check-circle-fill"></i> {{ servicio }}
                     </li>
                   </ul>
                 </div>
@@ -401,7 +425,8 @@ onMounted(() => {
                   </ul>
                 </div>
                 <div style="display: flex; justify-content: end;">
-                  <button class="btn btn-primary row justify-content-end" @click="irDetalleHabitacion(habitacion._id)">Ver
+                  <button class="btn btn-primary row justify-content-end"
+                    @click="irDetalleHabitacion(habitacion._id)">Ver
                     más...</button>
                 </div>
               </div>
@@ -439,7 +464,7 @@ onMounted(() => {
 .card {
   border: none;
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .card-img-top {

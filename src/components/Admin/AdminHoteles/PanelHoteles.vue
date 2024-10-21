@@ -1,9 +1,33 @@
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+ 
+const hoteles = ref([
+  {
+    direccion: "Carrera 2A #6-12",
+    nombre: "Bella Vista",
+    rlagal: "Juan Romero",
+    tel: "3222431440",
+    correo: "juanr@gmail.com",
+  },
+]);
+
+function goToRegistroHotel() {
+  router.push('/RegitroHotel')
+}
+</script>
+
 <template>
   <div class="galeria">
     <div class="Hoteles"><h5>Administrar hoteles</h5></div>
     <div>
-      
-
+      <div class="">
+        <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
+          <i class="material-icons">add_box</i>
+        </button>
+      </div>
       <!-- Tabla de hoteles -->
       <div style="font-size: 12px;" class="table-responsive">
         <table class="table table-bordered">
@@ -203,20 +227,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref } from 'vue';
-
-const hoteles = ref([
-  {
-    direccion: "Carrera 2A #6-12",
-    nombre: "Bella Vista",
-    rlagal: "Juan Romero",
-    tel: "3222431440",
-    correo: "juanr@gmail.com",
-  },
-]);
-</script>
 
 <style scoped>
 /* Estilo para el modal más pequeño */

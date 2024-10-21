@@ -11,6 +11,11 @@ export const useStoreReserva = defineStore(
   () => {
     // Estados reactivos
     const reservas = ref([]);
+    const fechaIngreso = ref();
+    const fechaEgreso = ref();
+    const adultos = ref('');
+    const ninos = ref('');
+    const numero_noche = ref('');
     const habitacionesDisponibles = ref([]);
     const reserva = ref(null);
     const estatus = ref("");
@@ -70,7 +75,7 @@ export const useStoreReserva = defineStore(
     // Crear una nueva reserva
     const crearReserva = async (data) => {
       try {
-        const response = await axios.post(`${modelo}/crear`, data);
+        const response = await axios.post(`${modelo}/registro`, data);
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -136,6 +141,11 @@ export const useStoreReserva = defineStore(
       editarReserva,
       activarReserva,
       inactivarReserva,
+      adultos,
+      ninos,
+      numero_noche,
+      fechaIngreso,
+      fechaEgreso,
     };
   },
   {

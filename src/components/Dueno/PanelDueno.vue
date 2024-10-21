@@ -11,9 +11,8 @@ const useUsuario = useStoreUsuarios();
 <template>
   <!-- Inicio de scroll de hoteles y sitios -->
   <main>
-    <h1>{{ useUsuario.usuario.nombre }}</h1>
     <div class="galeria">
-      <div class="Hoteles"><h5>Administra tu hotel</h5></div>
+      <div class="Hoteles"><h5>Administrar Hotel</h5></div>
       <div class="contenedor">
         <center>
           <div class="contenedor-conciertos">

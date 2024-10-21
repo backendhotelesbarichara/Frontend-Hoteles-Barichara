@@ -68,9 +68,10 @@ function goToPanelDueno() {
                   </path>
                 </svg>
               </div>
+              <p class="fw-bold text-uppercase">Iniciar Sesión</p>
               <form class="text-center" method="post" @submit.prevent="Login">
                 <div class="mb-3">
-                  <input class="form-control" type="number" name="cedula" placeholder="Cédula" v-model="cedula" />
+                  <input class="form-control" type="number" name="cedula" placeholder="Usuario" v-model="cedula" />
                 </div>
                 <div class="mb-3">
                   <input class="form-control" type="password" name="password" placeholder="Contraseña" v-model="password" />

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
 import { useStoreReserva } from '../../stores/reserva.js';
 import { useRouter, useRoute } from 'vue-router';
@@ -9,14 +9,22 @@ const useReserva = useStoreReserva();
 const habitacionDetalle = ref();
 const imagenSeleccionada = ref('');
 const idHabitacion = ref('');
-const fechaEntrada = ref(useHabitacion.fechaIngreso);
-const fechaSalida = ref(useHabitacion.fechaEgreso);
+const nombre = ref('');
+const identificacion = ref('');
+const telefono = ref('');
+const email = ref('');
+const cantidad_adulto = ref(useReserva.adultos);
+const cantidad_nino = ref(useReserva.ninos);
+const fechaEntrada = ref(useReserva.fechaIngreso);
+const fechaSalida = ref(useReserva.fechaEgreso);
+const totalReserva = ref('');
 const tituloForm = ref('Formulario de Reserva');
-const mensaje = ref("Hola, vi su hotel en Hoteles Barichara y estoy interesado en hospedarnme allí. ¿Podrían enviarme más información sobre las habitacion que escogí y las tarifas? Muchas gracias.");
+const mensaje = ref("Hola, vi su hotel en Hoteles Barichara y estoy interesado en hospedarme allí. ¿Podrían enviarme más información sobre la habitación que escogí y sus respectivas tarifas? Muchas gracias.");
 const minDate = ref(obtenerFechaActual());
 const router = useRouter();
 const route = useRoute();
 const loading = ref(false);
+const notificacionVisible = ref(false);
 console.log("hola soy h", habitacionDetalle);
 
 
@@ -35,25 +43,30 @@ const enviarFormulario = async () => {
     correo_cliente: email.value,
     fecha_entrada: fechaEntrada.value,
     fecha_salida: fechaSalida.value,
-    cantidad_noches: cantidadNoches.value,
-    cantidad_adulto: cantidadAdulto.value,
-    costo_total: costo.value,
+    cantidad_noches: numeroDeNoches.value,
+    cantidad_adulto: cantidad_adulto.value,
+    cantidad_nino: cantidad_nino.value,
+    costo_total: totalReserva.value,
     mensaje: mensaje.value,
     idHabitacion: habitacionDetalle.value._id,
   };
 
-
+  console.log(data);
   try {
-    const response = await useReserva.registro(data);
+    const response = await useReserva.crearReserva(data);
     if (useReserva.estatus === 200) {
       console.log("Reserva enviada");
+      notificacionVisible.value = true;
+      setTimeout(() => {
+        notificacionVisible.value = false;
+      }, 5000);
       limpiar();
-    } else if (useReserva.estatus === 400) {
+    }
+    else if (useReserva.estatus === 400) {
       console.log(useReserva.validacion);
     }
   } catch (error) {
     console.log(error);
-    notificar('negative', 'Error al enviar la reserva. Intenta nuevamente.');
   } finally {
     loading.value = false;
   }
@@ -61,10 +74,10 @@ const enviarFormulario = async () => {
 
 const limpiar = () => {
   nombre.value = '';
+  identificacion.value = '';
   email.value = '';
   telefono.value = '';
-  mensaje.value = 'Hola, me gustaría solicitar más información sobre este servicio y su disponibilidad. ¿Podrían proporcionarme detalles, por favor?';
-  dialogoAbierto.value = false;
+  mensaje.value = 'Hola, vi su hotel en Hoteles Barichara y estoy interesado en hospedarme allí. ¿Podrían enviarme más información sobre la habitación que escogí y sus respectivas tarifas? Muchas gracias.';
 }
 
 function obtenerFechaActual() {
@@ -113,27 +126,30 @@ async function cargarHabitacion(id) {
 
 const numeroDeNoches = computed(() => {
   if (fechaEntrada.value && fechaSalida.value) {
-    useHabitacion.fechaIngreso = fechaEntrada.value;
-    useHabitacion
-
     const diffTime = Math.abs(new Date(fechaSalida.value) - new Date(fechaEntrada.value));
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
   return 0;
 });
 
-function calcularPrecioTotal(habitacion, personas) {
-  const total = habitacion.precio_noche * numeroDeNoches.value * personas;
+function calcularPrecioTotal() {
+  const total = habitacionDetalle.value.precio_noche * numeroDeNoches.value * cantidad_adulto.value;
+  totalReserva.value = total;
   return total;
 }
 
 onMounted(async () => {
   const Habitacion = route.query.id;
-  console.log("hola batiacion", Habitacion)
   if (Habitacion) {
     idHabitacion.value = Habitacion;
     await cargarHabitacion(Habitacion);
   }
+
+  calcularPrecioTotal()
+  console.log("adultos", useReserva.adultos);
+  console.log("ninos", useReserva.ninos);
+  console.log("total", totalReserva.value);
+  console.log("noches", useReserva.numero_noche);
 });
 </script>
 
@@ -210,18 +226,18 @@ onMounted(async () => {
 
             <!-- Cuerpo del Modal -->
             <div class="modal-body">
-              <form style="padding-left: 30px; padding-right: 30px">
+              <form style="padding-left: 30px; padding-right: 30px" @submit.prevent="enviarFormulario">
                 <!-- Información del Cliente y Reserva en un solo paso -->
-                <p class="fs-5">
+                <p style="font-size: 20px;">
                   Por favor digite los siguientes datos para que <strong>{{ habitacionDetalle.idPiso.idHotel.nombre
-                    }}</strong> se ponga en contacto contigo en breves...
+                    }}</strong> se ponga en contacto contigo en breves.
                 </p>
 
                 <!-- Mensaje Adicional -->
                 <div class="row">
                   <div class="col-md-12 mb-3">
                     <label class="fw-bold fs-6 mb-2" for="mensaje">Mensaje:</label>
-                    <textarea id="mensaje" v-model="mensaje" class="form-control form-control-lg"
+                    <textarea id="mensaje" v-model="mensaje" class="form-control form-control-xl"
                       placeholder="Digite cualquier información adicional..."></textarea>
                   </div>
                 </div>
@@ -231,15 +247,15 @@ onMounted(async () => {
                   <div class="col-md-6 mb-3">
                     <label class="fw-bold fs-6 mb-2" for="nombre">Nombre <span
                         class="text-danger fw-bold">*</span></label>
-                    <input type="text" id="nombre" class="form-control form-control-lg"
-                      placeholder="Ingrese su nombre.." required />
+                    <input type="text" id="nombre" v-model="nombre" class="form-control form-control-lg"
+                      placeholder="Ingrese su nombre aquí..." required />
                   </div>
 
                   <div class="col-md-6 mb-3">
-                    <label class="fw-bold fs-6 mb-2" for="apellido">Apellido <span
+                    <label class="fw-bold fs-6 mb-2" for="apellido">Identificación <span
                         class="text-danger fw-bold">*</span></label>
-                    <input type="text" id="apellido" class="form-control form-control-lg"
-                      placeholder="Ingrese su apellido.." required />
+                    <input type="number" id="apellido" v-model="identificacion" class="form-control form-control-lg"
+                      placeholder="Ingrese su número de identificación aquí..." required />
                   </div>
                 </div>
 
@@ -248,15 +264,15 @@ onMounted(async () => {
                   <div class="col-md-6 mb-3">
                     <label class="fw-bold fs-6 mb-2" for="telefono">Teléfono <span
                         class="text-danger fw-bold">*</span></label>
-                    <input type="number" id="telefono" class="form-control form-control-lg"
-                      placeholder="Ingrese su teléfono.." required />
+                    <input type="number" id="telefono" v-model="telefono" class="form-control form-control-lg"
+                      placeholder="Ingrese su teléfono..." required />
                   </div>
 
                   <div class="col-md-6 mb-3">
                     <label class="fw-bold fs-6 mb-2" for="correo">Correo <span
                         class="text-danger fw-bold">*</span></label>
-                    <input type="email" id="correo" class="form-control form-control-lg"
-                      placeholder="Ingrese su correo.." required />
+                    <input type="email" id="correo" v-model="email" class="form-control form-control-lg"
+                      placeholder="Ingrese su correo aquí..." required />
                   </div>
                 </div>
                 <!-- Fecha de Ingreso y Egreso -->
@@ -264,23 +280,27 @@ onMounted(async () => {
                   <div class="col-md-6 mb-3">
                     <label class="fw-bold fs-6 mb-2" for="fechaIngreso">Fecha de Ingreso:</label>
                     <input type="date" id="fechaIngreso" class="form-control form-control-lg" :min="minDate"
-                      v-model="useHabitacion.fechaIngreso" />
+                      v-model="fechaEntrada" />
                   </div>
 
                   <div class="col-md-6 mb-3">
                     <label class="fw-bold fs-6 mb-2" for="fechaEgreso">Fecha de Egreso:</label>
                     <input type="date" id="fechaEgreso" class="form-control form-control-lg" :min="minDate"
-                      v-model="useHabitacion.fechaEgreso" />
+                      v-model="fechaSalida" />
                   </div>
                 </div>
 
                 <!-- Botones para enviar o cancelar -->
                 <div class="text-center mt-4">
-                  <button type="submit" class="btn btn-custom me-3 text-uppercase fw-bold">
-                    Reservar
+                  <button type="submit" class="btn btn-custom me-3 text-uppercase fw-bold" :disabled="loading">
+                    <span v-if="loading" class="spinner-border spinner-border-sm" role="status"
+                      aria-hidden="true"></span>
+                    <span v-else>Reservar</span>
                   </button>
 
-                  <button type="button" class="btn btn-custom" style="background-color: black;" data-bs-dismiss="modal">
+
+
+                  <button type="button" class="btn btn-custom" style="background-color: black;" data-bs-dismiss="modal" :disabled="loading">
                     <i class="bi bi-x-circle"></i> Cancelar
                   </button>
                 </div>
@@ -308,6 +328,9 @@ onMounted(async () => {
       </div>
     </div>
 
+    <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show" role="alert">
+      Reserva enviada con éxito, por favor revise su correo electrónico.
+    </div>
   </div>
 </template>
 
@@ -355,7 +378,6 @@ form button:hover {
   width: 100%;
   margin-bottom: 20px;
 }
-
 
 .servicios ul {
   display: flex;
@@ -458,8 +480,8 @@ body {
   border-radius: 10px;
 }
 
-.contenedor-imagenes .imagen {
-  width: 32%;
+.contenedor-imagenes img {
+  width: 100%;
   position: relative;
   height: 250px;
   margin-bottom: 5px;
@@ -467,26 +489,48 @@ body {
   border-radius: 10px;
 }
 
-.imagen img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 10px;
+.custom-notify {
+  position: fixed;
+  /* Fix the position on the screen */
+  top: 20px;
+  /* Distance from the top */
+  left: 50%;
+  /* Center horizontally */
+  transform: translateX(-50%);
+  /* Align to exact center */
+  z-index: 9999;
+  /* Ensure it's above all content */
+  width: 300px;
+  /* Width of the notification */
+  text-align: center;
+  /* Center text inside the notification */
+  padding: 15px;
+  /* Padding for content */
+  background-color: #4caf50;
+  /* Green color similar to q-notify success */
+  color: white;
+  /* Text color */
+  border-radius: 5px;
+  /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Subtle shadow */
+  font-size: 16px;
+  /* Slightly larger text for visibility */
 }
 
-.imagen:hover .overlay {
-  height: 100%;
-  cursor: pointer;
+.custom-notify .close:hover {
+  opacity: 1;
+  /* Full opacity on hover */
 }
 
-@media screen and (min-width: 1000px) {
+
+/* @media screen and (min-width: 1000px) {
   .contenedor-imagenes {
-    width: 60%;
+    width: 100%;
   }
 
-  .contenedor-imagenes .imagen {
-    width: calc(25% - 10px);
-    /* Dividir en filas de 4 con espaciado */
+  .contenedor-imagenes  img{
+    width: calc(50% - 50px);
   }
 }
 
@@ -495,13 +539,12 @@ body {
     width: 90%;
   }
 
-  .contenedor-imagenes .imagen {
+  .contenedor-imagenes img{
     width: 48%;
   }
 
-  .contenedor-imagenes .imagen {
+  .contenedor-imagenes img{
     width: calc(25% - 10px);
-    /* width: calc(50% - 10px); Dividir en filas de 2 con espaciado */
   }
 }
 
@@ -510,13 +553,12 @@ body {
     width: 90%;
   }
 
-  .contenedor-imagenes .imagen {
+  .contenedor-imagenes img{
     width: 48%;
   }
 
-  .contenedor-imagenes .imagen {
+  .contenedor-imagenes img{
     width: calc(25% - 10px);
-    /* width: calc(50% - 10px); Dividir en filas de 2 con espaciado */
   }
 }
 
@@ -525,14 +567,12 @@ body {
     width: 90%;
   }
 
-  .contenedor-imagenes .imagen {
+  .contenedor-imagenes img{
     width: 48%;
   }
 
-  .contenedor-imagenes .imagen {
-    /* width: calc(33.333% - 10px); Dividir en filas de 3 con espaciado */
+  .contenedor-imagenes img{
     width: calc(25% - 10px);
-    /* Dividir en filas de 2 con espaciado */
   }
 }
 
@@ -541,14 +581,12 @@ body {
     width: 100%;
   }
 
-  .contenedor-imagenes .imagen {
+  .contenedor-imagenes img{
     width: 80%;
   }
 
-  .contenedor-imagenes .imagen {
-    /* width: calc(33.333% - 10px); Dividir en filas de 3 con espaciado */
+  .contenedor-imagenes img{
     width: calc(50% - 10px);
-    /* Dividir en filas de 2 con espaciado */
   }
-}
+} */
 </style>
