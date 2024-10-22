@@ -25,6 +25,8 @@ const loading = ref(true);
 const uploadingPrincipal = ref(false); // Estado de carga para imagen principal
 const uploadingFotos = ref(false); // Estado de carga para fotos
 const uploadingLogo = ref(false);
+const loadingEditar = ref(false);
+const notificacionVisible = ref(false);
 const editMode = ref({
   nombre: false,
   descripcion: false,
@@ -35,9 +37,28 @@ const editMode = ref({
   imagen: false,
   fotos: false
 });
+const nuevoServicio = ref('');
 
 
 const dataHotel = ref({ ...useHotel.editarHotelSelec });
+
+const abrirModalImagenes = (hotel) => {
+  // Abre el modal de ver imágenes y coloca el backdrop correcto
+  editaHotel(hotel);
+
+  const modalVerImagenes = new bootstrap.Modal(document.getElementById('modalVerImagenes'));
+  modalVerImagenes.show();
+
+  // Añadir el backdrop opaco sobre el primer modal
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop modal-backdrop-custom fade show';
+  document.body.appendChild(backdrop);
+};
+
+const abrirModalServicios = () => {
+  const modalServicios = new bootstrap.Modal(document.getElementById('modalVerServicios'));
+  modalServicios.show();
+};
 
 async function getHoteles() {
   try {
@@ -74,31 +95,41 @@ watch(hotelSeleccionado, (value) => {
   console.log("hotel selec", value);
 })
 
-function guardarCambios() {
+async function guardarCambios() {
   if (!dataHotel.value.nombre || !dataHotel.value.descripcion || !dataHotel.value.direccion || !dataHotel.value.correo || !dataHotel.value.telefono) {
     validacion.value = "No se pueden enviar campos vacíos";
     return;
   }
-
+  loadingEditar.value = true;
   // Prepara los datos para incluir solo las imágenes no eliminadas
   const datosParaGuardar = {
     ...dataHotel.value,
     fotos: dataHotel.value.fotos.filter(foto => !foto.eliminada),
   };
 
-  useHotel.editar(dataHotel.value._id, datosParaGuardar)
-    .then((res) => {
-      console.log("soy res", res);
+  try {
+    const res = await useHotel.editar(dataHotel.value._id, datosParaGuardar);
+    console.log("soy res", res);
+    if (useHotel.estatus === 200) {
+      notificacionVisible.value = true;
       useHotel.editarHotelSelec = res;
       getHoteles();
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+      const modalEditar = bootstrap.Modal.getInstance(document.getElementById('editarDHotel'));
+      if (modalEditar) {
+        modalEditar.hide();
+      }
+      setTimeout(() => {
+        notificacionVisible.value = false;
+      }, 9000);
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loadingEditar.value = false;
+  }
 }
 
 /* Subir imagenes cloudinary */
-
 const cambiarLogo = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -114,7 +145,6 @@ const cambiarLogo = async (event) => {
     uploadingLogo.value = false;
   }
 };
-
 
 const cambiarFoto = async (event) => {
   const file = event.target.files[0];
@@ -155,15 +185,22 @@ async function subirFotosHotel(event) {
   }
 }
 
+// Función para agregar nuevo servicio
+const agregarServicio = () => {
+  if (nuevoServicio.value.trim() !== '') {
+    dataHotel.value.servicio.push({ descrip: nuevoServicio.value.trim() });
+    nuevoServicio.value = '';
+  }
+};
+
+// Función para eliminar un servicio
+const eliminarServicio = (index) => {
+  dataHotel.value.servicio.splice(index, 1);
+};
+
 function eliminarLogo() {
-  dataHotel.value.logo = null; // O elimina el logo según cómo manejes la eliminación en tu backend
+  dataHotel.value.logo = null;
 }
-
-function eliminarImagenPrincipal() {
-  dataHotel.value.imagen = null; // O elimina la imagen principal según cómo manejes la eliminación en tu backend
-  console.log(dataHotel)
-}
-
 
 function marcarComoEliminada(index) {
   dataHotel.value.fotos[index].eliminada = true;
@@ -175,14 +212,9 @@ function goToHabitaciones(hotel) {
   router.push('/DPanelHabitaciones')
 }
 
-function goToRegistroHotel() {
-  router.push('/RegitroHotel')
-}
-
 onMounted(() => {
   getHoteles();
 });
-
 </script>
 
 <template>
@@ -275,16 +307,28 @@ onMounted(() => {
             <div class="modal-body">
               <form>
                 <!-- Fila: Logo y Nombre del Hotel -->
-                <div class="row mb-3 align-items-center">
-                  <div class="col-md-3">
-                    <label class="form-label"><strong>Logo</strong></label>
+                <div class="row mb-3" style="position: relative;">
+                  <div class="col-md-6">
+                    <label class="form-label"><strong>Nombre Hotel <span class="text-danger">*</span></strong></label>
+                    <div class="d-flex align-items-center">
+                      <h2 v-if="!editMode.nombre" class="mb-0">{{ dataHotel.nombre }}</h2>
+                      <input v-else class="form-control me-2" type="text" id="nombre_hotel" name="nombre_hotel"
+                        v-model="dataHotel.nombre" @blur="editMode.nombre = false" required />
+                      <button @click="editMode.nombre = !editMode.nombre" type="button" class="btn btn-link ms-2 p-0">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label"><strong>Logo <span class="text-danger">*</span></strong></label>
                     <div class="d-flex align-items-center">
                       <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
                       <div v-else>
                         <img v-if="dataHotel.logo" :src="dataHotel.logo.url" alt="" class="fixed-size-image" />
                         <p v-if="!dataHotel.logo">Por favor suba un logo...</p>
                         <button v-if="editMode.logo && dataHotel.logo" type="button"
-                          class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarLogo">
+                          class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarLogo"
+                          style="margin-left: 8px;">
                           <i class="bi bi-trash"></i>
                         </button>
                         <input v-if="editMode.logo" class="form-control mt-2" type="file" @change="cambiarLogo"
@@ -295,70 +339,27 @@ onMounted(() => {
                       </button>
                     </div>
                   </div>
-                  <div class="col-md-9">
-                    <label class="form-label"><strong>Nombre Hotel</strong></label>
-                    <div class="d-flex align-items-center">
-                      <h2 v-if="!editMode.nombre" class="mb-0">{{ dataHotel.nombre }}</h2>
-                      <input v-else class="form-control me-2" type="text" id="nombre_hotel" name="nombre_hotel"
-                        v-model="dataHotel.nombre" @blur="editMode.nombre = false" required />
-                      <button @click="editMode.nombre = true" type="button" class="btn btn-link ms-2 p-0">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
-                <!--                 <!-- Imagen Principal 
-                <div class="mb-3">
-                  <label class="form-label"><strong>Imagen Principal</strong></label>
-                  <div class="d-flex align-items-center">
-                    <div v-if="uploadingPrincipal" class="loading-spinner">Cargando...</div>
-                    <div v-else>
-                      <img v-if="dataHotel.imagen" :src="dataHotel.imagen" alt="" class="fixed-size-image" />
-                      <p v-if="!dataHotel.imagen">Por favor suba una imagen principal...</p>
-                      <button v-if="editMode.imagen && dataHotel.imagen" type="button"
-                        class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarImagenPrincipal">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                      <input v-if="editMode.imagen" class="form-control mt-2" type="file" @change="cambiarFoto"
-                        accept="image/*" />
-                    </div>
-                    <button @click="editMode.imagen = !editMode.imagen" type="button" class="btn btn-link ms-2 p-0">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                  </div>
-                </div> -->
-
-                <!-- Fotos del Hotel -->
-                <div class="mb-3 text-center">
-                  <label class="form-label"><strong>Fotos del Hotel</strong></label>
-                  <div class="d-flex align-items-center">
-                    <div v-if="uploadingFotos" class="loading-spinner">Cargando fotos...</div>
-                    <div v-else class="gap-5">
-                      <div v-for="(foto, index) in dataHotel.fotos" :key="index" class="photo-container">
-                        <img v-if="!foto.eliminada" :src="foto.url" alt="" class="fixed-size-image">
-                        <button v-if="!foto.eliminada && editMode.fotos" type="button"
-                          class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="marcarComoEliminada(index)">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </div>
-                      <input v-if="editMode.fotos" class="form-control mt-2" type="file" multiple
-                        @change="subirFotosHotel" accept="image/*" />
-                    </div>
-                    <button @click="editMode.fotos = !editMode.fotos" type="button" class="btn btn-link ms-2 p-0">
-                      <i class="bi bi-pencil"></i>
+                <div class="mb-3 text-start" style="display: flex; flex-direction: column; width: 100%;">
+                  <label class="form-label"><strong>Fotos del Hotel <span class="text-danger">*</span></strong></label>
+                  <div style="width: 15%;">
+                    <button type="button" class="btn btn-dark" @click="abrirModalImagenes(dataHotel)">
+                      Ver Imágenes
                     </button>
                   </div>
                 </div>
 
                 <!-- Descripción del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="descripcion_hotel"><strong>Descripción *</strong></label>
+                  <label class="form-label" for="descripcion_hotel"><strong>Descripción <span
+                        class="text-danger">*</span></strong></label>
                   <div class="d-flex align-items-center">
-                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion }}</p>
+                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion.slice(0,100) }} ...</p>
                     <textarea v-else class="form-control me-2" id="descripcion_hotel" name="descripcion_hotel"
                       v-model="dataHotel.descripcion" @blur="editMode.descripcion = false" required></textarea>
-                    <button @click="editMode.descripcion = true" type="button" class="btn btn-link ms-2 p-0">
+                    <button @click="editMode.descripcion = !editMode.descripcion" type="button"
+                      class="btn btn-link ms-2 p-0">
                       <i class="bi bi-pencil"></i>
                     </button>
                   </div>
@@ -366,12 +367,14 @@ onMounted(() => {
 
                 <!-- Dirección del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="direccion_hotel"><strong>Dirección *</strong></label>
+                  <label class="form-label" for="direccion_hotel"><strong>Dirección del Hotel <span
+                        class="text-danger">*</span></strong></label>
                   <div class="d-flex align-items-center">
                     <p v-if="!editMode.direccion" class="mb-0">{{ dataHotel.direccion }}</p>
                     <input v-else class="form-control me-2" type="text" id="direccion_hotel" name="direccion_hotel"
                       v-model="dataHotel.direccion" @blur="editMode.direccion = false" required />
-                    <button @click="editMode.direccion = true" type="button" class="btn btn-link ms-2 p-0">
+                    <button @click="editMode.direccion = !editMode.direccion" type="button"
+                      class="btn btn-link ms-2 p-0">
                       <i class="bi bi-pencil"></i>
                     </button>
                   </div>
@@ -379,12 +382,13 @@ onMounted(() => {
 
                 <!-- Correo del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="correo_hotel"><strong>Correo *</strong></label>
+                  <label class="form-label" for="correo_hotel"><strong>Correo del Hotel <span
+                        class="text-danger">*</span></strong></label>
                   <div class="d-flex align-items-center">
                     <p v-if="!editMode.correo" class="mb-0">{{ dataHotel.correo }}</p>
                     <input v-else class="form-control me-2" type="email" id="correo_hotel" name="correo_hotel"
                       v-model="dataHotel.correo" @blur="editMode.correo = false" required />
-                    <button @click="editMode.correo = true" type="button" class="btn btn-link ms-2 p-0">
+                    <button @click="editMode.correo = !editMode.correo" type="button" class="btn btn-link ms-2 p-0">
                       <i class="bi bi-pencil"></i>
                     </button>
                   </div>
@@ -392,13 +396,24 @@ onMounted(() => {
 
                 <!-- Teléfono del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="telefono_hotel"><strong>Teléfono *</strong></label>
+                  <label class="form-label" for="telefono_hotel"><strong>Teléfono del Hotel <span
+                        class="text-danger">*</span></strong></label>
                   <div class="d-flex align-items-center">
                     <p v-if="!editMode.telefono" class="mb-0">{{ dataHotel.telefono }}</p>
                     <input v-else class="form-control me-2" type="text" id="telefono_hotel" name="telefono_hotel"
                       v-model="dataHotel.telefono" @blur="editMode.telefono = false" required />
-                    <button @click="editMode.telefono = true" type="button" class="btn btn-link ms-2 p-0">
+                    <button @click="editMode.telefono = !editMode.telefono" type="button" class="btn btn-link ms-2 p-0">
                       <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mb-3 text-start" style="display: flex; flex-direction: column; width: 100%;">
+                  <label class="form-label"><strong>Servicios del Hotel <span
+                        class="text-danger">*</span></strong></label>
+                  <div style="width: 15%;">
+                    <button type="button" class="btn btn-dark" @click="abrirModalServicios">
+                      Ver Servicios
                     </button>
                   </div>
                 </div>
@@ -410,30 +425,179 @@ onMounted(() => {
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Cerrar</button>
-              <button type="button" class="btn btn-dark" @click="guardarCambios">Guardar</button>
+              <button type="button" class="btn btn-dark" data-bs-dismiss="modal"
+                :disabled="loadingEditar">Cerrar</button>
+              <button type="button" class="btn btn-dark" @click="guardarCambios"> <span v-if="loadingEditar"
+                  class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span v-else>Guardar</span></button>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Modal para ver y editar imágenes -->
+      <div class="modal fade modal-large" id="modalVerImagenes" tabindex="-1" aria-labelledby="modalImagenesLabel"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="modalImagenesLabel" style="color: black;">Imágenes del Hotel</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Mostrar las imágenes actuales -->
+              <div class="d-flex flex-wrap gap-3">
+                <div v-for="(foto, index) in dataHotel.fotos" :key="index" class="photo-container">
+                  <img v-if="!foto.eliminada" :src="foto.url" alt="Foto del hotel" class="fixed-size-image">
+                  <button v-if="!foto.eliminada" class="btn btn-danger btn-sm mt-2 photo-delete-btn"
+                    @click="marcarComoEliminada(index)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div style="display: flex; flex-direction: column; width: 100%; justify-content: start;">
+                <label class="form-label"><strong>Agregar nuevas imágenes</strong></label>
+                <input type="file" class="form-control" multiple @change="subirFotosHotel" accept="image/*">
+                <label>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB, la primera foto será utilizada
+                  como foto
+                  principal del hotel)</label>
+              </div>
+              <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal para ver y editar servicios -->
+      <div class="modal fade modal-large" id="modalVerServicios" tabindex="-1" aria-labelledby="modalServiciosLabel"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="modalServiciosLabel">Servicios del Hotel</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Mostrar los servicios actuales -->
+              <div class="mb-3">
+                <label class="form-label"><strong>Servicios Existentes</strong></label>
+                <ul>
+                  <li v-for="(servicio, index) in dataHotel.servicio" :key="index" style="list-style-type: none;">
+                    <!-- Usar flexbox para alinear el input y el botón en la misma línea -->
+                    <div style="display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 10px;">
+                      <input type="text" v-model="dataHotel.servicio[index].descrip" class="form-control"
+                        style="flex: 1;" />
+                      <button type="button" class="btn btn-danger btn-sm" @click="eliminarServicio(index)"
+                        style="flex-shrink: 0;">
+                        <i class="bi bi-trash"></i> Eliminar
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div style="display: flex; flex-direction: column; width: 100%; justify-content: start;">
+                <label for="nuevoServicio" class="form-label">Agregar nuevo servicio</label>
+                <div style="width: 50%;">
+                  <textarea type="text" v-model="nuevoServicio" class="form-control"
+                    placeholder="Nuevo servicio"></textarea>
+                  <button type="button" class="btn mt-2 botonservicio" style="background-color: #a8521c;"
+                    @click="agregarServicio">Añadir Servicio</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show" role="alert">
+      ¡Cambios guardados exitosamente!
     </div>
   </div>
 </template>
 
-
 <style scoped>
 .modal-large .modal-dialog {
-  max-width: 90%;
-  /* Ancho máximo del 90% del tamaño de la pantalla */
+  max-width: 80%;
+  height: 80vh;
+  width: 80vw;
 }
+
+.modal-large .modal-content {
+  height: 100%;
+}
+
+.fixed-size-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #b7642d;
+}
+
+.modal-dialog-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: grey #f1f1f1;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: black;
+  border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background-color: black;
+  border-radius: 10px;
+  border: 2px solid #f1f1f1;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background-color: grey;
+}
+
+.modal-body::-webkit-scrollbar-thumb:active {
+  background-color: black;
+}
+
+.modal-large .modal-dialog {
+  max-width: 90%;
+}
+
+.modal-backdrop.show {
+  z-index: 1040 !important;
+}
+
+/* Asegurarse de que el modal de servicios tenga un z-index mayor que el modal editar */
+#modalVerServicios {
+  z-index: 1060 !important;
+}
+
+/* Asegurar que el modal Ver Servicios tenga la misma altura */
+#modalVerServicios .modal-dialog {
+  max-width: 90%;
+}
+
 
 .logo {
   max-width: 100%;
   max-height: 100px;
-  /* Ajusta el tamaño máximo del logo */
 }
-
-
 
 .image-container,
 .photos-container {
@@ -446,7 +610,6 @@ onMounted(() => {
   align-items: center;
   width: 100%;
   height: 100px;
-  /* Ajusta el alto del spinner si es necesario */
 }
 
 .photo-container {
@@ -455,17 +618,12 @@ onMounted(() => {
   margin-bottom: 10px;
 }
 
-
-
-
-
 .logo:hover {
   position: relative;
   max-width: 30px;
   max-height: 40px;
   margin-top: 5px;
   transform: scale(1.1);
-  /* Cambia el tamaño al pasar el mouse */
 }
 
 .logop {
@@ -485,8 +643,8 @@ onMounted(() => {
 }
 
 .fixed-size-image {
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
   overflow: hidden;
   object-fit: cover;
   border-radius: 10px;
@@ -593,7 +751,6 @@ onMounted(() => {
   transition: background-color 0.3s ease;
 }
 
-
 .galeria {
   padding: 16px;
   margin-top: 8px;
@@ -612,8 +769,6 @@ h5 {
   transition: 1s;
 }
 
-
-
 .descripVmenu {
   padding: 1rem;
   word-wrap: break-word;
@@ -629,7 +784,6 @@ h5 {
   border-collapse: collapse;
 }
 
-/* Ajusta el estilo solo para los elementos vmenu dentro de las celdas de la tabla */
 .table td .vmenu {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -647,26 +801,19 @@ th {
   background-color: #f2f2f2;
 }
 
-/* Botones de acción dentro de la tabla */
 .btns {
   border-radius: 50%;
-  /* Redondear los botones */
   padding: 5px;
-  /* Agregar espacio interior para separar los iconos */
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #343a40;
-  /* Color de fondo de los botones */
   color: white;
-  /* Color del texto de los botones */
   border: none;
-  /* Eliminar el borde de los botones */
 }
 
 .material-icons {
   font-size: 20px;
-  /* Tamaño del icono */
 }
 
 /* Estilos para scrollbar */
@@ -681,28 +828,51 @@ th {
 
 .btn-link i {
   font-size: 1.5rem;
-  /* Tamaño del icono */
   color: #b7642d;
-  /* Color del icono */
 }
 
 .btn-link {
   text-decoration: none;
   padding: 0;
   margin-left: 8px;
-  /* Espacio entre el texto y el lápiz */
 }
 
 .btn-link:hover {
   background-color: #000000;
-  /* Cambia el color del icono al pasar el mouse */
 }
 
 .btn-link:hover i {
   color: #ffffff;
-  /* Cambia el color del icono al pasar el mouse */
 }
 
+.custom-notify {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 300px;
+  text-align: center;
+  padding: 15px;
+  background-color: #4caf50;
+  color: white;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+}
+
+.custom-notify .close:hover {
+  opacity: 1;
+}
+
+.photo-delete-btn {
+  margin-left: 8px;
+}
+
+
+.botonservicio:hover {
+  background-color: black;
+}
 
 /* Media query */
 @media (max-width: 768px) {

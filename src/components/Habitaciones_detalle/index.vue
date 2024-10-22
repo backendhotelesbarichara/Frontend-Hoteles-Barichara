@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
 import { useStoreReserva } from '../../stores/reserva.js';
 import { useRouter, useRoute } from 'vue-router';
@@ -13,6 +13,7 @@ const nombre = ref('');
 const identificacion = ref('');
 const telefono = ref('');
 const email = ref('');
+const noches = ref('');
 const cantidad_adulto = ref(useReserva.adultos);
 const cantidad_nino = ref(useReserva.ninos);
 const fechaEntrada = ref(useReserva.fechaIngreso);
@@ -59,7 +60,11 @@ const enviarFormulario = async () => {
       notificacionVisible.value = true;
       setTimeout(() => {
         notificacionVisible.value = false;
-      }, 5000);
+      }, 9000);
+      const modalReserva = bootstrap.Modal.getInstance(document.getElementById('modalReserva'));
+      if (modalReserva) {
+        modalReserva.hide();
+      }
       limpiar();
     }
     else if (useReserva.estatus === 400) {
@@ -127,6 +132,7 @@ async function cargarHabitacion(id) {
 const numeroDeNoches = computed(() => {
   if (fechaEntrada.value && fechaSalida.value) {
     const diffTime = Math.abs(new Date(fechaSalida.value) - new Date(fechaEntrada.value));
+    noches.value = diffTime / (1000 * 60 * 60 * 24);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
   return 0;
@@ -137,6 +143,10 @@ function calcularPrecioTotal() {
   totalReserva.value = total;
   return total;
 }
+
+watch(numeroDeNoches, () => {
+  calcularPrecioTotal();
+})
 
 onMounted(async () => {
   const Habitacion = route.query.id;
@@ -300,7 +310,8 @@ onMounted(async () => {
 
 
 
-                  <button type="button" class="btn btn-custom" style="background-color: black;" data-bs-dismiss="modal" :disabled="loading">
+                  <button type="button" class="btn btn-custom" style="background-color: black;" data-bs-dismiss="modal"
+                    :disabled="loading">
                     <i class="bi bi-x-circle"></i> Cancelar
                   </button>
                 </div>
@@ -491,36 +502,22 @@ body {
 
 .custom-notify {
   position: fixed;
-  /* Fix the position on the screen */
   top: 20px;
-  /* Distance from the top */
   left: 50%;
-  /* Center horizontally */
   transform: translateX(-50%);
-  /* Align to exact center */
   z-index: 9999;
-  /* Ensure it's above all content */
   width: 300px;
-  /* Width of the notification */
   text-align: center;
-  /* Center text inside the notification */
   padding: 15px;
-  /* Padding for content */
   background-color: #4caf50;
-  /* Green color similar to q-notify success */
   color: white;
-  /* Text color */
   border-radius: 5px;
-  /* Rounded corners */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  /* Subtle shadow */
   font-size: 16px;
-  /* Slightly larger text for visibility */
 }
 
 .custom-notify .close:hover {
   opacity: 1;
-  /* Full opacity on hover */
 }
 
 
