@@ -117,7 +117,6 @@ const getIconClass = (servicio) => {
 
 async function cargarHabitacion(id) {
   try {
-    console.log("hola")
     const response = await useHabitacion.getPorId(id);
 
     if (response) {

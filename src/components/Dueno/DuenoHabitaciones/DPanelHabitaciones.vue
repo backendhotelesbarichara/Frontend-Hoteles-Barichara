@@ -3,10 +3,13 @@ import { ref, onMounted } from 'vue';
 import { useStorePiso } from '../../../stores/piso.js';
 import { useStoreHotel } from '../../../stores/hotel.js';
 import { useStoreHabitacion } from '../../../stores/habitacion.js';
+import { useRoute, useRouter } from 'vue-router';
 
 const usePiso = useStorePiso();
 const useHotel = useStoreHotel();
 const useHabitacion = useStoreHabitacion();
+const route = useRoute();
+const router = useRouter();
 const selectedPiso = ref("");
 const idPiso = ref("");
 const pisos = ref([]);
@@ -14,6 +17,7 @@ const habitaciones = ref([]);
 const loading = ref(true);
 const selectedHabitacion = ref(null);
 const idHabSelec = ref("");
+const idHotel = ref('');
 const numero_habitacion = ref("");
 const descripcionHabitacion = ref("");
 const capacidadMaxima = ref("");
@@ -29,10 +33,13 @@ const editarDHabitacionesModal = ref(null);
 const guardando = ref(false);
 const habitacionEditada = ref(false);
 
-async function getPisoPorHotel() {
+async function getPisoPorHotel(id) {
   try {
-    const response = await usePiso.getPisoPorHotel(useHotel.idHotel);
+    console.log("soy id", id)
+    const response = await usePiso.getPisoPorHotel(id);
+    console.log("dasdkaslasda2", response)
     pisos.value = response;
+
     if (pisos.value.length > 0) {
       selectedPiso.value = pisos.value[0];
       await handlePisoChange();
@@ -130,8 +137,20 @@ const openServicioModal = () => {
   showServicioModal.value = true;
 };
 
+function irFormularioHabitacion() {
+  router.push({ path: '/RegistroHabitaciones', query: { id: useHabitacion.idHotel } });
+}
 
-onMounted(() => {
+
+onMounted(async() => {
+  const Hotel = route.query.id;
+  if (Hotel) {
+    idHotel.value = Hotel;
+    useHabitacion.idHotel = Hotel;
+    await getPisoPorHotel(Hotel);
+  }
+
+
   tipoHabitacionModal.value = document.getElementById('tipoHabitacionModal');
   serviciosModal.value = document.getElementById('servicioModal');
   editarDHabitacionesModal.value = document.getElementById('editarDHabitaciones');
@@ -143,8 +162,6 @@ onMounted(() => {
   serviciosModal.value.addEventListener('hidden.bs.modal', () => {
     new bootstrap.Modal(editarDHabitacionesModal.value).show();
   });
-
-  getPisoPorHotel();
 });
 
 </script>
@@ -179,11 +196,7 @@ onMounted(() => {
       <div v-else style="font-size: 12px;" class="table-responsive">
         <div class="mb-5">
           <div class="top-bar">
-            <router-link class="link" to="/RegistroHabitaciones">
-              <button class="btns btn btn-dark top-bar__button" @click="showAddModal">
-                <i class="material-icons">add_box</i>
-              </button>
-            </router-link>
+            <h1 class="text-center">Habitaciones de {{ selectedPiso.idHotel.nombre }}</h1>
             <div class="top-bar__select-container">
               <select class="top-bar__select fw-bold" v-model="selectedPiso" @change="handlePisoChange">
                 <option v-for="piso in pisos" :key="piso._id" :value="piso">
@@ -268,7 +281,8 @@ onMounted(() => {
                 <div class="col-6">
                   <div class="mb-3">
                     <label class="form-label" for="alias_habitacion"><strong>Num habitacion</strong></label>
-                    <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion" required />
+                    <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion"
+                      required />
                   </div>
                 </div>
                 <div class="col-6">
@@ -389,11 +403,14 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <div style="display: flex; justify-content: end;">
+        <button class="btn top-bar__button" id="btns" @click="irFormularioHabitacion()">
+          Agregar Habitación
+        </button>
+    </div>
+
   </div>
 </template>
-
-
-
 
 <style scoped>
 .top-bar {
@@ -593,20 +610,16 @@ td {
 
 th {
   background-color: #f2f2f2;
-  /* Color de fondo para las celdas del encabezado */
 }
 
 .btn-container {
   display: flex;
   gap: 5px;
-  /* Espacio entre los botones */
 }
 
 .btns {
   border-radius: 50%;
-  /* Redondear los botones */
   padding: 5px;
-  /* Agregar espacio interior para separar los iconos */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,25 +628,33 @@ th {
 /* Botones de acción dentro de la tabla */
 .btns {
   border-radius: 50%;
-  /* Redondear los botones */
   padding: 5px;
-  /* Agregar espacio interior para separar los iconos */
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #343a40;
-  /* Color de fondo de los botones */
   color: white;
-  /* Color del texto de los botones */
   border: none;
-  /* Eliminar el borde de los botones */
+}
+
+#btns {
+  background-color: #b7642d;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#btns:hover {
+  background-color: #a8521c;
 }
 
 .custom {
   border-radius: 50%;
-  /* Redondear los botones */
   padding: 5px;
-  /* Agregar espacio interior para separar los iconos */
   display: flex;
   align-items: center;
   justify-content: center;

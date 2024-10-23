@@ -209,7 +209,8 @@ function marcarComoEliminada(index) {
 function goToHabitaciones(hotel) {
   idHotel.value = hotel._id;
   useHotel.idHotel = idHotel.value;
-  router.push('/DPanelHabitaciones')
+  const url = router.resolve({ path: '/DPanelHabitaciones', query: { id: hotel._id } }).href;
+  window.open(url, '_blank');
 }
 
 onMounted(() => {
@@ -500,7 +501,7 @@ onMounted(() => {
             </div>
             <div class="modal-footer">
               <div style="display: flex; flex-direction: column; width: 100%; justify-content: start;">
-                <label for="nuevoServicio" class="form-label">Agregar nuevo servicio</label>
+                <label for="nuevoServicio" class="form-label fw-bold">Agregar nuevo servicio</label>
                 <div style="width: 50%;">
                   <textarea type="text" v-model="nuevoServicio" class="form-control"
                     placeholder="Nuevo servicio"></textarea>

@@ -1,10 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useStorePiso } from '../../stores/piso.js';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 const usePiso = useStorePiso();
 const useHabitacion = useStoreHabitacion();
 const num_habitacion = ref("");
@@ -16,12 +17,16 @@ const precio = ref("");
 const tipo_habitacion = ref([]);
 const tipoInput = ref("");
 const uploadedImages = ref([]);
-const imagesSelected = ref(0);
+const data = ref([]);
+const loading = ref(false);
+const notificacionVisible = ref(false);
+const modalImagenesVisible = ref(false);
 const numPiso = ref(usePiso.numPisoSelec);
 const idPiso = ref(usePiso.idPisoSeleccionado);
+const idHotel = ref();
 
 const agregarHabitacion = async () => {
-  const data = {
+  data.value = {
     numero_habitacion: num_habitacion.value,
     descripcion: descripcion.value,
     tipo_habitacion: tipo_habitacion.value,
@@ -32,10 +37,10 @@ const agregarHabitacion = async () => {
   };
 
   try {
-    const response = await useHabitacion.agregar(data);
+    const response = await useHabitacion.agregar(data.value);
 
     if (useHabitacion.estatus === 200) {
-      router.push('/DPanelHabitaciones')
+      goToHabitaciones();
       console.log("Habitación añadida");
     } else if (useHabitacion.estatus === 400) {
       return;
@@ -45,38 +50,52 @@ const agregarHabitacion = async () => {
   }
 };
 
-const handleFileUpload = (event) => {
-  if (imagesSelected.value >= 4) {
-    // Límite de 4 imágenes alcanzado, no permitir más
-    return;
+// Función para abrir el modal
+const abrirModalImagenes = () => {
+  modalImagenesVisible.value = true;
+};
+
+// Función para cerrar el modal
+const cerrarModalImagenes = () => {
+  modalImagenesVisible.value = false;
+};
+
+// Modificamos la función para que al subir las fotos se habilite el botón de visualización de imágenes
+async function subirFotosHabitacion(event) {
+  const files = event.target.files;
+  if (files.length === 0) return;
+
+  loading.value = true;
+
+  if (!data.value.imagenes) {
+    data.value.imagenes = [];
   }
 
-  const fileInput = event.target;
-  const files = fileInput.files;
+  const fotosAntesDeSubir = [...data.value.imagenes];
 
-  // Recorrer los archivos seleccionados
-  for (let i = 0; i < files.length; i++) {
-    if (imagesSelected.value >= 4) {
-      // Límite de 4 imágenes alcanzado, no permitir más
-      break;
+  try {
+    data.value.imagenes = fotosAntesDeSubir.filter(foto => !foto.eliminada);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imageUrl = await useHabitacion.subirGrupoFotos(data.value._id, file);
+
+      const fotoObj = { url: imageUrl };
+      data.value.imagenes.push(fotoObj);
+      console.log("soy data fotos", data.value)
     }
 
-    const file = files[i];
-    const imageURL = URL.createObjectURL(file);
-
-    uploadedImages.value.push({ src: imageURL, alt: "Imagen" });
-    imagesSelected.value++;
+    uploadedImages.value = data.value.imagenes;
+    notificacionVisible.value = true;
+    setTimeout(() => {
+      notificacionVisible.value = false;
+    }, 3000);
+  } catch (error) {
+    console.error('Error al subir las fotos:', error);
+  } finally {
+    loading.value = false;
   }
-
-  // Limpiar el campo de entrada de archivos si es necesario
-  fileInput.value = "";
-};
-
-const clearImages = () => {
-  // Restablecer el array de imágenes cargadas y el contador
-  uploadedImages.value = [];
-  imagesSelected.value = 0;
-};
+}
 
 const addServicio = () => {
   if (servicioInput.value.trim() !== "") {
@@ -89,6 +108,15 @@ const removeServicio = (index) => {
   servicios.value.splice(index, 1);
 };
 
+// Función para eliminar una imagen tanto del array 'uploadedImages' como de 'data.value.imagenes'
+const eliminarImagen = (index) => {
+  uploadedImages.value.splice(index, 1);
+
+  if (data.value.imagenes && data.value.imagenes.length > 0) {
+    data.value.imagenes.splice(index, 1);
+  } 
+};
+
 const addTipo = () => {
   if (tipoInput.value.trim() !== "") {
     tipo_habitacion.value.push(tipoInput.value.trim());
@@ -99,8 +127,18 @@ const addTipo = () => {
 const removeTipo = (index) => {
   tipo_habitacion.value.splice(index, 1);
 };
-</script>
 
+function goToHabitaciones() {
+  router.push({ path: '/DPanelHabitaciones', query: { id: idHotel.value } });
+}
+
+onMounted(() => {
+  const Hotel = route.query.id;
+  if (Hotel) {
+    idHotel.value = Hotel;
+  }
+})
+</script>
 
 <template>
   <main>
@@ -114,7 +152,7 @@ const removeTipo = (index) => {
           <div class="card shadow mb-3">
             <div class="card-header py-3 d-flex justify-content-between">
               <p class="text-primary m-0 fw-bold">
-                <span style="color: #b7642d">Rellene los campos obligatorios *</span>
+                <span style="color: #b7642d">Rellene los campos obligatorios <span class="text-danger">*</span></span>
               </p>
               <p class="fw-bold">Añadir habitación al PISO {{ numPiso }}</p>
             </div>
@@ -123,14 +161,16 @@ const removeTipo = (index) => {
               <div class="row">
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="alias_habitacion"><strong>Número habitación *</strong></label>
+                    <label class="form-label" for="alias_habitacion"><strong>Número habitación <span
+                          class="text-danger">*</span></strong></label>
                     <input class="form-control" v-model="num_habitacion" type="text" id="alias_habitacion"
                       placeholder="Num habitación..." name="alias_habitacion" required />
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="descripcionSitio"><strong>Descripción *</strong></label>
+                    <label class="form-label" for="descripcionSitio"><strong>Descripción <span
+                          class="text-danger">*</span></strong></label>
                     <textarea class="form-control" v-model="descripcion" id="descripcionSitio"
                       placeholder="Describa la habitación..." name="descripcionSitio" rows="1" required></textarea>
                   </div>
@@ -139,12 +179,13 @@ const removeTipo = (index) => {
               <div class="row">
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="tipo_habitacion"><strong>Tipo de habitación *</strong></label>
+                    <label class="form-label" for="tipo_habitacion"><strong>Tipo de habitación <span
+                          class="text-danger">*</span></strong></label>
                     <div class="input-group">
                       <input class="form-control" v-model="tipoInput" type="text" id="tipo_habitacion"
-                        placeholder="Ej: Simple, Doble" name="tipo_habitacion" />
-                      <button type="button" class="btn btn-primary" @click="addTipo"
-                        style="background: #b7642d">Agregar</button>
+                        placeholder="Ej: Habitación cama sencilla, doble..." name="tipo_habitacion" />
+                      <button type="button" class="btn" @click="addTipo"
+                        style="background: #b7642d; color: white;">Agregar</button>
                     </div>
                     <div v-if="tipo_habitacion.length > 0">
                       <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal"
@@ -154,12 +195,13 @@ const removeTipo = (index) => {
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
+                    <label class="form-label" for="servicios"><strong>Servicios <span
+                          class="text-danger">*</span></strong></label>
                     <div class="input-group">
                       <input class="form-control" v-model="servicioInput" type="text" id="servicios"
                         placeholder="Ej: Wifi, TV" name="servicios" />
-                      <button type="button" class="btn btn-primary" @click="addServicio"
-                        style="background: #b7642d">Agregar</button>
+                      <button type="button" class="btn" @click="addServicio"
+                        style="background: #b7642d; color: white;">Agregar</button>
                     </div>
                     <div v-if="servicios.length > 0">
                       <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal"
@@ -171,48 +213,50 @@ const removeTipo = (index) => {
               <div class="row">
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="capacidad_maxima"><strong>Capacidad máxima *</strong></label>
+                    <label class="form-label" for="capacidad_maxima"><strong>Capacidad máxima <span
+                          class="text-danger">*</span></strong></label>
                     <input class="form-control" v-model="capacidad_max" type="number" id="capacidad_maxima"
                       placeholder="Máximo de personas..." name="capacidad_maxima" required />
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="precio"><strong>Precio *</strong></label>
+                    <label class="form-label" for="precio"><strong>Precio <span
+                          class="text-danger">*</span></strong></label>
                     <input class="form-control" v-model="precio" type="number" id="precio"
                       placeholder="Precio por noche..." name="precio" required />
                   </div>
                 </div>
+
                 <div class="col-6">
                   <div class="mb-3">
-                    <strong>Imagen principal *</strong>
-                    <p>(Máximo 4)</p>
+                    <strong>Imágenes de la habitación <span class="text-danger">*</span></strong>
+                    <p>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB)</p>
+
                     <div class="logo">
                       <p class="logop">
                         <i style="color: #b7642d; font-size: 30px" class="bi bi-file-earmark-arrow-up-fill"></i>
                       </p>
-                      <br />
-                      <input class="foto" style="margin-top: 13px"  type="file"
-                        accept="image/*" multiple @change="handleFileUpload" />
+                      <input class="foto" style="margin-top: 13px" type="file" accept="image/*" multiple
+                        @change="subirFotosHabitacion" />
                     </div>
-                    <!-- Contenedor de las imágenes con margen -->
-                    <div style="margin-top: 15px; display: flex" class="d-flex flex-wrap gap-1">
-                      <div v-for="(image, index) in uploadedImages" :key="index" class="image-preview">
-                        <img class="fixed-size-image" :src="image.src" :alt="image.alt" />
-                      </div>
-                    </div>
-                    <button style="background-color: #b7642d; color: #fff; margin-top: 20px;" class="btn btn-custom"
-                      @click="clearImages" v-if="uploadedImages.length > 0">
-                      <i class="bi bi-trash3-fill"></i> Limpiar Imágenes
+
+                    <!-- Spinner de carga -->
+                    <div v-if="loading" class="loading-spinner fw-bold">Subiendo imágenes...</div>
+                  </div>
+                  <div v-if="uploadedImages.length > 0">
+                    <button type="button" class="btn btn-secondary mt-2" @click="abrirModalImagenes">
+                      Ver imágenes subidas
                     </button>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
           <div class="text-center mb-3">
-            <a class="btn btn-outline-danger" role="button" href="#" style="margin-right: 5px">Cancelar</a>
-            <button class="btn btn-outline-dark" type="reset" style="margin-right: 5px">Limpiar</button>
+            <a class="btn btncancelar" role="button" href="#"
+              style="margin-right: 5px; background-color: #dc3545; color: white;">Cancelar</a>
             <button class="btn btn-custom" type="submit" style="background: #b7642d; color: #fff">
               <i class="bi bi-floppy-fill"></i> Registrar
             </button>
@@ -222,7 +266,8 @@ const removeTipo = (index) => {
       <!-- End: Ludens - Create-Edit Form -->
 
       <!-- Modal para ver los servicios -->
-      <div class="modal fade" id="serviciosModal" tabindex="-1" aria-labelledby="serviciosModalLabel" aria-hidden="true">
+      <div class="modal fade" id="serviciosModal" tabindex="-1" aria-labelledby="serviciosModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -269,6 +314,37 @@ const removeTipo = (index) => {
         </div>
       </div>
     </div>
+
+    <div v-if="modalImagenesVisible" class="modal fade show" tabindex="-1"
+      style="display: block; background: rgba(0, 0, 0, 0.5);">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5">Imágenes Subidas</h1>
+            <button type="button" class="btn-close" @click="cerrarModalImagenes"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex flex-wrap gap-2">
+              <div v-for="(image, index) in uploadedImages" :key="index" class="image-preview position-relative">
+                <!-- Imagen -->
+                <img class="fixed-size-image" :src="image.src || image.url" :alt="image.alt" />
+                <!-- Botón para eliminar la imagen -->
+                <button @click="eliminarImagen(index)" class="btn btn-danger btn-sm position-absolute" id="btn-danger"
+                  style="top: 5px; right: 5px;">Eliminar</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cerrarModalImagenes">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show" role="alert">
+      ¡Imagen subida exitosamente!
+    </div>
   </main>
 </template>
 
@@ -309,15 +385,29 @@ const removeTipo = (index) => {
   opacity: 0;
 }
 
+.position-relative {
+  position: relative;
+}
+
 .fixed-size-image {
-  width: 100px;
-  height: 100px;
-  overflow: hidden;
-  /* Para manejar el desbordamiento de la imagen */
+  width: 150px;
+  height: 150px;
   object-fit: cover;
   border-radius: 10px;
-  border-style: solid;
-  border-color: #b7642d5b;
+  border: 2px solid #b7642d5b;
+}
+
+#btn-danger {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+
+.modal-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .link {
@@ -340,6 +430,55 @@ h5 {
   align-items: center;
   border-radius: 10px;
   transition: 1s;
+}
+
+.btncancelar:hover {
+  background-color: white;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.loading-spinner {
+  font-size: 16px;
+  color: #b7642d;
+  margin-top: 10px;
+  margin-left: 30px;
+  animation: pulse 1s infinite ease-in-out; /* Pulsing animation */
+}
+
+
+/* Estilos para la notificación */
+.custom-notify {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 300px;
+  text-align: center;
+  padding: 15px;
+  background-color: #4caf50;
+  color: white;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+}
+
+.custom-notify .close:hover {
+  opacity: 1;
 }
 
 /* Estilos para resoluciones de 1000px o más */

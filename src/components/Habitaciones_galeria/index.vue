@@ -275,15 +275,14 @@ onMounted(() => {
       <p class="text-h5 fw-bold text-uppercase">Servicios del hotel</p>
       <p>El Hotel {{ hotelInfo.nombre }} cuenta con los siguientes servicios:</p>
 
-      <table class="table-servicios">
-        <tbody>
-          <tr v-for="(chunk, index) in chunkArray(hotelInfo.servicio, 5)" :key="index">
-            <td v-for="servicio in chunk" :key="servicio._id" style="text-align: center;">
-              <i class="bi bi-check-circle-fill"></i> {{ servicio.descrip }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="servicios"
+        style="  display: flex; flex-wrap: wrap; justify-content: center; list-style: none; padding: 0; margin: 0;">
+        <ul>
+          <li class="fw-bold" v-for="servicio in hotelInfo.servicio" :key="servicio">
+            <i class="bi bi-check-circle-fill" id="bi"></i>{{ servicio.descrip }}
+          </li>
+        </ul>
+      </div>
     </div>
 
     <div class="row text-center mt-3">
@@ -493,6 +492,12 @@ onMounted(() => {
 .servicios li {
   width: 50%;
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.servicios li i {
+  margin-right: 8px;
 }
 
 /* CSS */
@@ -756,20 +761,6 @@ h3 {
   padding: 2px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   /* Agrega la sombra de fondo */
-}
-
-.servicios ul {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.servicios li {
-  width: 50%;
-  margin-bottom: 10px;
 }
 
 .dropdown-menu {

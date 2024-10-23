@@ -6,6 +6,7 @@ const modelo = "habitacion";
 const estatus = ref("");
 const validacion = ref("");
 const nuevaHabitacion = ref("");
+const idHotel = ref("");
 const idHabitacion = ref("");
 const habitacionSelecionada = ref("");
 const fechaIngreso = ref();
@@ -131,6 +132,30 @@ export const useStoreHabitacion = defineStore(
       }
     };
 
+    const subirGrupoFotos = async (id, file) => {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "fotos_habitacion");
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/dwslti4ar/image/upload`,
+          formData,
+          config
+        );
+        console.log("img", response);
+        const fotos = response.data.secure_url;
+        return  fotos;
+      } catch (error) {
+        console.error("Error al subir la foto:", error);
+        throw error; 
+      }
+    };
+
     return {
       getAll,
       getHabitacionesPorPiso,
@@ -141,6 +166,7 @@ export const useStoreHabitacion = defineStore(
       editar,
       activar,
       inactivar,
+      subirGrupoFotos,
       habitaciones,
       estatus,
       validacion,
@@ -150,6 +176,7 @@ export const useStoreHabitacion = defineStore(
       habitacionSelecionada,
       fechaIngreso,
       fechaEgreso,
+      idHotel,
     };
   },
   {

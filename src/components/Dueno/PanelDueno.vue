@@ -1,10 +1,33 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useStoreUsuarios } from '../../stores/usuario.js';
+import { useStoreHotel } from '../../stores/hotel.js';
+import { useRouter } from 'vue-router';
 
-
+const useHotel = useStoreHotel();
+const router = useRouter();
 const useUsuario = useStoreUsuarios();
+const idUsuario = ref(useUsuario.usuario._id)
+const hoteles = ref([]);
+const idHotel = ref('');
 
+async function getHoteles() {
+  try {
+    const response = await useHotel.getPorUsuario(idUsuario.value)
+    hoteles.value = response
+    idHotel.value = hoteles.value[0]._id;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function irHabitacionesHotel(){
+  router.push({ path: '/DPanelHabitaciones', query: { id: idHotel.value } });
+}
+
+onMounted(()=>{
+  getHoteles();
+})
 </script>
 
 
@@ -26,19 +49,15 @@ const useUsuario = useStoreUsuarios();
               </div>
             </router-link>
 
-            <router-link
-              class="lg4"
-              to="/DPanelHabitaciones"
-              title="DPanelHabitaciones"
-            >
-              <div class="card" style="background-color: #ffffff">
+
+              <div class="card" style="background-color: #ffffff" @click="irHabitacionesHotel()">
                 <div class="textos" title="DPanelHabitaciones">
                   <center><h6>Mis Habitaciones</h6></center>
 
                   <i class="material-icons">holiday_village</i>
                 </div>
               </div>
-            </router-link>
+
 
             <router-link
               class="lg4"
