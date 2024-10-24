@@ -80,6 +80,7 @@ export const useStoreHotel = defineStore(
         return response.data;
       } catch (error) {
         console.log(error);
+        validacion.value = error.response.data.error;
         estatus.value = error.response.status;
       }
     };

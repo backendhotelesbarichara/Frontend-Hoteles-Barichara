@@ -100,12 +100,14 @@ export const useStoreHabitacion = defineStore(
 
     const editar = async (id, data) => {
       try {
+        console.log(id)
         const response = await axios.put(`${modelo}/editar/${id}`, data);
         estatus.value = response.status;
         console.log(response);
         return response.data;
       } catch (error) {
         console.log(error);
+        validacion.value = error.response.data.error;
         estatus.value = error.response.status;
       }
     };

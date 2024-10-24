@@ -25,19 +25,24 @@ const precioNoche = ref("");
 const disponible = ref("");
 const showTipoHabitacionModal = ref(false);
 const showServicioModal = ref(false);
+const showImagenModal = ref(false);
+const notificacionVisible = ref(false);
+const notificacionValidacion = ref(false);
+const loadingFotos = ref(false);
+const mensajeNotificacion = ref('');
+const mensajeValidacion = ref('');
 const editarTipoHabitacion = ref([]);
 const editarServicios = ref([]);
 const tipoHabitacionModal = ref(null);
-const serviciosModal = ref(null)
+const serviciosModal = ref(null);
+const imagenModal = ref(null);
 const editarDHabitacionesModal = ref(null);
 const guardando = ref(false);
-const habitacionEditada = ref(false);
+const data = ref([]);
 
 async function getPisoPorHotel(id) {
   try {
-    console.log("soy id", id)
     const response = await usePiso.getPisoPorHotel(id);
-    console.log("dasdkaslasda2", response)
     pisos.value = response;
 
     if (pisos.value.length > 0) {
@@ -70,6 +75,7 @@ const handlePisoChange = async () => {
 }
 
 const selectHabitacion = (habitacion) => {
+  data.value = habitacion;
   selectedHabitacion.value = habitacion;
   numero_habitacion.value = habitacion.numero_habitacion;
   descripcionHabitacion.value = habitacion.descripcion;
@@ -81,11 +87,12 @@ const selectHabitacion = (habitacion) => {
   idHabSelec.value = selectedHabitacion.value._id;
 }
 
-function guardarCambios() {
+async function guardarCambios() {
   guardando.value = true;
-  const data = {
+  data.value = {
     numero_habitacion: numero_habitacion.value,
     descripcion: descripcionHabitacion.value,
+    imagenes: data.value.imagenes.filter(foto => !foto.eliminada),
     tipo_habitacion: editarTipoHabitacion.value,
     cantidad_personas: capacidadMaxima.value,
     servicio: editarServicios.value,
@@ -95,22 +102,69 @@ function guardarCambios() {
   };
 
   try {
-
-    const response = useHabitacion.editar(idHabSelec.value, data)
+    const response = await useHabitacion.editar(idHabSelec.value, data.value)
 
     if (useHabitacion.estatus === 200) {
-      getHabitacionPorPiso();
-      habitacionEditada.value = true; // Set habitacionEditada to true
+      const modalEditar = bootstrap.Modal.getInstance(document.getElementById('editarDHabitaciones'));
+      if (modalEditar) {
+        modalEditar.hide();
+      }
+      await getHabitacionPorPiso();
+      const index = buscarIndexLocal(response._id);
+      habitaciones.value.splice(index, 1);
+      habitaciones.value.unshift(response);
+      notificacionVisible.value = true;
+      mensajeNotificacion.value = 'Habitación editada exitosamente'
       setTimeout(() => {
-        habitacionEditada.value = false; // Reset habitacionEditada after 3 seconds
+        notificacionVisible.value = false;
+        mensajeNotificacion.value = '';
       }, 3000);
-
+    } else if (useHabitacion.estatus === 400) {
+      notificacionValidacion.value = true;
+      mensajeValidacion.value = useHabitacion.validacion;
+      setTimeout(() => {
+        notificacionValidacion.value = false;
+        mensajeValidacion.value = '';
+      }, 3000);
     }
   } catch (error) {
+    notificacionValidacion.value = true;
+    mensajeValidacion.value = useHabitacion.validacion;
+    setTimeout(() => {
+      notificacionValidacion.value = false;
+      mensajeValidacion.value = '';
+    }, 3000);
     console.log(error)
   } finally {
     guardando.value = false;
   }
+}
+
+async function subirFotosHabitacion(event) {
+  const files = event.target.files;
+  if (files.length === 0) return;
+
+  loadingFotos.value = true;
+  const fotosAntesDeSubir = [...data.value.imagenes];
+
+  try {
+    data.value.imagenes = fotosAntesDeSubir.filter(foto => !foto.eliminada);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imageUrl = await useHabitacion.subirGrupoFotos(data.value._id, file);
+
+      const fotoObj = { url: imageUrl };
+      data.value.imagenes.push(fotoObj);
+    }
+  } catch (error) {
+    console.error("Error al subir las fotos:", error);
+  } finally {
+    loadingFotos.value = false;
+  }
+}
+
+function marcarComoEliminada(index) {
+  data.value.imagenes[index].eliminada = true;
 }
 
 const addTipoHabitacion = () => {
@@ -137,12 +191,19 @@ const openServicioModal = () => {
   showServicioModal.value = true;
 };
 
+const openImagenModal = () => {
+  showImagenModal.value = true;
+};
+
 function irFormularioHabitacion() {
   router.push({ path: '/RegistroHabitaciones', query: { id: useHabitacion.idHotel } });
 }
 
+function buscarIndexLocal(id) {
+  return habitaciones.value.findIndex((r) => r._id === id);
+}
 
-onMounted(async() => {
+onMounted(async () => {
   const Hotel = route.query.id;
   if (Hotel) {
     idHotel.value = Hotel;
@@ -150,9 +211,9 @@ onMounted(async() => {
     await getPisoPorHotel(Hotel);
   }
 
-
   tipoHabitacionModal.value = document.getElementById('tipoHabitacionModal');
   serviciosModal.value = document.getElementById('servicioModal');
+  imagenModal.value = document.getElementById('verImagenesModal');
   editarDHabitacionesModal.value = document.getElementById('editarDHabitaciones');
 
   tipoHabitacionModal.value.addEventListener('hidden.bs.modal', () => {
@@ -160,6 +221,10 @@ onMounted(async() => {
   });
 
   serviciosModal.value.addEventListener('hidden.bs.modal', () => {
+    new bootstrap.Modal(editarDHabitacionesModal.value).show();
+  });
+
+  imagenModal.value.addEventListener('hidden.bs.modal', () => {
     new bootstrap.Modal(editarDHabitacionesModal.value).show();
   });
 });
@@ -229,10 +294,37 @@ onMounted(async() => {
           <tbody v-else>
             <tr v-for="habitacion in habitaciones" :key="habitacion._id">
               <td>{{ habitacion.numero_habitacion }}</td>
-              <td>{{ habitacion.descripcion }}</td>
-              <td>{{ habitacion.tipo_habitacion.join(', ') }}</td>
+              <td>
+                <VMenu class="vmenu">
+                  <span class="truncated-text">{{ habitacion.descripcion }}</span>
+                  <template #popper>
+                    <div class="descripVmenu">
+                      {{ habitacion.descripcion }}
+                    </div>
+                  </template>
+                </VMenu>
+              </td>
+              <td>
+                <VMenu class="vmenu">
+                  <span class="truncated-text">{{ habitacion.tipo_habitacion[0] }}</span>
+                  <template #popper>
+                    <div class="descripVmenu">
+                      {{ habitacion.tipo_habitacion.join(', ') }}
+                    </div>
+                  </template>
+                </VMenu>
+              </td>
               <td>{{ habitacion.cantidad_personas }}</td>
-              <td>{{ habitacion.servicio.join(', ') }}</td>
+              <td>
+                <VMenu class="vmenu">
+                  <span class="truncated-text">{{ habitacion.servicio.slice(0, 2).join(', ') }}</span>
+                  <template #popper>
+                    <div class="descripVmenu">
+                      {{ habitacion.servicio.join(', ') }}
+                    </div>
+                  </template>
+                </VMenu>
+              </td>
               <td>{{ habitacion.precio_noche }}</td>
               <td>{{ habitacion.disponible ? "Si" : "No" }}</td>
               <td>{{ habitacion.estado ? "Activa" : "Desactivada" }}</td>
@@ -241,9 +333,6 @@ onMounted(async() => {
                   <button style="max-height: 30px" type="button" class="btns btn btn-dark" data-bs-toggle="modal"
                     data-bs-target="#editarDHabitaciones" @click="selectHabitacion(habitacion)">
                     <i class="material-icons">edit</i>
-                  </button>
-                  <button style="max-height: 30px" class="btns btn btn-dark">
-                    <i class="material-icons">delete</i>
                   </button>
                 </div>
               </td>
@@ -258,71 +347,75 @@ onMounted(async() => {
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="editarDHabitacionesLabel">Editar habitación</h1>
+              <h1 class="modal-title fs-5" id="editarDHabitacionesLabel">Editar Habitación</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <!-- Aquí va el contenido del modal de edición de habitación -->
-              <div class="col-15">
+              <div class="col-6">
                 <div class="mb-3">
-                  <strong>Imágenes *</strong>
-                  <p> imágenes seleccionadas (Máximo 4)</p>
-                  <div style="margin-top: -15px" class="logo">
-                    <p class="logop">
-                      <i style="color: #b7642d; font-size: 30px" class="bi bi-file-earmark-arrow-up-fill"></i>
-                    </p>
-                    <br />
-                    <input class="foto" style="margin-top: 13px" type="file" ref="fileInput" accept="image/*" multiple
-                      @change="handleFileUpload" />
-                  </div>
+                  <label class="form-label" for="alias_habitacion"><strong>Num habitacion <span
+                        class="text-danger">*</span></strong></label>
+                  <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion" required />
                 </div>
               </div>
+              <div class="col-12">
+                <div class="mb-3">
+                  <label class="form-label" for="direccion_habitacion"><strong>Descripción <span
+                        class="text-danger">*</span></strong></label>
+                  <textarea class="form-control" v-model="descripcionHabitacion" id="descripcionSitio"
+                    placeholder="Describa la habitación..." name="descripcionSitio" rows="2" required></textarea>
+                </div>
+              </div>
+
               <div class="row">
-                <div class="col-6">
-                  <div class="mb-3">
-                    <label class="form-label" for="alias_habitacion"><strong>Num habitacion</strong></label>
-                    <input class="form-control" type="text" id="alias_habitacion" v-model="numero_habitacion"
-                      required />
+
+                <div class="col-12">
+                  <div class="mb-3" style="display: flex; flex-direction: column;">
+                    <strong>Imágenes de la habitación <span class="text-danger">*</span></strong>
+                    <div style="width: 50%;">
+                      <button class="btn text-light btn-secondary mt-2" data-bs-toggle="modal"
+                        data-bs-target="#verImagenesModal" @click="openImagenModal">Ver imágenes</button>
+                    </div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="direccion_habitacion"><strong>Descripción *</strong></label>
-                    <textarea class="form-control" v-model="descripcionHabitacion" id="descripcionSitio"
-                      placeholder="Describa la habitación..." name="descripcionSitio" rows="1" required></textarea>
+                    <label class="form-label" for="tipo_habitacion"><strong>Tipo de habitación <span
+                          class="text-danger">*</span></strong></label>
+                    <button class="btn text-light btn-secondary" data-bs-toggle="modal"
+                      data-bs-target="#tipoHabitacionModal" @click="openTipoHabitacionModal">Ver tipos de
+                      habitación</button>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="tipo_habitacion"><strong>Tipo de habitación *</strong></label>
-                    <button class="btn text-light " data-bs-toggle="modal" data-bs-target="#tipoHabitacionModal"
-                      @click="openTipoHabitacionModal" style="background: #b7642d">Ver tipos de habitación</button>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="mb-3">
-                    <label class="form-label" for="servicios"><strong>Servicios *</strong></label>
+                    <label class="form-label" for="servicios"><strong>Servicios <span
+                          class="text-danger">*</span></strong></label>
                     <br />
-                    <button class="btn text-light" data-bs-toggle="modal" data-bs-target="#servicioModal"
-                      @click="openServicioModal" style="background: #b7642d">Ver servicios</button>
+                    <button class="btn text-light btn-secondary" data-bs-toggle="modal" data-bs-target="#servicioModal"
+                      @click="openServicioModal">Ver servicios</button>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="precio_noche"><strong>Precio x noche *</strong></label>
+                    <label class="form-label" for="precio_noche"><strong>Precio x noche <span
+                          class="text-danger">*</span></strong></label>
                     <input class="form-control" type="number" id="precio_noche" v-model="precioNoche" required />
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="capacidad_maxima"><strong>Capacidad max *</strong></label>
+                    <label class="form-label" for="capacidad_maxima"><strong>Capacidad max <span
+                          class="text-danger">*</span></strong></label>
                     <input class="form-control" type="Number" id="direccion_habitacion" v-model="capacidadMaxima"
                       required />
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="mb-3">
-                    <label class="form-label" for="disponible"><strong>Disponible *</strong></label>
+                    <label class="form-label" for="disponible"><strong>Disponible <span
+                          class="text-danger">*</span></strong></label>
                     <select class="form-select" id="disponible" v-model="disponible" required>
                       <option value="true">Si</option>
                       <option value="false">No</option>
@@ -332,15 +425,12 @@ onMounted(async() => {
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal" :disabled="guardando">Cerrar</button>
               <button type="button" class="btn text-light" @click="guardarCambios" style="background: #b7642d"
                 :disabled="guardando">
                 <span v-if="guardando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
               </button>
-            </div>
-            <div v-if="habitacionEditada" class="alert alert-success" role="alert">
-              Habitación editada exitosamente!
             </div>
           </div>
         </div>
@@ -353,22 +443,26 @@ onMounted(async() => {
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="text-dark">Añadir o eliminar tipos de habitación:</h5>
+              <h5 class="text-dark">Modificar tipos de habitación: </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <div class="mt-3">
                 <div v-for="(tipo, index) in editarTipoHabitacion" :key="index" class="d-flex align-items-center mb-2">
-                  <input class="form-control" type="text" v-model="editarTipoHabitacion[index]" required />
+                  <div style="width: 80%;">
+                    <input class="form-control" type="text" v-model="editarTipoHabitacion[index]" required />
+                  </div>
+
                   <button class="btn btn-danger ms-2" @click="removeTipoHabitacion(index)">Eliminar</button>
                 </div>
-                <div class="text-center">
-                  <button class="btn btn-success" @click="addTipoHabitacion">Agregar tipo de habitación</button>
-                </div>
+
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn text-light" data-bs-dismiss="modal">Aceptar</button>
+              <div class="text-center">
+                <button class="btn btn-success" @click="addTipoHabitacion">Agregar tipo de habitación</button>
+              </div>
+              <button type="button" class="btn" id="btns" data-bs-dismiss="modal">Aceptar</button>
             </div>
           </div>
         </div>
@@ -382,7 +476,7 @@ onMounted(async() => {
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="text-dark">Añadir o eliminar servicios de la habitacion:</h5>
+            <h1 class="text-dark fs-5">Modificar servicios de la habitación: </h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -391,24 +485,69 @@ onMounted(async() => {
                 <input class="form-control" type="text" v-model="editarServicios[index]" required />
                 <button class="btn btn-danger ms-2" @click="removeServicio(index)">Eliminar</button>
               </div>
-              <div class="text-center">
-                <button class="btn btn-success" @click="addServicio">Agregar servicio</button>
-              </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn text-light" data-bs-dismiss="modal"
+            <div class="text-center">
+              <button class="btn btn-success" @click="addServicio">Agregar servicio</button>
+            </div>
+            <button type="button" class="btn" id="btns" data-bs-dismiss="modal"
               style="background: #b7642d">Aceptar</button>
           </div>
         </div>
       </div>
     </div>
-    <div style="display: flex; justify-content: end;">
-        <button class="btn top-bar__button" id="btns" @click="irFormularioHabitacion()">
-          Agregar Habitación
-        </button>
+
+    <!-- Modal para ver y gestionar imágenes -->
+    <div class="modal fade" id="verImagenesModal" tabindex="-1" aria-labelledby="verImagenesModalLabel"
+      aria-hidden="true" v-show="showImagenModal">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="verImagenesModalLabel">Imágenes de la habitación</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="modal-body">
+            <!-- Mostrar imágenes subidas -->
+            <div class="d-flex flex-wrap gap-3">
+              <div v-for="(foto, index) in data.imagenes" :key="index" class="photo-container">
+                <img v-if="!foto.eliminada" :src="foto.url" alt="Foto del hotel" class="fixed-size-image">
+                <button v-if="!foto.eliminada" class="btn btn-danger btn-sm mt-2 photo-delete-btn"
+                  @click="marcarComoEliminada(index)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Agregar nuevas imágenes -->
+          <div class="modal-footer">
+            <div style="display: flex; flex-direction: column; width: 100%; justify-content: start;">
+              <label class="form-label"><strong>Agregar nuevas imágenes</strong></label>
+              <input type="file" class="form-control" multiple @change="subirFotosHabitacion" accept="image/*">
+              <label>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB, la primera foto será utilizada como
+                foto
+                principal del hotel)</label>
+            </div>
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aceptar</button>
+          </div>
+        </div>
+      </div>
     </div>
 
+
+    <div style="display: flex; justify-content: end;">
+      <button class="btn top-bar__button" id="btns" style="margin-top: 6px;" @click="irFormularioHabitacion()">
+        Agregar Habitación
+      </button>
+    </div>
+
+    <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show" role="alert">
+      {{ mensajeNotificacion }}
+    </div>
+    <div v-if="notificacionValidacion" class="custom-notify alert alert-danger alert-dismissible fade show"
+      role="alert">
+      {{ mensajeValidacion }}
+    </div>
   </div>
 </template>
 
@@ -417,9 +556,7 @@ onMounted(async() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Espacio entre el botón y el select */
   margin-top: 30px;
-  /* Alineación vertical */
 }
 
 .top-bar__button {
@@ -433,17 +570,12 @@ onMounted(async() => {
 
 .top-bar__select {
   margin-left: 10px;
-  /* Espacio entre el botón y el select */
   padding: 10px 20px;
-  /* Tamaño más grande para mayor visibilidad */
   border-radius: 10px;
-  /* Bordes redondeados */
   border: 2px solid #b7642d;
-  /* Borde de color destacado */
   background-color: #fff;
   color: #495057;
   font-size: 1rem;
-  /* Fuente más grande */
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -451,7 +583,6 @@ onMounted(async() => {
   border-color: #b7642d;
   outline: none;
   box-shadow: 0 0 10px rgba(183, 100, 45, 0.5);
-  /* Efecto de sombra al enfocarse */
 }
 
 .empty-state {
@@ -510,18 +641,14 @@ onMounted(async() => {
 
 .separator {
   width: 1px;
-  /* Ancho de la línea vertical */
   height: 30px;
-  /* Altura de la línea vertical */
   background-color: #38383835;
-  /* Color de la línea */
   margin: 0 5px;
-  /* Espacio entre los botones y la línea */
+
 }
 
 .modal-small .modal-dialog {
   transform: translateY(0%);
-  /* Alinea verticalmente el modal */
 }
 
 .logo {
@@ -538,7 +665,6 @@ onMounted(async() => {
   max-height: 40px;
   margin-top: 5px;
   transform: scale(1.1);
-  /* Cambia el tamaño al pasar el mouse */
 }
 
 .logop {
@@ -561,12 +687,14 @@ onMounted(async() => {
   display: flex;
   justify-content: center;
   gap: 5px;
-  /* Espacio entre los botones */
 }
 
 .material-icons {
   font-size: 20px;
-  /* Tamaño del icono */
+}
+
+.photo-delete-btn {
+  margin-left: 8px;
 }
 
 .galeria {
@@ -596,10 +724,19 @@ h5 {
 }
 
 /* Estilos para la tabla */
-.table {
-  border-collapse: collapse;
-  /* Para eliminar los espacios entre las celdas */
-  width: 100%;
+.table td .vmenu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.descripVmenu {
+  padding: 1rem;
+  word-wrap: break-word;
+  height: fit-content;
+  max-height: 250px;
+  max-width: 250px;
 }
 
 th,
@@ -659,14 +796,11 @@ th {
   align-items: center;
   justify-content: center;
   color: white;
-  /* Color del texto de los botones */
   border: none;
-  /* Eliminar el borde de los botones */
 }
 
 .material-icons {
   font-size: 20px;
-  /* Tamaño del icono */
 }
 
 /* Estilos para scrollbar */
@@ -677,5 +811,49 @@ th {
 .table-responsive::-webkit-scrollbar-thumb {
   background-color: #b7642d;
   border-radius: 20px;
+}
+
+.position-relative {
+  position: relative;
+}
+
+.fixed-size-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #b7642d5b;
+}
+
+#btn-danger {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+#modal-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.custom-notify {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 300px;
+  text-align: center;
+  padding: 15px;
+  color: rgb(0, 0, 0);
+  font-weight: bold;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+}
+
+.custom-notify .close:hover {
+  opacity: 1;
 }
 </style>

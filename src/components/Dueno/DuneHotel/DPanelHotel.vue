@@ -20,13 +20,13 @@ const direccion = ref();
 const correo = ref();
 const telefono = ref();
 const piso = ref();
-const validacion = ref("");
 const loading = ref(true);
-const uploadingPrincipal = ref(false); // Estado de carga para imagen principal
-const uploadingFotos = ref(false); // Estado de carga para fotos
+const uploadingFotos = ref(false); 
 const uploadingLogo = ref(false);
 const loadingEditar = ref(false);
 const notificacionVisible = ref(false);
+const notificacionValidacion = ref(false);
+const mensajeValidacion = ref('');
 const editMode = ref({
   nombre: false,
   descripcion: false,
@@ -48,11 +48,7 @@ const abrirModalImagenes = (hotel) => {
 
   const modalVerImagenes = new bootstrap.Modal(document.getElementById('modalVerImagenes'));
   modalVerImagenes.show();
-
-  // Añadir el backdrop opaco sobre el primer modal
-  const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop modal-backdrop-custom fade show';
-  document.body.appendChild(backdrop);
+ 
 };
 
 const abrirModalServicios = () => {
@@ -97,8 +93,12 @@ watch(hotelSeleccionado, (value) => {
 
 async function guardarCambios() {
   if (!dataHotel.value.nombre || !dataHotel.value.descripcion || !dataHotel.value.direccion || !dataHotel.value.correo || !dataHotel.value.telefono) {
-    validacion.value = "No se pueden enviar campos vacíos";
-    return;
+    notificacionValidacion.value = true;
+    mensajeValidacion.value = "No se pueden enviar campos vacíos";
+    setTimeout(() => {
+      notificacionValidacion.value = false;
+      return;
+    }, 3000);
   }
   loadingEditar.value = true;
   // Prepara los datos para incluir solo las imágenes no eliminadas
@@ -120,9 +120,22 @@ async function guardarCambios() {
       }
       setTimeout(() => {
         notificacionVisible.value = false;
-      }, 9000);
+      }, 3000);
+    } else if (useHotel.estatus === 400) {
+      notificacionValidacion.value = true;
+      mensajeValidacion.value = useHabitacion.validacion;
+      setTimeout(() => {
+        notificacionValidacion.value = false;
+        mensajeValidacion.value = '';
+      }, 3000);
     }
   } catch (error) {
+    notificacionValidacion.value = true;
+    mensajeValidacion.value = useHabitacion.validacion;
+    setTimeout(() => {
+      notificacionValidacion.value = false;
+      mensajeValidacion.value = '';
+    }, 3000);
     console.log(error);
   } finally {
     loadingEditar.value = false;
@@ -143,22 +156,6 @@ const cambiarLogo = async (event) => {
     console.error("Error al cambiar el logo:", error);
   } finally {
     uploadingLogo.value = false;
-  }
-};
-
-const cambiarFoto = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  uploadingPrincipal.value = true;
-
-  try {
-    const imageUrl = await useHotel.subirFotos(dataHotel.value._id, file);
-    dataHotel.value.imagen = imageUrl;
-  } catch (error) {
-    console.error("Error al cambiar la foto:", error);
-  } finally {
-    uploadingPrincipal.value = false;
   }
 };
 
@@ -268,9 +265,7 @@ onMounted(() => {
               </td>
               <td>
                 <VMenu class="vmenu">
-                  <!-- Texto truncado visible en la celda -->
                   <span class="truncated-text">{{ hotel.descripcion }}</span>
-                  <!-- Menú desplegable al hacer clic o pasar el mouse -->
                   <template #popper>
                     <div class="descripVmenu">
                       {{ hotel.descripcion }}
@@ -298,7 +293,7 @@ onMounted(() => {
 
       <!-- Modal editar hotel -->
       <div class="modal fade modal-large" id="editarDHotel" tabindex="-1" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
+        aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <div class="modal-header">
@@ -356,7 +351,7 @@ onMounted(() => {
                   <label class="form-label" for="descripcion_hotel"><strong>Descripción <span
                         class="text-danger">*</span></strong></label>
                   <div class="d-flex align-items-center">
-                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion.slice(0,100) }} ...</p>
+                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion.slice(0, 100) }} ...</p>
                     <textarea v-else class="form-control me-2" id="descripcion_hotel" name="descripcion_hotel"
                       v-model="dataHotel.descripcion" @blur="editMode.descripcion = false" required></textarea>
                     <button @click="editMode.descripcion = !editMode.descripcion" type="button"
@@ -418,10 +413,6 @@ onMounted(() => {
                     </button>
                   </div>
                 </div>
-
-                <div v-if="validacion" class="alert alert-danger mt-3" role="alert">
-                  {{ validacion }}
-                </div>
               </form>
             </div>
 
@@ -461,11 +452,9 @@ onMounted(() => {
               <div style="display: flex; flex-direction: column; width: 100%; justify-content: start;">
                 <label class="form-label"><strong>Agregar nuevas imágenes</strong></label>
                 <input type="file" class="form-control" multiple @change="subirFotosHotel" accept="image/*">
-                <label>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB, la primera foto será utilizada
-                  como foto
-                  principal del hotel)</label>
+                <label>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB, la primera foto será utilizada como foto principal del hotel)</label>
               </div>
-              <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Aceptar</button>
+              <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aceptar</button>
             </div>
           </div>
         </div>
@@ -517,7 +506,12 @@ onMounted(() => {
 
     </div>
     <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show" role="alert">
-      ¡Cambios guardados exitosamente!
+      Hotel editado exitosamente
+    </div>
+
+    <div v-if="notificacionValidacion" class="custom-notify alert alert-danger alert-dismissible fade show"
+      role="alert">
+      {{ mensajeValidacion }}
     </div>
   </div>
 </template>
@@ -855,8 +849,8 @@ th {
   width: 300px;
   text-align: center;
   padding: 15px;
-  background-color: #4caf50;
-  color: white;
+  color: rgb(0, 0, 0);
+  font-weight: bold;
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-size: 16px;

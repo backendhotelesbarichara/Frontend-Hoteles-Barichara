@@ -16,10 +16,14 @@ const servicioInput = ref("");
 const precio = ref("");
 const tipo_habitacion = ref([]);
 const tipoInput = ref("");
+const mensajeNotificacion = ref('');
+const mensajeValidacion = ref('');
 const uploadedImages = ref([]);
 const data = ref([]);
 const loading = ref(false);
+const loadingHabitacion = ref(false);
 const notificacionVisible = ref(false);
+const notificacionValidacion = ref(false);
 const modalImagenesVisible = ref(false);
 const numPiso = ref(usePiso.numPisoSelec);
 const idPiso = ref(usePiso.idPisoSeleccionado);
@@ -29,6 +33,7 @@ const agregarHabitacion = async () => {
   data.value = {
     numero_habitacion: num_habitacion.value,
     descripcion: descripcion.value,
+    imagenes: uploadedImages.value,
     tipo_habitacion: tipo_habitacion.value,
     cantidad_personas: capacidad_max.value,
     servicio: servicios.value,
@@ -36,17 +41,38 @@ const agregarHabitacion = async () => {
     idPiso: idPiso.value,
   };
 
+  loadingHabitacion.value = true;
+
   try {
     const response = await useHabitacion.agregar(data.value);
 
     if (useHabitacion.estatus === 200) {
-      goToHabitaciones();
+      notificacionVisible.value = true;
+      mensajeNotificacion.value = 'Habitación creada exitosamente'
+      setTimeout(() => {
+        notificacionVisible.value = false;
+        mensajeNotificacion.value = '';
+        goToHabitaciones();
+      }, 3000);
       console.log("Habitación añadida");
     } else if (useHabitacion.estatus === 400) {
-      return;
+      notificacionValidacion.value = true;
+      mensajeValidacion.value = useHabitacion.validacion;
+      setTimeout(() => {
+        notificacionValidacion.value = false;
+        mensajeValidacion.value = '';
+      }, 3000);
     }
   } catch (error) {
+    notificacionValidacion.value = true;
+    mensajeValidacion.value = useHabitacion.validacion;
+    setTimeout(() => {
+      notificacionValidacion.value = false;
+      mensajeValidacion.value = '';
+    }, 3000);
     console.log('Error al agregar habitación:', error);
+  } finally {
+    loadingHabitacion.value = false;
   }
 };
 
@@ -87,8 +113,10 @@ async function subirFotosHabitacion(event) {
 
     uploadedImages.value = data.value.imagenes;
     notificacionVisible.value = true;
+    mensajeNotificacion.value = '¡Imagen subida exitosamente!'
     setTimeout(() => {
       notificacionVisible.value = false;
+      mensajeNotificacion.value = '';
     }, 3000);
   } catch (error) {
     console.error('Error al subir las fotos:', error);
@@ -114,7 +142,7 @@ const eliminarImagen = (index) => {
 
   if (data.value.imagenes && data.value.imagenes.length > 0) {
     data.value.imagenes.splice(index, 1);
-  } 
+  }
 };
 
 const addTipo = () => {
@@ -255,10 +283,14 @@ onMounted(() => {
             </div>
           </div>
           <div class="text-center mb-3">
-            <a class="btn btncancelar" role="button" href="#"
-              style="margin-right: 5px; background-color: #dc3545; color: white;">Cancelar</a>
-            <button class="btn btn-custom" type="submit" style="background: #b7642d; color: #fff">
-              <i class="bi bi-floppy-fill"></i> Registrar
+            <button class="btn btncancelar" type="button" :disabled="loadingHabitacion"
+              style="margin-right: 5px; background-color: #dc3545; color: white;"
+              @click="goToHabitaciones()">Cancelar</button>
+            <button class="btn btn-custom" type="submit" style="background: #b7642d; color: #fff"
+              :disabled="loadingHabitacion">
+              <span v-if="loadingHabitacion" class="spinner-border spinner-border-sm" role="status"
+                aria-hidden="true"></span>
+              <span v-else> <i class="bi bi-floppy-fill"></i> Registrar</span>
             </button>
           </div>
         </form>
@@ -279,12 +311,13 @@ onMounted(() => {
                 <li v-for="(servicio, index) in servicios" :key="index"
                   class="list-group-item d-flex justify-content-between align-items-center">
                   {{ servicio }}
-                  <button type="button" class="btn btn-danger btn-sm" @click="removeServicio(index)">Eliminar</button>
+                  <button type="button" class="btn btn-danger btn-sm" style="margin-left: 10px;"
+                    @click="removeServicio(index)">Eliminar</button>
                 </li>
               </ul>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Aceptar</button>
             </div>
           </div>
         </div>
@@ -303,12 +336,13 @@ onMounted(() => {
                 <li v-for="(tipo, index) in tipo_habitacion" :key="index"
                   class="list-group-item d-flex justify-content-between align-items-center">
                   {{ tipo }}
-                  <button type="button" class="btn btn-danger btn-sm" @click="removeTipo(index)">Eliminar</button>
+                  <button type="button" class="btn btn-danger btn-sm" style="margin-left: 10px;"
+                    @click="removeTipo(index)">Eliminar</button>
                 </li>
               </ul>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Aceptar</button>
             </div>
           </div>
         </div>
@@ -343,7 +377,12 @@ onMounted(() => {
 
 
     <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show" role="alert">
-      ¡Imagen subida exitosamente!
+      {{ mensajeNotificacion }}
+    </div>
+
+    <div v-if="notificacionValidacion" class="custom-notify alert alert-danger alert-dismissible fade show"
+      role="alert">
+      {{ mensajeValidacion }}
     </div>
   </main>
 </template>
@@ -441,10 +480,12 @@ h5 {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.05);
     opacity: 0.9;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -456,7 +497,8 @@ h5 {
   color: #b7642d;
   margin-top: 10px;
   margin-left: 30px;
-  animation: pulse 1s infinite ease-in-out; /* Pulsing animation */
+  animation: pulse 1s infinite ease-in-out;
+  /* Pulsing animation */
 }
 
 
@@ -470,8 +512,7 @@ h5 {
   width: 300px;
   text-align: center;
   padding: 15px;
-  background-color: #4caf50;
-  color: white;
+  color: rgb(0, 0, 0);
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-size: 16px;
@@ -485,7 +526,6 @@ h5 {
 @media screen and (min-width: 1000px) {
   .row .col-6 {
     flex: 0 0 50%;
-    /* Establece un ancho del 50% para cada columna en pantallas de 1000px o más */
     max-width: 50%;
   }
 }
