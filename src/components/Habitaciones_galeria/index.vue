@@ -3,18 +3,21 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useStoreHotel } from '../../stores/hotel.js';
 import { useStoreHabitacion } from '../../stores/habitacion.js';
 import { useStoreReserva } from '../../stores/reserva.js'
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 const useHotel = useStoreHotel();
 const useHabitacion = useStoreHabitacion();
 const useReserva = useStoreReserva();
+const idHotel = ref('');
 const hotelInfo = ref("");
 const habitacionInfo = ref([]);
 const fechaIngreso = ref();
 const fechaEgreso = ref();
 const imagenSeleccionada = ref("");
 const mostrarModal = ref(false);
+const mostrarTodo = ref(false);
 const cargando = ref(true);
 const cargandoHabitaciones = ref(true);
 const paginaActual = ref(1);
@@ -28,9 +31,9 @@ function obtenerFechaActual() {
   const today = new Date();
   return today.toISOString().split('T')[0];
 }
-async function getHotelSeleccionado() {
+async function getHotelSeleccionado(id) {
   try {
-    const response = await useHotel.getPorId(useHotel.HotelHome);
+    const response = await useHotel.getPorId(id);
     if (useHabitacion.estatus === 200) {
       cargando.value = false;
       hotelInfo.value = response;
@@ -154,6 +157,10 @@ const getIconClass = (servicio) => {
   return iconosServicios[servicio.toLowerCase()] || 'bi bi-info-circle';
 };
 
+function toggleMostrar() {
+  mostrarTodo.value = !mostrarTodo.value;
+}
+
 //Función ir detalle habitacion
 async function irDetalleHabitacion(idHabitacion) {
 
@@ -226,7 +233,14 @@ function chunkArray(array, size) {
 }
 
 
-onMounted(() => {
+onMounted(async () => {
+  const Hotel = route.query.id;
+  if (Hotel) {
+    idHotel.value = Hotel;
+    await getHotelSeleccionado(Hotel);
+  }
+
+
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -239,7 +253,6 @@ onMounted(() => {
   fechaEgreso.value = tomorrowFormatted;
   useHabitacion.fechaEgreso = fechaEgreso.value;
 
-  getHotelSeleccionado();
   getHabitaciones();
   filtrarHabitacion();
 });
@@ -412,19 +425,33 @@ onMounted(() => {
                 </div>
                 <div class="price-breakdown mt-3">
                   <h6>Tarifa por ocupación:</h6>
-                  <ul>
-                    <li v-for="personas in Array.from({ length: habitacion.cantidad_personas }, (_, i) => i + 1)"
-                      :key="personas" style="list-style: none;">
+                  <ul style="margin: 0;">
+                    <!-- Mostrar solo los primeros 2 elementos cuando mostrarTodo es false -->
+                    <li
+                      v-for="(personas, index) in Array.from({ length: habitacion.cantidad_personas }, (_, i) => i + 1)"
+                      :key="personas" v-show="mostrarTodo || index < 2" style="list-style: none;">
                       <p>
-                        <i class="bi bi-person"></i> <span class="fw-bold" style="color: #b7642d"> x{{ personas }} {{
-                          calcularPrecioTotal(habitacion, personas) }} </span>
+                        <i class="bi bi-person"></i>
+                        <span class="fw-bold" style="color: #b7642d">
+                          x{{ personas }} {{ calcularPrecioTotal(habitacion, personas) }}
+                        </span>
                         Total para {{ numeroDeNoches }} noche(s)
                       </p>
                     </li>
                   </ul>
+
+                  <!-- Botón de toggle para mostrar/ocultar según el estado de mostrarTodo -->
+                  <div style="display: flex; justify-content: center;">
+                    <button v-if="habitacion.cantidad_personas > 2" @click="toggleMostrar" class="btn-transparent">
+                      {{ mostrarTodo ? 'Ocultar tarifas' : 'Ver más tarifas...' }} <i
+                        :class="mostrarTodo ? 'bi bi-arrow-up' : 'bi bi-arrow-down'"></i>
+                    </button>
+                  </div>
+
                 </div>
-                <div style="display: flex; justify-content: end;">
-                  <button class="btn btn-primary row justify-content-end"
+
+                <div class="container-boton" style="display: flex; justify-content: end;">
+                  <button class="btn btn-primary row justify-content-end mt-2"
                     @click="irDetalleHabitacion(habitacion._id)">Ver
                     más...</button>
                 </div>
@@ -458,7 +485,6 @@ onMounted(() => {
   </div>
 </template>
 
-
 <style scoped>
 .card {
   border: none;
@@ -469,6 +495,7 @@ onMounted(() => {
 .card-img-top {
   object-fit: cover;
   height: 200px;
+
 }
 
 .card-title {
@@ -567,14 +594,12 @@ onMounted(() => {
 }
 
 @media (max-width: 600px) {
-  .pagination-container {
-    flex-direction: column;
+  .container-boton {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
-  .btn {
-    width: 100%;
-    margin-bottom: 5px;
-  }
 }
 
 .Hoteles {
@@ -751,6 +776,27 @@ p {
 .imagen:hover .overlay {
   height: 100%;
   cursor: pointer;
+}
+
+
+
+.btn-transparent {
+  background-color: transparent;
+  border: none;
+  color: #000000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-transparent:hover {
+  font-weight: bold;
+  color: #8b5a24;
+}
+
+.btn-transparent i {
+  margin-left: 5px;
 }
 
 h3 {

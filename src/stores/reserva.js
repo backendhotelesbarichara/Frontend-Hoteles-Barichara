@@ -45,6 +45,17 @@ export const useStoreReserva = defineStore(
       }
     };
 
+    const getReservasByUser = async (idUsuario) => {
+      try {
+        const response = await axios.get(`${modelo}/buscarReservaByUser/${idUsuario}`);
+        reservas.value = response.data;
+        estatus.value = response.status;
+        return response.data;
+      } catch (error) {
+        handleRequestError(error);
+      }
+    };
+
     // Obtener habitaciones disponibles entre dos fechas
     const getHabitacionesDisponibles = async (fecha_entrada, fecha_salida) => {
       try {
@@ -135,6 +146,7 @@ export const useStoreReserva = defineStore(
       validacion,
       getAllReservas,
       getReservasByHotelId,
+      getReservasByUser,
       getHabitacionesDisponibles,
       getReservaById,
       crearReserva,

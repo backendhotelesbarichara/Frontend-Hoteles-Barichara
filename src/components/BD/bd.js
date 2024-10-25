@@ -51,7 +51,7 @@ export const hoteles = [
 /* ------------------------------------------------------------------ */
 export const Sturisticos = [
     {
-        nombre: "salto del mico",
+        nombre: "Salto del mico",
         descripcion: "lkasjdlkasdlkasjdlkajsdlkjasdlksa",
         img1: "https://i.ibb.co/R77C9hC/1.jpg",
     },

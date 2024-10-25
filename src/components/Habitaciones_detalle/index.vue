@@ -52,7 +52,7 @@ const enviarFormulario = async () => {
     idHabitacion: habitacionDetalle.value._id,
   };
 
-  console.log(data);
+  console.log("soy data a enviar", data);
   try {
     const response = await useReserva.crearReserva(data);
     if (useReserva.estatus === 200) {
@@ -301,7 +301,7 @@ onMounted(async () => {
 
                 <!-- Botones para enviar o cancelar -->
                 <div class="text-center mt-4">
-                  <button type="submit" class="btn btn-custom me-3 text-uppercase fw-bold" :disabled="loading">
+                  <button type="submit" class="btn btn-custom me-3 fw-bold" :disabled="loading">
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status"
                       aria-hidden="true"></span>
                     <span v-else>Reservar</span>
