@@ -2,16 +2,33 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { hoteles, Sturisticos } from './../components/BD/bd';
+import { useStoreSitioTuristico } from '../stores/sitio_turistico.js';
 import { useStoreHotel } from '../stores/hotel.js';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const useHotel = useStoreHotel();
+const useSitioTuristico = useStoreSitioTuristico();
 const listaHoteles = ref("");
+const sitiosTuristicos = ref([]);
 const datahotel = ref(hoteles);
 const datasitios = ref(Sturisticos);
 const img = ref("")
 const cargando = ref(true);
+const cargandoSitiosT = ref(true)
+
+function irInfoHotel(hotel) {
+    useHotel.HotelHome = hotel._id
+    /* router.push('/GaleriaHabitaciones') */
+    // En lugar de router.push, abrimos una nueva pestaña
+    const url = router.resolve({ path: '/GaleriaHabitaciones', query: { id: hotel._id } }).href;
+    window.open(url, '_blank');
+}
+
+function irSitioTuristico(sitio) {
+    const url = router.resolve({ path: '/detalle-sitio-turistico', query: { id: sitio } }).href;
+    window.open(url, '_blank');
+}
 
 async function getHoteles() {
     try {
@@ -24,19 +41,32 @@ async function getHoteles() {
         console.log(response);
     } catch (error) {
         console.log(error);
+        cargandoSitiosT.value = false;
+    } finally {
+        cargando.value = false;
     }
 }
 
-function irInfoHotel(hotel) {
-    useHotel.HotelHome = hotel._id
-    /* router.push('/GaleriaHabitaciones') */
-    // En lugar de router.push, abrimos una nueva pestaña
-    const url = router.resolve({ path: '/GaleriaHabitaciones', query: { id: hotel._id } }).href;
-    window.open(url, '_blank');
+async function getSitiosTuristicos() {
+    try {
+        const response = await useSitioTuristico.getAll()
+        if (useHotel.estatus === 200) {
+            sitiosTuristicos.value = response.reverse();
+            cargandoSitiosT.value = false;
+        }
+
+        console.log(response);
+    } catch (error) {
+        console.log(error);
+        cargandoSitiosT.value = false;
+    } finally {
+        cargandoSitiosT.value = false;
+    }
 }
 
 onMounted(() => {
     getHoteles();
+    getSitiosTuristicos();
 })
 </script>
 
@@ -173,21 +203,26 @@ onMounted(() => {
         </button>
 
         <!-----------------------------------------------PASARELA SITIOS TURISTICOS----------------------------------->
-        <div class="lista-imagenes sitios-images">
+        <!--         <div class="lista-imagenes sitios-images">
             <div class="imagen-con-texto" v-for="sitio in datasitios" :key="sitio.nombre">
                 <router-link class="link" to="/SaltoDelMico">
                     <img :src="sitio.img1" alt="imagen-principal" />
                     <p class="text-hotel">{{ sitio.nombre }}</p>
                 </router-link>
             </div>
+        </div> -->
+
+        <div class="lista-imagenes sitios-images">
+            <div class="imagen-con-texto" v-for="sitio in sitiosTuristicos" :key="sitio.nombre"
+                @click="irSitioTuristico(sitio._id)">
+                <img :src="sitio.imagen[0].url" alt="imagen-principal" />
+                <p class="text-hotel">{{ sitio.nombre }}</p>
+            </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-
-
-
 .btncafe {
     margin-right: 10px;
     border-radius: 50px;
@@ -196,7 +231,48 @@ onMounted(() => {
     color: #fff;
     padding: 8px;
     margin-left: 5px;
+}
 
+.lista-imagenes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: start;
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.imagen-con-texto {
+    width: 100%;
+    max-width: 300px;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.imagen-con-texto:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.imagen-con-texto img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+}
+
+.text-hotel {
+    padding: 10px;
+    background-color: #b7642d;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    margin: 0;
 }
 
 .imagen-con-texto {
@@ -206,17 +282,14 @@ onMounted(() => {
 .imagen-con-texto:hover {
     filter: saturate(2);
     transform: scale(1.01);
-    /* Cambia el tamaño al pasar el mouse */
 }
 
 .btn.btn-custom {
     transition: transform 0.3s;
-    /* Transición de transformación */
 }
 
 .btn.btn-custom:active {
     animation: iconClickAnimation 0.3s ease;
-    /* Aplica la animación al hacer clic */
 }
 
 @keyframes iconClickAnimation {
@@ -237,14 +310,7 @@ onMounted(() => {
     text-decoration: none !important;
 }
 
-.text-hotel {
-    margin-right: 10px;
-    text-align: center;
-    background-color: #b7642d;
-    color: #fff;
-    border-radius: 0 0 10px 10px;
-    /* Redondear solo las esquinas superiores */
-}
+
 
 /* Estilos para scrollbar */
 .lista-imagenes::-webkit-scrollbar {
@@ -268,22 +334,6 @@ onMounted(() => {
     transform: 1s;
 }
 
-.lista-imagenes img {
-    width: 100%;
-    object-fit: cover;
-    width: 107px;
-    height: 150px;
-    margin-right: 10px;
-    display: block;
-    border-radius: 10px 10px 0 0;
-    /* Redondear solo las esquinas superiores */
-}
-
-.lista-imagenes {
-    display: flex;
-    overflow-y: auto;
-    margin-top: 10px;
-}
 
 h5 {
     padding: 5px;
@@ -312,51 +362,30 @@ h5 {
 
 @media screen and (max-width: 2000px) {
     .lista-imagenes img {
-        /* Flexbox */
-        /* width: 70%;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 20px; */
-
-        /* Grid */
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 1px;
-        width: 300px;
+        width: 100%;
         height: 300px;
     }
 }
 
 @media screen and (max-width: 700px) {
     .lista-imagenes img {
-        /* Flexbox */
-        /* width: 70%;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 20px; */
-
-        /* Grid */
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
-        width: 200px;
+        width: 100%;
         height: 200px;
     }
 }
 
 @media screen and (max-width: 500px) {
     .lista-imagenes img {
-        /* Flexbox */
-        /* width: 70%;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 20px; */
-
-        /* Grid */
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
-        width: 107px;
+        width: 100%;
         height: 150px;
     }
 

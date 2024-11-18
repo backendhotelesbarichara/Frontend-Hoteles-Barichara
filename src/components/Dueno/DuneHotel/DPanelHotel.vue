@@ -210,8 +210,8 @@ function goToHabitaciones(hotel) {
   window.open(url, '_blank');
 }
 
-onMounted(() => {
-  getHoteles();
+onMounted(async() => {
+  await getHoteles();
 });
 </script>
 
@@ -351,7 +351,7 @@ onMounted(() => {
                   <label class="form-label" for="descripcion_hotel"><strong>Descripción <span
                         class="text-danger">*</span></strong></label>
                   <div class="d-flex align-items-center">
-                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion.slice(0, 100) }} ...</p>
+                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion }} ...</p>
                     <textarea v-else class="form-control me-2" id="descripcion_hotel" name="descripcion_hotel"
                       v-model="dataHotel.descripcion" @blur="editMode.descripcion = false" required></textarea>
                     <button @click="editMode.descripcion = !editMode.descripcion" type="button"

@@ -33,7 +33,7 @@ import detalle_habitaciones from "../src/components/Habitaciones_detalle/index.v
 
 
 // Info Info sitios turisticos
-import SaltoDelMico from "../src/components/InfoSTuristicos/SaltoDelMico.vue";
+import detalle_sitio_turistico from "../src/components/InfoSTuristicos/SitioTuristicoDetalle.vue";
 
 
 
@@ -75,7 +75,7 @@ const routes = [
 
   { path: "/detallehabitaciones", component: detalle_habitaciones },
 
-  { path: "/SaltoDelMico", component: SaltoDelMico },
+  { path: "/detalle-sitio-turistico", component: detalle_sitio_turistico },
 
   { path: "/Login", component: Login },
 
