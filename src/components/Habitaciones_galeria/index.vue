@@ -277,7 +277,7 @@ onMounted(async () => {
     </div>
     <!-- HTML -->
     <div class="logo-title-container">
-      <img :src="hotelInfo.logo.url" alt="Logo del hotel" class="logo">
+      <img :src="hotelInfo.logo" alt="Logo del hotel" class="logo">
       <h2 class="title">{{ hotelInfo.nombre }}</h2>
     </div>
 

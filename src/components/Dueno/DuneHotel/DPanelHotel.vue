@@ -58,7 +58,7 @@ const abrirModalServicios = () => {
 
 async function getHoteles() {
   try {
-    const response = await useHotel.getPorUsuario(idUsuario.value)
+    const response = await useHotel.getAll()
     hoteles.value = response
     console.log(response);
   } catch (error) {
@@ -210,6 +210,10 @@ function goToHabitaciones(hotel) {
   window.open(url, '_blank');
 }
 
+function goToRegistroHotel() {
+  router.push('/RegitroHotel')
+}
+
 onMounted(async() => {
   await getHoteles();
 });
@@ -235,7 +239,15 @@ onMounted(async() => {
     </div>
     <div v-else>
       <!-- Tabla de hoteles -->
+      <div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
       <h1 class="text-center m-4">TUS HOTELES</h1>
+      <div>
+        <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
+          <i class="material-icons">add_box</i>
+        </button>
+      </div>
+
+      </div>
       <div style="font-size: 12px" class="table-responsive">
         <table class="table table-bordered">
           <thead>
@@ -320,7 +332,7 @@ onMounted(async() => {
                     <div class="d-flex align-items-center">
                       <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
                       <div v-else>
-                        <img v-if="dataHotel.logo" :src="dataHotel.logo.url" alt="" class="fixed-size-image" />
+                        <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image" />
                         <p v-if="!dataHotel.logo">Por favor suba un logo...</p>
                         <button v-if="editMode.logo && dataHotel.logo" type="button"
                           class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarLogo"

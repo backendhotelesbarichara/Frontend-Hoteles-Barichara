@@ -11,7 +11,6 @@ const hotelSeleccionado = ref("");
 const editarHotelSelec = ref("");
 const HotelHome = ref("");
 
-
 export const useStoreHotel = defineStore(
   modelo,
   () => {
@@ -111,14 +110,14 @@ export const useStoreHotel = defineStore(
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "logohotel");
+        formData.append("upload_preset", "logo_hotel");
         const config = {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         };
         const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/dep417oku/image/upload`,
+          `https://api.cloudinary.com/v1_1/dwslti4ar/image/upload`,
           formData,
           config
         );
@@ -127,39 +126,8 @@ export const useStoreHotel = defineStore(
 
         // Actualizar la foto de perfil del usuario
         editarHotelSelec.value.logo = logo;
-      
-        return  logo ;
-      } catch (error) {
-        console.error("Error al subir la foto:", error);
-        throw error; // Re-lanzar el error para que se pueda manejar en el llamador
-      }
-    };
 
-    const subirFotos = async (id, file) => {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "fotoprincipalhotel");
-        const config = {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        };
-        const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/dep417oku/image/upload`,
-          formData,
-          config
-        );
-        console.log(response);
-        const imagen = response.data.secure_url;
-
-        // Actualizar la foto de perfil del usuario
-        editarHotelSelec.value.imagen = imagen;
-
-        // Guardar la foto de perfil en el servidor
-        
-
-        return  imagen ;
+        return logo;
       } catch (error) {
         console.error("Error al subir la foto:", error);
         throw error; // Re-lanzar el error para que se pueda manejar en el llamador
@@ -170,14 +138,14 @@ export const useStoreHotel = defineStore(
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "fotoshotel");
+        formData.append("upload_preset", "fotos-hotel");
         const config = {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         };
         const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/dep417oku/image/upload`,
+          `https://api.cloudinary.com/v1_1/dwslti4ar/image/upload`,
           formData,
           config
         );
@@ -186,7 +154,7 @@ export const useStoreHotel = defineStore(
         // Actualizar la foto de perfil del usuario
         editarHotelSelec.value.fotos = fotos;
         // Guardar la foto de perfil en el servidor
-        return  fotos;
+        return fotos;
       } catch (error) {
         console.error("Error al subir la foto:", error);
         throw error; // Re-lanzar el error para que se pueda manejar en el llamador
@@ -209,7 +177,6 @@ export const useStoreHotel = defineStore(
       hotelSeleccionado,
       HotelHome,
       subirLogo,
-      subirFotos,
       subirGrupoFotos,
       editarHotelSelec,
     };

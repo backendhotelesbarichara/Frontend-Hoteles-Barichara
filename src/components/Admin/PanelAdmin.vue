@@ -6,7 +6,7 @@
       <div class="contenedor">
         <center>
           <div class="contenedor-conciertos">
-            <router-link class="lg4" to="/PanelHoteles" title="SUPanelHoteles">
+<!--             <router-link class="lg4" to="/PanelHoteles" title="SUPanelHoteles">
               <div class="card" style="background-color: #ffffff">
                 <div class="textos" title="SUPanelHoteles">
                   <center><h6>Hoteles</h6></center>
@@ -14,7 +14,7 @@
                   <i class="material-icons">settings</i>
                 </div>
               </div>
-            </router-link>
+            </router-link> -->
 
             <router-link class="lg4" to="/PanelSitios" title="PanelSitios">
               <div class="card" style="background-color: #ffffff">

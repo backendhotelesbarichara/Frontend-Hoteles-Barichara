@@ -42,7 +42,7 @@ onMounted(()=>{
             <router-link class="lg4" to="/DPanelHotel" title="DPanelHotel">
               <div class="card" style="background-color: #ffffff">
                 <div class="textos" title="DPanelHotel">
-                  <center><h6>Mi Hotel</h6></center>
+                  <center><h6>Hoteles</h6></center>
 
                   <i class="material-icons">settings</i>
                 </div>
@@ -52,7 +52,7 @@ onMounted(()=>{
 
               <div class="card" style="background-color: #ffffff" @click="irHabitacionesHotel()">
                 <div class="textos" title="DPanelHabitaciones">
-                  <center><h6>Mis Habitaciones</h6></center>
+                  <center><h6>Habitaciones</h6></center>
 
                   <i class="material-icons">holiday_village</i>
                 </div>
