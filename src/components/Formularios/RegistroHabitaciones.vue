@@ -54,6 +54,7 @@ const agregarHabitacion = async () => {
         mensajeNotificacion.value = '';
         goToHabitaciones();
       }, 3000);
+      console.log(response)
       console.log("Habitación añadida");
     } else if (useHabitacion.estatus === 400) {
       notificacionValidacion.value = true;
@@ -149,6 +150,8 @@ const addTipo = () => {
   if (tipoInput.value.trim() !== "") {
     tipo_habitacion.value.push(tipoInput.value.trim());
     tipoInput.value = "";
+    console.log(tipo_habitacion);
+    console.log(data.value.tipo_habitacion);
   }
 };
 
@@ -516,6 +519,7 @@ h5 {
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-size: 16px;
+  font-weight: bold;
 }
 
 .custom-notify .close:hover {

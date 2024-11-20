@@ -21,7 +21,7 @@ const correo = ref();
 const telefono = ref();
 const piso = ref();
 const loading = ref(true);
-const uploadingFotos = ref(false); 
+const uploadingFotos = ref(false);
 const uploadingLogo = ref(false);
 const loadingEditar = ref(false);
 const notificacionVisible = ref(false);
@@ -40,7 +40,10 @@ const editMode = ref({
 const nuevoServicio = ref('');
 
 
-const dataHotel = ref({ ...useHotel.editarHotelSelec });
+const dataHotel = ref({
+  ...useHotel.editarHotelSelec,
+  servicio: useHotel.editarHotelSelec.servicio || [], // Asegura que sea un array
+});
 
 const abrirModalImagenes = (hotel) => {
   // Abre el modal de ver imágenes y coloca el backdrop correcto
@@ -48,7 +51,7 @@ const abrirModalImagenes = (hotel) => {
 
   const modalVerImagenes = new bootstrap.Modal(document.getElementById('modalVerImagenes'));
   modalVerImagenes.show();
- 
+
 };
 
 const abrirModalServicios = () => {
@@ -185,15 +188,18 @@ async function subirFotosHotel(event) {
 // Función para agregar nuevo servicio
 const agregarServicio = () => {
   if (nuevoServicio.value.trim() !== '') {
-    dataHotel.value.servicio.push({ descrip: nuevoServicio.value.trim() });
-    nuevoServicio.value = '';
+    // Añadir directamente la cadena al array de servicios
+    dataHotel.value.servicio = [...(dataHotel.value.servicio || []), nuevoServicio.value.trim()];
+    nuevoServicio.value = ''; // Limpia el campo de entrada
   }
 };
 
+
 // Función para eliminar un servicio
 const eliminarServicio = (index) => {
-  dataHotel.value.servicio.splice(index, 1);
+  dataHotel.value.servicio.splice(index, 1); // Elimina el servicio por índice
 };
+
 
 function eliminarLogo() {
   dataHotel.value.logo = null;
@@ -214,7 +220,7 @@ function goToRegistroHotel() {
   router.push('/RegitroHotel')
 }
 
-onMounted(async() => {
+onMounted(async () => {
   await getHoteles();
 });
 </script>
@@ -240,12 +246,12 @@ onMounted(async() => {
     <div v-else>
       <!-- Tabla de hoteles -->
       <div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
-      <h1 class="text-center m-4">TUS HOTELES</h1>
-      <div>
-        <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
-          <i class="material-icons">add_box</i>
-        </button>
-      </div>
+        <h1 class="text-center m-4">TUS HOTELES</h1>
+        <div>
+          <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
+            <i class="material-icons">add_box</i>
+          </button>
+        </div>
 
       </div>
       <div style="font-size: 12px" class="table-responsive">
@@ -464,7 +470,9 @@ onMounted(async() => {
               <div style="display: flex; flex-direction: column; width: 100%; justify-content: start;">
                 <label class="form-label"><strong>Agregar nuevas imágenes</strong></label>
                 <input type="file" class="form-control" multiple @change="subirFotosHotel" accept="image/*">
-                <label>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB, la primera foto será utilizada como foto principal del hotel)</label>
+                <label>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB, la primera foto será utilizada
+                  como foto
+                  principal del hotel)</label>
               </div>
               <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aceptar</button>
             </div>
@@ -487,10 +495,9 @@ onMounted(async() => {
                 <label class="form-label"><strong>Servicios Existentes</strong></label>
                 <ul>
                   <li v-for="(servicio, index) in dataHotel.servicio" :key="index" style="list-style-type: none;">
-                    <!-- Usar flexbox para alinear el input y el botón en la misma línea -->
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 10px;">
-                      <input type="text" v-model="dataHotel.servicio[index].descrip" class="form-control"
-                        style="flex: 1;" />
+                      <!-- Muestra y permite editar directamente la cadena -->
+                      <input type="text" v-model="dataHotel.servicio[index]" class="form-control" style="flex: 1;" />
                       <button type="button" class="btn btn-danger btn-sm" @click="eliminarServicio(index)"
                         style="flex-shrink: 0;">
                         <i class="bi bi-trash"></i> Eliminar

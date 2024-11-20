@@ -66,7 +66,7 @@ const filtrarHabitacion = async () => {
   try {
     console.log("filtros nav ", filters);
     const filteredHabitaciones = await useHabitacion.getHabitacionesPorCantPerson(filters);
-    useHabitacion.habitacionesFiltradas = filteredHabitaciones;
+    useHabitacion.habitacionesFiltradas = filteredHabitaciones.filter(habitacion => habitacion.disponible === true);
     console.log('Habitaciones filtrados:', filteredHabitaciones);
   } catch (error) {
     console.error("Error al filtrar habitaciones:", error);
@@ -270,14 +270,14 @@ onMounted(async () => {
       <h5 id="h5">INFORMACION HOTEL</h5>
     </div>
     <div class="row no-gutters">
-      <div v-for="foto in hotelInfo.fotos" :key="foto.url" class="col-md-4">
+      <div v-for="foto in hotelInfo.fotos.slice(0,3)" :key="foto.url" class="col-md-4">
         <img :src="foto.url" alt="Imagen del hotel" class="img-fluid w-100 h-100" @click="abrirModal(foto.url)"
           data-bs-toggle="modal" data-bs-target="#modalImagen">
       </div>
     </div>
     <!-- HTML -->
     <div class="logo-title-container">
-      <img :src="hotelInfo.logo" alt="Logo del hotel" class="logo">
+      <img v-if="hotelInfo.logo" :src="hotelInfo.logo" alt="Logo del hotel" class="logo">
       <h2 class="title">{{ hotelInfo.nombre }}</h2>
     </div>
 
@@ -292,7 +292,7 @@ onMounted(async () => {
         style="  display: flex; flex-wrap: wrap; justify-content: center; list-style: none; padding: 0; margin: 0;">
         <ul>
           <li class="fw-bold" v-for="servicio in hotelInfo.servicio" :key="servicio">
-            <i class="bi bi-check-circle-fill" id="bi"></i>{{ servicio.descrip }}
+            <i class="bi bi-check-circle-fill" id="bi"></i>{{ servicio }}
           </li>
         </ul>
       </div>
