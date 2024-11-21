@@ -26,6 +26,8 @@ const uploadingLogo = ref(false);
 const loadingEditar = ref(false);
 const notificacionVisible = ref(false);
 const notificacionValidacion = ref(false);
+const notificacionCargando = ref(false);
+const mensajeCargando = ref('');
 const mensajeValidacion = ref('');
 const editMode = ref({
   nombre: false,
@@ -151,12 +153,26 @@ const cambiarLogo = async (event) => {
   if (!file) return;
 
   uploadingLogo.value = true;
+  notificacionCargando.value = true;
+  mensajeCargando.value = 'Subiendo logo del hotel, por favor espere...';
 
   try {
     const imageUrl = await useHotel.subirLogo(dataHotel.value._id, file);
     dataHotel.value.logo = imageUrl;
+
+    mensajeCargando.value = 'Logo del hotel subido exitosamente';
+    setTimeout(() => {
+      notificacionCargando.value = false;
+      mensajeCargando.value = '';
+    }, 6000);
+
   } catch (error) {
     console.error("Error al cambiar el logo:", error);
+    mensajeCargando.value = 'Error al subir el logo';
+    setTimeout(() => {
+      notificacionCargando.value = false;
+      mensajeCargando.value = '';
+    }, 3000);
   } finally {
     uploadingLogo.value = false;
   }
@@ -200,6 +216,11 @@ const eliminarServicio = (index) => {
   dataHotel.value.servicio.splice(index, 1); // Elimina el servicio por índice
 };
 
+const abrirModalLogo = () => {
+  const modal = new bootstrap.Modal(document.getElementById('modalVerLogo'));
+  modal.show();
+};
+
 
 function eliminarLogo() {
   dataHotel.value.logo = null;
@@ -228,7 +249,7 @@ onMounted(async () => {
 <template>
   <div class="galeria">
     <div class="Hoteles">
-      <h5>Administrar Hotel</h5>
+      <h5>Administrar Hoteles</h5>
     </div>
     <div v-if="loading" class="centered">
       <div class="empty-state">
@@ -310,140 +331,78 @@ onMounted(async () => {
       </div>
 
       <!-- Modal editar hotel -->
-      <div class="modal fade modal-large" id="editarDHotel" tabindex="-1" aria-labelledby="exampleModalLabel"
-        aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal fade" id="editarDHotel" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"
+        data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="exampleModalLabel">Editar información del hotel</h1>
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Información del Hotel</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <form>
-                <!-- Fila: Logo y Nombre del Hotel -->
-                <div class="row mb-3" style="position: relative;">
-                  <div class="col-md-6">
-                    <label class="form-label"><strong>Nombre Hotel <span class="text-danger">*</span></strong></label>
-                    <div class="d-flex align-items-center">
-                      <h2 v-if="!editMode.nombre" class="mb-0">{{ dataHotel.nombre }}</h2>
-                      <input v-else class="form-control me-2" type="text" id="nombre_hotel" name="nombre_hotel"
-                        v-model="dataHotel.nombre" @blur="editMode.nombre = false" required />
-                      <button @click="editMode.nombre = !editMode.nombre" type="button" class="btn btn-link ms-2 p-0">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label"><strong>Logo <span class="text-danger">*</span></strong></label>
-                    <div class="d-flex align-items-center">
-                      <div v-if="uploadingLogo" class="loading-spinner">Cargando...</div>
-                      <div v-else>
-                        <img v-if="dataHotel.logo" :src="dataHotel.logo" alt="" class="fixed-size-image" />
-                        <p v-if="!dataHotel.logo">Por favor suba un logo...</p>
-                        <button v-if="editMode.logo && dataHotel.logo" type="button"
-                          class="btn btn-danger btn-sm mt-2 photo-delete-btn" @click="eliminarLogo"
-                          style="margin-left: 8px;">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                        <input v-if="editMode.logo" class="form-control mt-2" type="file" @change="cambiarLogo"
-                          accept="image/*" />
-                      </div>
-                      <button @click="editMode.logo = !editMode.logo" type="button" class="btn btn-link ms-2 p-0">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mb-3 text-start" style="display: flex; flex-direction: column; width: 100%;">
-                  <label class="form-label"><strong>Fotos del Hotel <span class="text-danger">*</span></strong></label>
-                  <div style="width: 15%;">
-                    <button type="button" class="btn btn-dark" @click="abrirModalImagenes(dataHotel)">
-                      Ver Imágenes
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Descripción del Hotel -->
+                <!-- Nombre del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="descripcion_hotel"><strong>Descripción <span
-                        class="text-danger">*</span></strong></label>
-                  <div class="d-flex align-items-center">
-                    <p v-if="!editMode.descripcion" class="mb-0">{{ dataHotel.descripcion }} ...</p>
-                    <textarea v-else class="form-control me-2" id="descripcion_hotel" name="descripcion_hotel"
-                      v-model="dataHotel.descripcion" @blur="editMode.descripcion = false" required></textarea>
-                    <button @click="editMode.descripcion = !editMode.descripcion" type="button"
-                      class="btn btn-link ms-2 p-0">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                  </div>
+                  <label class="form-label"><strong>Nombre Hotel <span class="text-danger">*</span></strong></label>
+                  <input class="form-control" type="text" v-model="dataHotel.nombre" required />
                 </div>
 
                 <!-- Dirección del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="direccion_hotel"><strong>Dirección del Hotel <span
-                        class="text-danger">*</span></strong></label>
-                  <div class="d-flex align-items-center">
-                    <p v-if="!editMode.direccion" class="mb-0">{{ dataHotel.direccion }}</p>
-                    <input v-else class="form-control me-2" type="text" id="direccion_hotel" name="direccion_hotel"
-                      v-model="dataHotel.direccion" @blur="editMode.direccion = false" required />
-                    <button @click="editMode.direccion = !editMode.direccion" type="button"
-                      class="btn btn-link ms-2 p-0">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                  </div>
+                  <label class="form-label"><strong>Dirección <span class="text-danger">*</span></strong></label>
+                  <input class="form-control" type="text" v-model="dataHotel.direccion" required />
                 </div>
 
                 <!-- Correo del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="correo_hotel"><strong>Correo del Hotel <span
-                        class="text-danger">*</span></strong></label>
-                  <div class="d-flex align-items-center">
-                    <p v-if="!editMode.correo" class="mb-0">{{ dataHotel.correo }}</p>
-                    <input v-else class="form-control me-2" type="email" id="correo_hotel" name="correo_hotel"
-                      v-model="dataHotel.correo" @blur="editMode.correo = false" required />
-                    <button @click="editMode.correo = !editMode.correo" type="button" class="btn btn-link ms-2 p-0">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                  </div>
+                  <label class="form-label"><strong>Correo <span class="text-danger">*</span></strong></label>
+                  <input class="form-control" type="email" v-model="dataHotel.correo" required />
                 </div>
 
                 <!-- Teléfono del Hotel -->
                 <div class="mb-3">
-                  <label class="form-label" for="telefono_hotel"><strong>Teléfono del Hotel <span
-                        class="text-danger">*</span></strong></label>
-                  <div class="d-flex align-items-center">
-                    <p v-if="!editMode.telefono" class="mb-0">{{ dataHotel.telefono }}</p>
-                    <input v-else class="form-control me-2" type="text" id="telefono_hotel" name="telefono_hotel"
-                      v-model="dataHotel.telefono" @blur="editMode.telefono = false" required />
-                    <button @click="editMode.telefono = !editMode.telefono" type="button" class="btn btn-link ms-2 p-0">
-                      <i class="bi bi-pencil"></i>
-                    </button>
+                  <label class="form-label"><strong>Teléfono <span class="text-danger">*</span></strong></label>
+                  <input class="form-control" type="text" v-model="dataHotel.telefono" required />
+                </div>
+
+                <!-- Botón para Ver Logo -->
+                <div class="mb-3" style="display: flex; flex-direction: column;">
+                  <label class="form-label"><strong>Logo del Hotel</strong></label>
+                  <div style="width: 30%">
+                    <button type="button" class="btn btn-dark" @click="abrirModalLogo">Ver Logo</button>
                   </div>
                 </div>
 
-                <div class="mb-3 text-start" style="display: flex; flex-direction: column; width: 100%;">
-                  <label class="form-label"><strong>Servicios del Hotel <span
-                        class="text-danger">*</span></strong></label>
-                  <div style="width: 15%;">
-                    <button type="button" class="btn btn-dark" @click="abrirModalServicios">
-                      Ver Servicios
-                    </button>
+                <!-- Fotos del Hotel -->
+                <div class="mb-3" style="display: flex; flex-direction: column;">
+                  <label class="form-label"><strong>Fotos del Hotel</strong></label>
+                  <div style="width: 30%">
+                    <button type="button" class="btn btn-dark" @click="abrirModalImagenes(dataHotel)">Ver
+                      Imágenes</button>
+                  </div>
+                </div>
+
+                <!-- Servicios del Hotel -->
+                <div class="mb-3" style="display: flex; flex-direction: column;">
+                  <label class="form-label"><strong>Servicios del Hotel</strong></label>
+                  <div style="width: 30%">
+                    <button type="button" class="btn btn-dark" @click="abrirModalServicios">Ver Servicios</button>
                   </div>
                 </div>
               </form>
             </div>
-
             <div class="modal-footer">
-              <button type="button" class="btn btn-dark" data-bs-dismiss="modal"
-                :disabled="loadingEditar">Cerrar</button>
-              <button type="button" class="btn btn-dark" @click="guardarCambios"> <span v-if="loadingEditar"
-                  class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span v-else>Guardar</span></button>
+              <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: gray;">Cerrar</button>
+              <button type="button" class="btn btn-dark" @click="guardarCambios">
+                <span v-if="loadingEditar" class="spinner-border spinner-border-sm" role="status"
+                  aria-hidden="true"></span>
+                <span v-else>Guardar</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
+
 
       <!-- Modal para ver y editar imágenes -->
       <div class="modal fade modal-large" id="modalVerImagenes" tabindex="-1" aria-labelledby="modalImagenesLabel"
@@ -460,7 +419,7 @@ onMounted(async () => {
                 <div v-for="(foto, index) in dataHotel.fotos" :key="index" class="photo-container">
                   <img v-if="!foto.eliminada" :src="foto.url" alt="Foto del hotel" class="fixed-size-image">
                   <button v-if="!foto.eliminada" class="btn btn-danger btn-sm mt-2 photo-delete-btn"
-                    @click="marcarComoEliminada(index)">
+                    style="background-color: red;" @click="marcarComoEliminada(index)">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -474,11 +433,45 @@ onMounted(async () => {
                   como foto
                   principal del hotel)</label>
               </div>
-              <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aceptar</button>
+              <button type="button" class="btn" data-bs-dismiss="modal">Aceptar</button>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="modal fade modal-large" id="modalVerLogo" tabindex="-1" aria-labelledby="modalLogoLabel"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalLogoLabel" style="color: black;">Gestión del Logo</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                :disabled="uploadingLogo"></button>
+            </div>
+            <div class="modal-body text-center">
+              <!-- Mostrar Logo Actual -->
+              <div v-if="dataHotel.logo">
+                <img :src="dataHotel.logo" alt="Logo del Hotel" class="img-thumbnail mb-3"
+                  style="width: 25%; height: auto;" />
+                <button class="btn btn-danger mb-3" style="margin-left: 20px; background-color: red; font-weight: bold;"
+                  @click="eliminarLogo"><i class="bi bi-trash"></i></button>
+              </div>
+              <div v-else>
+                <p>No hay un logo actualmente.</p>
+              </div>
+
+              <!-- Subir Nuevo Logo -->
+              <label for="nuevoLogo" class="form-label fw-bold">Subir Nuevo Logo ↓</label>
+              <input type="file" id="nuevoLogo" class="form-control" @change="cambiarLogo" accept="image/*" />
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-dark" data-bs-dismiss="modal"
+                :disabled="uploadingLogo">Aceptar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       <!-- Modal para ver y editar servicios -->
       <div class="modal fade modal-large" id="modalVerServicios" tabindex="-1" aria-labelledby="modalServiciosLabel"
@@ -486,21 +479,20 @@ onMounted(async () => {
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h1 class="modal-title fs-5" id="modalServiciosLabel">Servicios del Hotel</h1>
+              <h1 class="modal-title fs-5" id="modalServiciosLabel">Servicios que dispone el hotel</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <!-- Mostrar los servicios actuales -->
               <div class="mb-3">
-                <label class="form-label"><strong>Servicios Existentes</strong></label>
                 <ul>
                   <li v-for="(servicio, index) in dataHotel.servicio" :key="index" style="list-style-type: none;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 10px;">
                       <!-- Muestra y permite editar directamente la cadena -->
                       <input type="text" v-model="dataHotel.servicio[index]" class="form-control" style="flex: 1;" />
                       <button type="button" class="btn btn-danger btn-sm" @click="eliminarServicio(index)"
-                        style="flex-shrink: 0;">
-                        <i class="bi bi-trash"></i> Eliminar
+                        style="flex-shrink: 0; background-color: red;">
+                        <i class="bi bi-trash"></i>
                       </button>
                     </div>
                   </li>
@@ -531,6 +523,10 @@ onMounted(async () => {
     <div v-if="notificacionValidacion" class="custom-notify alert alert-danger alert-dismissible fade show"
       role="alert">
       {{ mensajeValidacion }}
+    </div>
+
+    <div v-if="notificacionCargando" class="custom-notify alert alert-info alert-dismissible fade show" role="alert">
+      {{ mensajeCargando }}
     </div>
   </div>
 </template>
@@ -750,13 +746,13 @@ onMounted(async () => {
   transition: background-color 0.3s ease;
 }
 
-.btns:hover,
-.btn:hover {
+.btns:hover {
   background-color: #a8521c;
 }
 
 .btn {
   color: white;
+  background-color: #a8521c;
   padding: 10px 20px;
   border-radius: 5px;
   border: none;

@@ -83,7 +83,7 @@ const agregarHotel = async () => {
         mensajeCargando.value = '';
         notificacionVisible.value = false;
         mensajeNotificacion.value = '';
-        router.push('/PanelDueno')
+        irPanelDueno();
       }, 3000);
 
     } else if (useHotel.estatus === 400 || useHotel.estatus === 404 || useHotel.estatus === 500) {
@@ -171,7 +171,7 @@ async function subirLogoHotel(event) {
     }, 6000);
   } catch (error) {
     console.error("Error al subir las fotos:", error);
-    mensajeCargando.value = 'Error al subir las imágenes';
+    mensajeCargando.value = 'Error al subir el logo';
     setTimeout(() => {
       notificacionCargando.value = false;
       mensajeCargando.value = '';
@@ -239,18 +239,6 @@ function eliminarServicioModal(index) {
 
 
 function limpiar() {
-  data.value = {
-    nombre: '',
-    logo: '',
-    fotos: [],
-    servicios: [],
-    descripcion: '',
-    direccion: '',
-    correo: '',
-    telefono: '',
-    pisos: '',
-    idUsuario: '',
-  }
   nombre.value = '';
   descripcion.value = '';
   direccion.value = '';
@@ -260,10 +248,20 @@ function limpiar() {
   selectedImage.value = null;
   selectedPhotos.value = [];
   nuevoServicio.value = [];
+  data.value.nombre = '';
+  data.value.logo = '';
+  data.value.fotos = [];
+  data.value.servicio = [];
+  data.value.descripcion = '';
+  data.value.direccion = '';
+  data.value.correo = '';
+  data.value.telefono = '';
+  data.value.pisos = '';
+
 }
 
 function irPanelDueno() {
-  router.push('/PanelDueno')
+  router.push('/DPanelHotel')
 }
 
 // Limpia la instancia del modal al desmontarlo
@@ -422,8 +420,8 @@ onMounted(() => {
           <div class="text-center mb-3">
             <button class="btn btn-outline-danger btn" type="button" style="margin-right: 5px"
               @click="irPanelDueno()">Cancelar</button>
-            <button class="btn btn-outline-dark btn" type="button" style="margin-right: 5px" @click="limpiar()">
-              Limpiar</button>
+<!--             <button class="btn btn-outline-dark btn" type="button" style="margin-right: 5px" @click="limpiar()">
+              Limpiar</button> -->
             <button class="btn btn-custom btn" type="submit" style="background:  #b7642d; color: #fff"
               :disabled="loadingHotel">
               <span v-if="loadingHotel" class="spinner-border spinner-border-sm" role="status"

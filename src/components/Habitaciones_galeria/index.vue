@@ -26,6 +26,7 @@ const adults = ref(1);
 const children = ref(0);
 const totalPersona = ref();
 const minDate = ref(obtenerFechaActual());
+const imagenIndex = ref(0); // Índice de la imagen seleccionada
 
 function obtenerFechaActual() {
   const today = new Date();
@@ -78,8 +79,26 @@ const filtrarHabitacion = async () => {
 //Abrir imagen con modal
 
 function abrirModal(imagen) {
+  // Establece el índice y la imagen seleccionada
+  imagenIndex.value = hotelInfo.value.fotos.findIndex((foto) => foto.url === imagen);
   imagenSeleccionada.value = imagen;
   mostrarModal.value = true;
+}
+
+function cambiarImagen(direccion) {
+  if (!hotelInfo.value.fotos || hotelInfo.value.fotos.length === 0) return;
+
+  if (direccion === 'siguiente') {
+    // Avanza al siguiente índice, con bucle al inicio
+    imagenIndex.value = (imagenIndex.value + 1) % hotelInfo.value.fotos.length;
+  } else if (direccion === 'anterior') {
+    // Retrocede al índice anterior, con bucle al final
+    imagenIndex.value =
+      (imagenIndex.value - 1 + hotelInfo.value.fotos.length) % hotelInfo.value.fotos.length;
+  }
+
+  // Actualiza la imagen seleccionada
+  imagenSeleccionada.value = hotelInfo.value.fotos[imagenIndex.value].url;
 }
 
 //Calcular noches y formatear precio x noche
@@ -269,10 +288,10 @@ onMounted(async () => {
     <div class="Hoteles">
       <h5 id="h5">INFORMACION HOTEL</h5>
     </div>
-    <div class="row no-gutters">
-      <div v-for="foto in hotelInfo.fotos.slice(0,3)" :key="foto.url" class="col-md-4">
-        <img :src="foto.url" alt="Imagen del hotel" class="img-fluid w-100 h-100" @click="abrirModal(foto.url)"
-          data-bs-toggle="modal" data-bs-target="#modalImagen">
+    <div class="container" style="display: flex; justify-content: center;">
+      <div v-for="foto in hotelInfo.fotos.slice(0, 3)" :key="foto.url" class="contenedor-imagen-fija">
+        <img :src="foto.url" alt="Imagen del hotel" class="imagen-ajustada" @click="abrirModal(foto.url)"
+          data-bs-toggle="modal" data-bs-target="#modalImagen" />
       </div>
     </div>
     <!-- HTML -->
@@ -298,19 +317,19 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div class="row text-center mt-3">
-      <div class="col-md-6 mb-3">
-        <i class="bi bi-geo-alt-fill"></i>{{ hotelInfo.direccion }}
-      </div>
-      <div class="col-md-6 mb-3">
-        <i class="bi bi-telephone-fill"></i>{{ hotelInfo.telefono }}
-      </div>
-      <div class="col-md-6 mb-3">
-        <i class="bi bi-envelope-fill"></i>{{ hotelInfo.correo }}
+    <div class="container text-center">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <i class="bi bi-geo-alt-fill"></i>{{ hotelInfo.direccion }}
+        </div>
+        <div class="col-md-6 mb-3">
+          <i class="bi bi-telephone-fill"></i>{{ hotelInfo.telefono }}
+        </div>
+        <div class="col-md-6 mb-3">
+          <i class="bi bi-envelope-fill"></i>{{ hotelInfo.correo }}
+        </div>
       </div>
     </div>
-
-
 
     <div>
       <div class="Hoteles">
@@ -474,14 +493,27 @@ onMounted(async () => {
       <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
           <div class="modal-header">
+            <p class="fw-bold fs-5" style="margin: 0;">Fotos del Hotel</p>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body position-relative">
+            <!-- Flecha izquierda -->
+            <button class="flecha-izquierda" @click="cambiarImagen('anterior')">
+              <i class="bi bi-chevron-left" style="color: white;"></i>
+            </button>
+
+            <!-- Imagen seleccionada -->
             <img :src="imagenSeleccionada" alt="Imagen del hotel" class="img-fluid w-100">
+
+            <!-- Flecha derecha -->
+            <button class="flecha-derecha" @click="cambiarImagen('siguiente')">
+              <i class="bi bi-chevron-right" style="color: white;"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -494,8 +526,25 @@ onMounted(async () => {
 
 .card-img-top {
   object-fit: cover;
-  height: 200px;
+  height: 300px;
+}
 
+.contenedor-imagen-fija {
+  width: 340px;
+  height: 230px;
+  display: inline-block;
+  overflow: hidden;
+  position: relative;
+  margin: 5px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.imagen-ajustada {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
 }
 
 .card-title {
@@ -646,8 +695,9 @@ p {
 }
 
 .img-fluid {
-  object-fit: cover;
   cursor: pointer;
+  width: 100%;
+  max-height: 50%;
 }
 
 .w-100 {
@@ -833,6 +883,42 @@ input.form-control {
   font-size: 1.5em;
   margin-top: 10px;
 }
+
+.modal-body {
+  position: relative; /* Posiciona las flechas */
+}
+
+.flecha-izquierda,
+.flecha-derecha {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background-color: #b7642d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.flecha-izquierda {
+  left: 10px;
+}
+
+.flecha-derecha {
+  right: 10px;
+}
+
+.flecha-izquierda:hover,
+.flecha-derecha:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
 
 
 @media screen and (max-width: 2000px) {

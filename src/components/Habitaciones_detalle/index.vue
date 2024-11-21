@@ -331,7 +331,7 @@ onMounted(async () => {
             <h5 class="modal-title" id="modalImagenLabel" style="color: black;">Imagen Habitación</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body text-center">
             <img :src="imagenSeleccionada" alt="Imagen del hotel" class="img-fluid" />
           </div>
         </div>

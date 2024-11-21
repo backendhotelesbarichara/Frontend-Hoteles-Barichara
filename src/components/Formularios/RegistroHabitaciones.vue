@@ -19,7 +19,9 @@ const tipoInput = ref("");
 const mensajeNotificacion = ref('');
 const mensajeValidacion = ref('');
 const uploadedImages = ref([]);
-const data = ref([]);
+const data = ref({
+  tipo_habitacion: [],
+});
 const loading = ref(false);
 const loadingHabitacion = ref(false);
 const notificacionVisible = ref(false);
@@ -34,8 +36,8 @@ const agregarHabitacion = async () => {
     numero_habitacion: num_habitacion.value,
     descripcion: descripcion.value,
     imagenes: uploadedImages.value,
-    tipo_habitacion: tipo_habitacion.value,
     cantidad_personas: capacidad_max.value,
+    tipo_habitacion: data.value.tipo_habitacion,
     servicio: servicios.value,
     precio_noche: precio.value,
     idPiso: idPiso.value,
@@ -56,7 +58,7 @@ const agregarHabitacion = async () => {
       }, 3000);
       console.log(response)
       console.log("Habitación añadida");
-    } else if (useHabitacion.estatus === 400) {
+    } else if (useHabitacion.estatus === 400 || useHabitacion.estatus === 404 || useHabitacion.estatus === 500) {
       notificacionValidacion.value = true;
       mensajeValidacion.value = useHabitacion.validacion;
       setTimeout(() => {
@@ -148,7 +150,7 @@ const eliminarImagen = (index) => {
 
 const addTipo = () => {
   if (tipoInput.value.trim() !== "") {
-    tipo_habitacion.value.push(tipoInput.value.trim());
+    data.value.tipo_habitacion.push(tipoInput.value.trim());
     tipoInput.value = "";
     console.log(tipo_habitacion);
     console.log(data.value.tipo_habitacion);
@@ -156,7 +158,7 @@ const addTipo = () => {
 };
 
 const removeTipo = (index) => {
-  tipo_habitacion.value.splice(index, 1);
+  data.value.tipo_habitacion.splice(index, 1);
 };
 
 function goToHabitaciones() {
@@ -214,11 +216,11 @@ onMounted(() => {
                           class="text-danger">*</span></strong></label>
                     <div class="input-group">
                       <input class="form-control" v-model="tipoInput" type="text" id="tipo_habitacion"
-                        placeholder="Ej: Habitación cama sencilla, doble..." name="tipo_habitacion" />
+                        placeholder="Ej: Habitación cama sencilla" name="tipo_habitacion" />
                       <button type="button" class="btn" @click="addTipo"
                         style="background: #b7642d; color: white;">Agregar</button>
                     </div>
-                    <div v-if="tipo_habitacion.length > 0">
+                    <div v-if="data.tipo_habitacion.length > 0">
                       <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal"
                         data-bs-target="#tipoModal">Ver tipos añadidos</button>
                     </div>
@@ -255,25 +257,25 @@ onMounted(() => {
                     <label class="form-label" for="precio"><strong>Precio <span
                           class="text-danger">*</span></strong></label>
                     <input class="form-control" v-model="precio" type="number" id="precio"
-                      placeholder="Precio por noche..." name="precio" required />
+                      placeholder="Precio por noche por persona..." name="precio" required />
                   </div>
                 </div>
 
                 <div class="col-6">
                   <div class="mb-3">
                     <strong>Imágenes de la habitación <span class="text-danger">*</span></strong>
-                    <p>(Debe haber mínimo 1 foto, cada foto debe pesar menos de 10MB)</p>
+                    <p>(Debe haber mínimo 1 foto, cada foto debe como máximo 10MB)</p>
 
                     <div class="logo">
                       <p class="logop">
                         <i style="color: #b7642d; font-size: 30px" class="bi bi-file-earmark-arrow-up-fill"></i>
                       </p>
                       <input class="foto" style="margin-top: 13px" type="file" accept="image/*" multiple
-                        @change="subirFotosHabitacion" />
+                        @change="subirFotosHabitacion" required />
                     </div>
 
                     <!-- Spinner de carga -->
-                    <div v-if="loading" class="loading-spinner fw-bold">Subiendo imágenes...</div>
+                    <div v-if="loading" class="loading-spinner fw-bold">Subiendo imágenes, por favor espere...</div>
                   </div>
                   <div v-if="uploadedImages.length > 0">
                     <button type="button" class="btn btn-secondary mt-2" @click="abrirModalImagenes">
@@ -286,13 +288,11 @@ onMounted(() => {
             </div>
           </div>
           <div class="text-center mb-3">
-            <button class="btn btncancelar" type="button" :disabled="loadingHabitacion"
+            <button class="btn btncancelar" type="button" :disabled="loading"
               style="margin-right: 5px; background-color: #dc3545; color: white;"
               @click="goToHabitaciones()">Cancelar</button>
-            <button class="btn btn-custom" type="submit" style="background: #b7642d; color: #fff"
-              :disabled="loadingHabitacion">
-              <span v-if="loadingHabitacion" class="spinner-border spinner-border-sm" role="status"
-                aria-hidden="true"></span>
+            <button class="btn btn-custom" type="submit" style="background: #b7642d; color: #fff" :disabled="loading">
+              <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               <span v-else> <i class="bi bi-floppy-fill"></i> Registrar</span>
             </button>
           </div>
@@ -336,7 +336,7 @@ onMounted(() => {
             </div>
             <div class="modal-body">
               <ul class="list-group">
-                <li v-for="(tipo, index) in tipo_habitacion" :key="index"
+                <li v-for="(tipo, index) in data.tipo_habitacion" :key="index"
                   class="list-group-item d-flex justify-content-between align-items-center">
                   {{ tipo }}
                   <button type="button" class="btn btn-danger btn-sm" style="margin-left: 10px;"
