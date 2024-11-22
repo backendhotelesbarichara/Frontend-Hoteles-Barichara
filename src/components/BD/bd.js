@@ -156,10 +156,11 @@ export const proveedores = [
     {
         alias: "HCulona Barichara",
         tel: "3222431440",
-        sitios :[{nombre:"Salto del mico"}, {nombre:"piscinas"},{nombre:"cementerio"}],
+        sitios :[{nombre:"Salto del mico"}],
+        estado: "Activo",
         vigencia: "10/05/2024",
     },
-    {
+/*     {
         alias: "SUXpress Barichara  ",
         tel: "3222431440",
         sitios :[{nombre:"Salto del mico"},{nombre:"cementerio"}],
@@ -170,7 +171,7 @@ export const proveedores = [
         tel: "3222431440",
         sitios :[{nombre:"Salto del mico"}, {nombre:"piscinas"}],
         vigencia: "10/05/2024",
-    },
+    }, */
 ];
 
 export const sitios = [

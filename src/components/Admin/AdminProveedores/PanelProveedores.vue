@@ -1,125 +1,131 @@
 <template>
-<div class="galeria">
-    <div class="Hoteles">
-        <h5>Administrar proveedores</h5>
-    </div>
-    <div>
-        <!-- Botón para agregar nuevo proveedor -->
+    <div class="galeria">
+        <div class="Hoteles">
+            <h5>Administrar proveedores</h5>
+        </div>
         <div>
-            <div class="btn-group" role="group">
-                <router-link class="link" to="/RegistroProveedores">
-                    <button style="margin-bottom: 5px; margin-top: 30px; margin-right: 5px" class="btns btn-dark">
-                        <i class="material-icons">add_box</i>
-                    </button></router-link>
+            <div class="text-center w-25 mt-5" style="display: flex; align-items: baseline;">
+                <p for="hotelSelector" class="form-p fw-bold w-100 fs-3">Proveedores de: </p>
+                <select id="hotelSelector" class="form-select text-center fw-bold">
+                    <option selected disabled value=""> Salto del mico</option> <!-- Opción por defecto -->
+                    <option value="Salto del mico"> Seleccione un sitio turistico...
+                    </option>
+                </select>
             </div>
-        </div>
 
-        <!-- Tabla de proveedores -->
-        <div style="font-size: 12px;" class="table-responsive">
-            <table class="table table-bordered">
-                <thead style="align-items: center; text-align: center">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Telefono</th>
-                        <th>Sitios vinculados</th>
-                        <th>vigencia</th>
-                        <th>Acciones</th>
+            <!-- Tabla de proveedores -->
+            <div style="font-size: 12px;" class="table-responsive">
+                <table class="table table-bordered">
+                    <thead style="align-items: center; text-align: center">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Telefono</th>
+                            <th>Sitio vinculado</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="proveedor in dataproveedores">
+                            <td>{{ proveedor.alias }}</td>
+                            <td>{{ proveedor.tel }}</td>
+                            <td>
+                                <div class="col" v-for="lugares in proveedor.sitios" bind:key="lugares.nombre">
+                                    {{ lugares.nombre }}
+                                </div>
+                            </td>
+                            <td>{{ proveedor.estado }}</td>
+                            <td>
+                                <div class="btn-container">
+                                    <!-- boton que abre el modal -->
+                                    <button type="button" class="btns btn btn-dark" data-bs-toggle="modal"
+                                        data-bs-target="#editarp">
+                                        <i class="material-icons">edit</i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="proveedor in dataproveedores">
-                        <td>{{ proveedor.alias }}</td>
-                        <td>{{ proveedor.tel }}</td>
+                <div style="display: flex; justify-content: end;">
+                    <button class="btn top-bar__button" id="btns" style="margin-top: 6px;">
+                        Agregar Proveedor
+                    </button>
+                </div>
+            </div>
 
-                        <td>
-
-                            <div class="col" v-for="lugares in proveedor.sitios" bind:key="lugares.nombre">
-                                {{ lugares.nombre }}
+            <!-- espacio para el modal -->
+            <div class="modal fade modal-small" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">
+                                Editar proveedor
+                            </h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="col-15">
+                                <div class="mb-3">
+                                    <strong>Imágen pricipal *</strong>
+                                    <p>{{ imagesSelected }} imágenes seleccionadas (Máximo 1)</p>
+                                    <div style="margin-top: -15px" class="logo">
+                                        <p class="logop">
+                                            <i style="color: #b7642d; font-size: 30px"
+                                                class="bi bi-file-earmark-arrow-up-fill"></i>
+                                        </p>
+                                        <br />
+                                        <input class="foto" style="margin-top: 13px" :required="imagesSelected !== 1"
+                                            type="file" ref="fileInput" accept="image/*" multiple
+                                            @change="handleFileUpload" />
+                                    </div>
+                                </div>
                             </div>
 
-                        </td>
+                            <div class="row">
+                                <div class="col-15">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="nombre_proveedor"><strong>Nombre
+                                                *</strong></label><input class="form-control" type="text"
+                                            id="nombre_proveedor" name="nombre_proveedor" required="" />
+                                    </div>
+                                </div>
 
-                        <td>{{proveedor.vigencia}}</td>
-                        <td>
-                            <div class="btn-container">
-                                <!-- boton que abre el modal -->
-                                <button type="button" class="btns btn btn-dark" data-bs-toggle="modal" data-bs-target="#editarp">
-                                    <i class="material-icons">edit</i>
-                                </button>
-                                <!-- boton que abre el modal -->
+                                <div class="col-15">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="telefono_proveedor"><strong>Telefono
+                                                *</strong></label><input class="form-control" type="number"
+                                            id="telefono_proveedor" name="telefono_proveedor" required="" />
+                                    </div>
+                                </div>
 
-                                <!-- boton que debe eliminar el proveedor -->
-                                <button type="button" class="btns btn btn-dark">
-                                    <i class="material-icons">delete</i>
-                                </button>
-                                <!-- boton que debe eliminar el proveedor -->
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- espacio para el modal -->
-        <div class="modal fade modal-small" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">
-                            Editar proveedor
-                        </h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="col-15">
-                            <div class="mb-3">
-                                <strong>Imágen pricipal *</strong>
-                                <p>{{ imagesSelected }} imágenes seleccionadas (Máximo 1)</p>
-                                <div style="margin-top: -15px" class="logo">
-                                    <p class="logop">
-                                        <i style="color: #b7642d; font-size: 30px" class="bi bi-file-earmark-arrow-up-fill"></i>
-                                    </p>
-                                    <br />
-                                    <input class="foto" style="margin-top: 13px" :required="imagesSelected !== 1" type="file" ref="fileInput" accept="image/*" multiple @change="handleFileUpload" />
+                                <div class="col-15">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="sitio_asignado"><strong>Sitio
+                                                *</strong></label><input class="form-control" type="text"
+                                            id="sitio_asignado" name="sitio_asignado" required="" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="row">
-                            <div class="col-15">
-                                <div class="mb-3">
-                                    <label class="form-label" for="nombre_proveedor"><strong>Nombre *</strong></label><input class="form-control" type="text" id="nombre_proveedor" name="nombre_proveedor" required="" />
-                                </div>
-                            </div>
-
-                            <div class="col-15">
-                                <div class="mb-3">
-                                    <label class="form-label" for="telefono_proveedor"><strong>Telefono *</strong></label><input class="form-control" type="number" id="telefono_proveedor" name="telefono_proveedor" required="" />
-                                </div>
-                            </div>
-
-                            <div class="col-15">
-                                <div class="mb-3">
-                                    <label class="form-label" for="sitio_asignado"><strong>Sitio *</strong></label><input class="form-control" type="text" id="sitio_asignado" name="sitio_asignado" required="" />
-                                </div>
-                            </div>
+                        <div class="modal-footer">
+                            <button type="button" style="background-color: #343a40; border-style: none"
+                                class="btn btn-secondary" data-bs-dismiss="modal">
+                                Cancelar
+                            </button>
+                            <button type="button" style="background-color: #b7642d; border-style: none"
+                                class="btn btn-primary">
+                                Editar
+                            </button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" style="background-color: #343a40; border-style: none" class="btn btn-secondary" data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-                        <button type="button" style="background-color: #b7642d; border-style: none" class="btn btn-primary">
-                            Editar
-                        </button>
                     </div>
                 </div>
             </div>
+            <!-- espacio para el modal -->
         </div>
-        <!-- espacio para el modal -->
     </div>
-</div>
 </template>
 
 <script setup>
@@ -224,6 +230,21 @@ h5 {
     align-items: center;
     border-radius: 10px;
     transition: 1s;
+}
+
+#btns {
+    background-color: #b7642d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#btns:hover {
+    background-color: #a8521c;
 }
 
 @media screen and (max-width: 500px) {
