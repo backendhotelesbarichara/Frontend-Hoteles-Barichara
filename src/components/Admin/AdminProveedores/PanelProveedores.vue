@@ -34,7 +34,7 @@
                                     {{ lugares.nombre }}
                                 </div>
                             </td>
-                            <td>{{ proveedor.estado }}</td>
+                            <td><button class="btn btn-success fw-bold">{{ proveedor.estado }}</button></td>
                             <td>
                                 <div class="btn-container">
                                     <!-- boton que abre el modal -->
@@ -56,7 +56,7 @@
             </div>
 
             <!-- espacio para el modal -->
-            <div class="modal fade modal-small" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel"
+            <div class="modal fade modal-lg" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -67,45 +67,53 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="col-15">
-                                <div class="mb-3">
-                                    <strong>Imágen pricipal *</strong>
-                                    <p>{{ imagesSelected }} imágenes seleccionadas (Máximo 1)</p>
-                                    <div style="margin-top: -15px" class="logo">
-                                        <p class="logop">
-                                            <i style="color: #b7642d; font-size: 30px"
-                                                class="bi bi-file-earmark-arrow-up-fill"></i>
-                                        </p>
-                                        <br />
-                                        <input class="foto" style="margin-top: 13px" :required="imagesSelected !== 1"
-                                            type="file" ref="fileInput" accept="image/*" multiple
-                                            @change="handleFileUpload" />
-                                    </div>
-                                </div>
-                            </div>
-
                             <div class="row">
-                                <div class="col-15">
+                                <div class="col-12">
                                     <div class="mb-3">
                                         <label class="form-label" for="nombre_proveedor"><strong>Nombre
-                                                *</strong></label><input class="form-control" type="text"
-                                            id="nombre_proveedor" name="nombre_proveedor" required="" />
+                                                <span class="text-danger">*</span></strong></label><input
+                                            class="form-control" type="text" id="nombre_proveedor"
+                                            name="nombre_proveedor" required="" />
                                     </div>
                                 </div>
 
-                                <div class="col-15">
+                                <div class="col-12">
                                     <div class="mb-3">
                                         <label class="form-label" for="telefono_proveedor"><strong>Telefono
-                                                *</strong></label><input class="form-control" type="number"
-                                            id="telefono_proveedor" name="telefono_proveedor" required="" />
+                                                <span class="text-danger">*</span></strong></label><input
+                                            class="form-control" type="number" id="telefono_proveedor"
+                                            name="telefono_proveedor" required="" />
                                     </div>
                                 </div>
 
-                                <div class="col-15">
+                                <div class="col-12">
                                     <div class="mb-3">
-                                        <label class="form-label" for="sitio_asignado"><strong>Sitio
-                                                *</strong></label><input class="form-control" type="text"
-                                            id="sitio_asignado" name="sitio_asignado" required="" />
+                                        <label class="form-label" for="sitio_asignado"><strong>Sitio Turístico asignado
+                                                <span class="text-danger">*</span></strong></label>
+                                        <select id="hotelSelector" class="form-select text-start fw-bold">
+                                            <option selected disabled value=""> Salto del mico</option>
+                                            <!-- Opción por defecto -->
+                                            <option value="Salto del mico"> Seleccione un sitio turistico...
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <strong>Foto <span class="text-danger">*</span></strong>
+                                        <p>(Debe haber mínimo 1 foto, la foto debe pesar como máximo 10MB)</p>
+                                        <button type="button" style="background-color: #b7642d; border-style: none"
+                                        class="btn btn-primary">Ver foto</button>
+<!--                                         <div style="margin-top: -15px" class="logo">
+                                            <p class="logop">
+                                                <i style="color: #b7642d; font-size: 30px"
+                                                    class="bi bi-file-earmark-arrow-up-fill"></i>
+                                            </p>
+                                            <br />
+                                             <input class="foto" style="margin-top: 13px"
+                                                :required="imagesSelected !== 1" type="file" ref="fileInput"
+                                                accept="image/*" multiple @change="handleFileUpload" />
+                                        </div> -->
                                     </div>
                                 </div>
                             </div>

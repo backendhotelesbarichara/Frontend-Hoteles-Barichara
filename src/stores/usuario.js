@@ -21,6 +21,19 @@ export const useStoreUsuarios = defineStore(
       axios.defaults.headers.common["x-token"] = token.value;
     }
 
+    const getAll = async () => {
+      try {
+        insertarToken();
+        const response = await axios.get(`${modelo}/all`);
+        console.log(response);
+        estatus.value = response.status;
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+      }
+    };
+
     const login = async (data) => {
       try {
         const response = await axios.post(`${modelo}/login`, data);
@@ -98,6 +111,7 @@ export const useStoreUsuarios = defineStore(
     };
 
     return {
+      getAll,
       login,
       agregar,
       editar,

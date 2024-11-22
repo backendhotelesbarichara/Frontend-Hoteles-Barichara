@@ -79,12 +79,12 @@
                     class="btn btn-primary d-block w-100"
                     style="background:  #b7642d; border-style: none"
                   >
-                    Registrarme
+                    Registrar
                   </button>
                 </div>
-                <router-link class="link" to="/Login">
+<!--                 <router-link class="link" to="/Login">
                 <p class="text-muted">¿Ya esta registrado? Inicie sesión&nbsp;</p>
-              </router-link>
+              </router-link> -->
               </form>
             </div>
           </div>

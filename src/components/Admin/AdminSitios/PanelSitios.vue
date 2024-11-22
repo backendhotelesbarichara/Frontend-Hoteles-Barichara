@@ -47,7 +47,7 @@ async function getSitiosTuristicos() {
     }
 }
 
-function irProveedor(){
+function irProveedor() {
     router.push('/PanelProveedores')
 }
 
@@ -64,17 +64,17 @@ onMounted(() => {
         </div>
         <div>
             <!-- Botón para agregar nuevo sitio -->
-            <div>
+            <!--             <div>
                 <div class="btn-group" role="group">
                     <router-link class="link" to="/RegistroSitio">
                         <button style="margin-bottom: 5px; margin-top: 30px; margin-right: 5px" class="btns btn-dark">
                             <i class="material-icons">add_box</i>
                         </button></router-link>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Tabla de hoteles -->
-            <div style="font-size: 12px;" class="table-responsive">
+            <div style="font-size: 12px;" class="table-responsive m-5">
                 <table class="table table-bordered">
                     <thead style="align-items: center; text-align: center">
                         <tr>
@@ -112,7 +112,7 @@ onMounted(() => {
                             <td>
                                 <div class="btn-container">
                                     <!-- boton que abre el modal -->
-                                    <button type="button" class="btns btn btn-dark" data-bs-toggle="modal" 
+                                    <button type="button" class="btns btn btn-dark" data-bs-toggle="modal"
                                         data-bs-target="#editarp" @click="editarSitio(sitio)">
                                         <i class="material-icons">edit</i>
                                     </button>
@@ -130,7 +130,11 @@ onMounted(() => {
                     </tbody>
                 </table>
             </div>
-
+            <div style="display: flex; justify-content: end;">
+                <button class="btn top-bar__button" id="btns" style="margin-top: 6px;">
+                    Agregar Sitio Turistico
+                </button>
+            </div>
             <!-- espacio para el modal -->
             <div class="modal fade modal-lg" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel"
                 aria-hidden="true">
@@ -161,21 +165,21 @@ onMounted(() => {
                                 </div>
 
                                 <div class="col-12">
-                                <div class="mb-3">
-                                    <strong>Imágen pricipal *</strong>
-                                    <p>{{ imagesSelected }} imágenes seleccionadas (Máximo 4)</p>
-                                    <div style="margin-top: -15px" class="logo">
-                                        <p class="logop">
-                                            <i style="color: #b7642d; font-size: 30px"
-                                                class="bi bi-file-earmark-arrow-up-fill"></i>
-                                        </p>
-                                        <br />
-                                        <input class="foto" style="margin-top: 13px" :required="imagesSelected !== 4"
-                                            type="file" ref="fileInput" accept="image/*" multiple
-                                            @change="handleFileUpload" />
+                                    <div class="mb-3">
+                                        <strong>Imágen pricipal *</strong>
+                                        <p>{{ imagesSelected }} imágenes seleccionadas (Máximo 4)</p>
+                                        <div style="margin-top: -15px" class="logo">
+                                            <p class="logop">
+                                                <i style="color: #b7642d; font-size: 30px"
+                                                    class="bi bi-file-earmark-arrow-up-fill"></i>
+                                            </p>
+                                            <br />
+                                            <input class="foto" style="margin-top: 13px"
+                                                :required="imagesSelected !== 4" type="file" ref="fileInput"
+                                                accept="image/*" multiple @change="handleFileUpload" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
                             </div>
                         </div>
@@ -263,6 +267,21 @@ onMounted(() => {
     justify-content: center;
     gap: 5px;
     /* Espacio entre los botones */
+}
+
+#btns {
+    background-color: #b7642d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#btns:hover {
+    background-color: #a8521c;
 }
 
 .btns {

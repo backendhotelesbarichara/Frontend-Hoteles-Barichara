@@ -83,6 +83,7 @@ function goToPanelDueno() {
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span v-if="!loading">Ingresar</span>
                   </button>
+                  <p class="fw-bold mt-1" style="font-size: 13px; cursor: pointer; text-decoration: underline;">¿Olvidaste tu contraseña?</p>
                   <p class="text-danger"> {{ msgValidacion }} </p>
                 </div>
                 <!-- <router-link class="link" to="/Registro">

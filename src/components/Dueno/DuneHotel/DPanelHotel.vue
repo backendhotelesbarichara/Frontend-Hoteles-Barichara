@@ -64,7 +64,10 @@ const abrirModalServicios = () => {
 async function getHoteles() {
   try {
     const response = await useHotel.getAll()
-    hoteles.value = response
+    hoteles.value = response.map(hotel => ({
+      ...hotel,
+      loadingActInac: false // Agregamos el estado de carga por plato
+    }));
     console.log(response);
   } catch (error) {
     console.log(error);
@@ -201,6 +204,29 @@ async function subirFotosHotel(event) {
   }
 }
 
+async function cambiarEstadoHotel(hotel) {
+  const Hotel = hoteles.value.find(hoteles => hoteles._id === hotel._id);
+  if (!Hotel) return;
+
+  Hotel.loadingActInac = true;
+
+  const estadoAnterior = Hotel.estado;
+  Hotel.estado = !Hotel.estado;
+
+  try {
+    if (estadoAnterior) {
+      await useHotel.inactivar(hotel._id);
+    } else {
+      await useHotel.activar(hotel._id);
+    }
+  } catch (error) {
+    console.error("Error al cambiar el estado del sitio", error);
+    Hotel.estado = estadoAnterior;
+  } finally {
+    Hotel.loadingActInac = false;
+  }
+}
+
 // Función para agregar nuevo servicio
 const agregarServicio = () => {
   if (nuevoServicio.value.trim() !== '') {
@@ -266,16 +292,15 @@ onMounted(async () => {
     </div>
     <div v-else>
       <!-- Tabla de hoteles -->
-      <div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
+      <!--       <div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
         <h1 class="text-center m-4">TUS HOTELES</h1>
         <div>
           <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
             <i class="material-icons">add_box</i>
           </button>
         </div>
-
-      </div>
-      <div style="font-size: 12px" class="table-responsive">
+      </div> -->
+      <div style="font-size: 12px" class="table-responsive mt-5">
         <table class="table table-bordered">
           <thead>
             <tr>
@@ -284,6 +309,7 @@ onMounted(async () => {
               <th>Descripción</th>
               <th>Teléfono</th>
               <th>Dirección</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -315,6 +341,15 @@ onMounted(async () => {
               <td>{{ hotel.telefono }}</td>
               <td>{{ hotel.direccion }}</td>
               <td>
+                <button :class="['btn', hotel.estado ? 'btn-success' : 'btn-danger']" @click="cambiarEstadoHotel(hotel)"
+                  style="margin-left: 10px; font-weight: bold;" :disabled="hotel.loadingActInac">
+                  <span v-if="hotel.loadingActInac" class="spinner-border spinner-border-sm" role="status"
+                    aria-hidden="true"></span>
+                  <span v-if="!hotel.loadingActInac"> {{ hotel.estado ? 'Activo' : 'Inactivo'
+                    }}</span>
+                </button>
+              </td>
+              <td>
                 <div class="btn-container">
                   <button type="button" class="btns btn btn-dark" data-bs-toggle="modal" data-bs-target="#editarDHotel"
                     @click="editaHotel(hotel)">
@@ -328,6 +363,12 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div style="display: flex; justify-content: end;">
+        <button class="btn top-bar__button" id="btns" style="margin-top: 6px;" @click="goToRegistroHotel()">
+          Agregar Hotel
+        </button>
       </div>
 
       <!-- Modal editar hotel -->
@@ -692,6 +733,14 @@ onMounted(async () => {
   margin-top: 20%;
 }
 
+.btn-success {
+  background-color: green !important;
+}
+
+.btn-danger {
+  background-color: #bb2d3b !important;
+}
+
 .btn-container {
   display: flex;
   justify-content: center;
@@ -753,6 +802,16 @@ onMounted(async () => {
 .btn {
   color: white;
   background-color: #a8521c;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btne {
+  color: white;
   padding: 10px 20px;
   border-radius: 5px;
   border: none;
