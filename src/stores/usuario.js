@@ -16,6 +16,8 @@ export const useStoreUsuarios = defineStore(
     const email = ref("");
     const id = ref("");
     const router = useRouter();
+    const correoRecuperar = ref("");
+    const codigoCorreo = ref("");
 
     function insertarToken() {
       axios.defaults.headers.common["x-token"] = token.value;
@@ -31,6 +33,48 @@ export const useStoreUsuarios = defineStore(
       } catch (error) {
         console.log(error);
         estatus.value = error.response.status;
+      }
+    };
+
+    const codigoRecuperar = async (correo) => {
+      try {
+        const response = await axios.get(
+          `${modelo}/codigo-recuperar/${correo}`
+        );
+        email.value = correo;
+        estatus.value = response.status;
+        return response;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+        validacion.value = error.response.data.error;
+      }
+    };
+
+    const confirmarCodigo = async (codigo) => {
+      try {
+        const response = await axios.get(
+          `${modelo}/confirmar-codigo/${codigo}`
+        );
+        estatus.value = response.status;
+        codigoCorreo.value = codigo;
+        return response;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+        validacion.value = error.response.data.error;
+      }
+    };
+
+    const nuevaPassword = async (data) => {
+      try {
+        const response = await axios.put(`${modelo}/nueva-password`, data);
+        estatus.value = response.status;
+        return response;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+        validacion.value = error.response.data.error;
       }
     };
 
@@ -62,6 +106,7 @@ export const useStoreUsuarios = defineStore(
       } catch (error) {
         console.log(error);
         estatus.value = error.response.status;
+        validacion.value = error.response.data.error;
         if (error.message === "Network Error") {
           validacion.value = "Sin conexión, por favor intente recargar";
           console.log(validacion);
@@ -91,6 +136,7 @@ export const useStoreUsuarios = defineStore(
       } catch (error) {
         console.log(error);
         estatus.value = error.response.status;
+        validacion.value = error.response.data.error;
         if (error.message === "Network Error") {
           validacion.value = "Sin conexión, por favor intente recargar";
           console.log(validacion);
@@ -110,17 +156,46 @@ export const useStoreUsuarios = defineStore(
       }
     };
 
+    const activar = async (id) => {
+      try {
+        const response = await axios.put(`${modelo}/activar/${id}`);
+        console.log(response);
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+      }
+    };
+
+    const inactivar = async (id) => {
+      try {
+        const response = await axios.put(`${modelo}/inactivar/${id}`);
+        console.log(response);
+        return response.data;
+      } catch (error) {
+        console.log(error);
+        estatus.value = error.response.status;
+      }
+    };
+
     return {
       getAll,
       login,
       agregar,
       editar,
+      activar,
+      inactivar,
+      codigoRecuperar,
+      confirmarCodigo,
+      nuevaPassword,
       token,
       id,
       email,
       usuario,
       validacion,
       estatus,
+      correoRecuperar,
+      codigoCorreo,
     };
   },
   {

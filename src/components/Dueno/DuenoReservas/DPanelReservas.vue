@@ -23,7 +23,7 @@ function formatDate(dateString) {
 // Cargar reservas y formatear fechas
 async function getReservas() {
   try {
-    const response = await useReserva.getReservasByUser(idUsuario.value);
+    const response = await useReserva.getAllReservas();
 
     if (useReserva.estatus === 200) {
       // Formateamos las fechas y guardamos en propiedades separadas
@@ -127,7 +127,8 @@ onMounted(() => {
               <div class="mb-3"><strong>Cantidad Niños:</strong> {{ selectedReserva.cantidad_nino }}</div>
               <div class="mb-3"><strong>Mensaje:</strong> {{ selectedReserva.mensaje }}</div>
               <div class="mb-3"><strong>Costo Total:</strong> {{ selectedReserva.costo_total }}</div>
-              <div class="mb-3"><strong>Habitación:</strong> Número {{ selectedReserva.idHabitacion.numero_habitacion }}</div>
+              <div class="mb-3"><strong>Habitación:</strong> Número {{ selectedReserva.idHabitacion.numero_habitacion }}
+              </div>
               <div class="mb-3"><strong>Tipo de Habitación:</strong> {{
                 selectedReserva.idHabitacion.tipo_habitacion.join(', ') }}</div>
             </div>

@@ -62,7 +62,7 @@ import PanelDueno from "../src/components/Dueno/PanelDueno.vue";
 import DPanelHotel from "../src/components/Dueno/DuneHotel/DPanelHotel.vue";
 import DPanelHabitaciones from "../src/components/Dueno/DuenoHabitaciones/DPanelHabitaciones.vue";
 import DPanelReservas from "../src/components/Dueno/DuenoReservas/DPanelReservas.vue";
-
+import recuperarContra from "../src/components/recuperarContraseña/RecuperarContrasena.vue";
 
 
 
@@ -120,7 +120,7 @@ const routes = [
 
   { path: "/DPanelReservas", component: DPanelReservas },
 
-
+  { path: "/recuperar-contrasena", component: recuperarContra },
 ];
 
 //objeto rutas - vue router

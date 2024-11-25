@@ -11,7 +11,7 @@ const msgValidacion = ref("");
 const loading = ref(false);
 
 const Login = async () => {
-  if (!cedula.value || !password.value) {
+  if (!cedula.value ) {
     msgValidacion.value = "Por favor, complete todos los campos";
     setTimeout(() => {
       msgValidacion.value = "";
@@ -50,6 +50,10 @@ const Login = async () => {
 function goToPanelDueno() {
   router.push('/PanelDueno');
 }
+
+function goRecuperarContrasena(){
+  router.push('/recuperar-contrasena')
+}
 </script>
 
 <template>
@@ -83,7 +87,7 @@ function goToPanelDueno() {
                     <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span v-if="!loading">Ingresar</span>
                   </button>
-                  <p class="fw-bold mt-1" style="font-size: 13px; cursor: pointer; text-decoration: underline;">¿Olvidaste tu contraseña?</p>
+                  <p class="fw-bold mt-1" style="font-size: 13px; cursor: pointer; text-decoration: underline;" @click="goRecuperarContrasena()">¿Olvidaste tu contraseña?</p>
                   <p class="text-danger"> {{ msgValidacion }} </p>
                 </div>
                 <!-- <router-link class="link" to="/Registro">
