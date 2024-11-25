@@ -87,6 +87,31 @@ export const useStoreSitioTuristico = defineStore(
       }
     };
 
+    const subirFoto = async (id, file) => {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "sitio_turistico");
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/dwslti4ar/image/upload`,
+          formData,
+          config
+        );
+        console.log(response);
+        const logo = response.data.secure_url;
+
+        return logo;
+      } catch (error) {
+        console.error("Error al subir la foto:", error);
+        throw error; // Re-lanzar el error para que se pueda manejar en el llamador
+      }
+    };
+
     return {
       getAll,
       getPorId,
@@ -99,6 +124,7 @@ export const useStoreSitioTuristico = defineStore(
       validacion,
       nuevoSitio,
       sitioSeleccionado,
+      subirFoto,
     };
   },
   {

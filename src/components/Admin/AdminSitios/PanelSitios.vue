@@ -2,12 +2,123 @@
 import { ref, onMounted } from 'vue';
 import { useStoreSitioTuristico } from '../../../stores/sitio_turistico';
 import { useRouter } from 'vue-router';
+import 'bootstrap/dist/js/bootstrap.bundle';
 
 const useSitioTuristico = useStoreSitioTuristico();
 const sitios = ref([]);
-const loading = ref(false)
-const router = useRouter()
+const loading = ref(false);
+const router = useRouter();
+const dataSitio = ref([]);
+const notificacionCargando = ref(false);
+const notificacionVisible = ref(false);
+const notificacionValidacion = ref(false);
+const loadingSitio = ref(false);
+const mensajeCargando = ref('');
+const mensajeValidacion = ref('');
+const mensajeNotificacion = ref('');
+const loadingFotos = ref(false)
+let editarModalInstance; // Instancia del modal editarp
+let imagenesModalInstance; // Instancia del modal imagenesModal
 
+const guardarCambios = async () => {
+    if (dataSitio.value.imagen.length === 0) {
+        notificacionValidacion.value = true;
+        mensajeValidacion.value = 'Debe añadir una imagen para el sitio turístico';
+        setTimeout(() => {
+            notificacionValidacion.value = false;
+            mensajeValidacion.value = '';
+        }, 3000);
+        return;
+    } else if (!dataSitio.value.nombre || !dataSitio.value.descripcion) {
+        notificacionValidacion.value = true;
+        mensajeValidacion.value = "No se pueden enviar campos vacíos";
+        setTimeout(() => {
+            notificacionValidacion.value = false;
+            return;
+        }, 3000);
+    }
+
+    notificacionCargando.value = true;
+    mensajeCargando.value = 'Editando sitio turístico...';
+    loadingSitio.value = true;
+
+    try {
+        const response = await useSitioTuristico.editar(dataSitio.value._id, dataSitio.value);
+
+        if (useSitioTuristico.estatus === 200) {
+            notificacionCargando.value = false;
+            mensajeCargando.value = '';
+            notificacionVisible.value = true;
+            mensajeNotificacion.value = 'Sitio turístico editado con éxito';
+            getSitiosTuristicos();
+
+
+            setTimeout(() => {
+                notificacionCargando.value = false;
+                mensajeCargando.value = '';
+                notificacionVisible.value = false;
+                mensajeNotificacion.value = '';
+            }, 3000);
+        } else {
+            notificacionCargando.value = false;
+            mensajeCargando.value = '';
+            notificacionValidacion.value = true;
+            mensajeValidacion.value = useSitioTuristico.validacion;
+
+            setTimeout(() => {
+                notificacionValidacion.value = false;
+                mensajeValidacion.value = '';
+            }, 3000);
+        }
+    } catch (error) {
+        notificacionValidacion.value = true;
+        mensajeValidacion.value = useSitioTuristico.validacion;
+
+        setTimeout(() => {
+            notificacionValidacion.value = false;
+            mensajeValidacion.value = '';
+        }, 3000);
+        console.log(error);
+    } finally {
+        loadingSitio.value = false;
+    }
+};
+
+const subirFotoSitio = async (event) => {
+    const files = event.target.files;
+    if (files.length === 0) return;
+
+    loadingFotos.value = true;
+    notificacionCargando.value = true;
+    mensajeCargando.value = 'Subiendo imagen del sitio turístico, por favor espere...';
+
+    try {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const imageUrl = await useSitioTuristico.subirFoto(dataSitio.value._id, file);
+
+            dataSitio.value.imagen.push({ url: imageUrl });
+        }
+
+        mensajeCargando.value = 'Imagen subida exitosamente';
+        setTimeout(() => {
+            notificacionCargando.value = false;
+            mensajeCargando.value = '';
+        }, 6000);
+    } catch (error) {
+        console.error('Error al subir las fotos:', error);
+        notificacionCargando.value = false;
+        mensajeNotificacion.value = '';
+        notificacionValidacion.value = true;
+        mensajeValidacion.value = 'Error al subir las imágenes';
+        setTimeout(() => {
+            notificacionValidacion.value = false;
+            mensajeValidacion.value = '';
+        }, 3000);
+    } finally {
+        loadingFotos.value = false;
+    }
+};
 
 async function cambiarEstadoSitio(sitio) {
     const Sitio = sitios.value.find(sitios => sitios._id === sitio._id);
@@ -34,10 +145,10 @@ async function cambiarEstadoSitio(sitio) {
 
 async function getSitiosTuristicos() {
     try {
-        const response = await useSitioTuristico.getAll()
+        const response = await useSitioTuristico.getAll();
         sitios.value = response.map(sitio => ({
             ...sitio,
-            loadingActInac: false // Agregamos el estado de carga por plato
+            loadingActInac: false,
         }));
         console.log(response);
     } catch (error) {
@@ -47,15 +158,54 @@ async function getSitiosTuristicos() {
     }
 }
 
-function irProveedor() {
-    router.push('/PanelProveedores')
+function editarSitio(sitio) {
+    console.log(sitio);
+    dataSitio.value = sitio;
+    if (editarModalInstance) editarModalInstance.show();
 }
 
+const abrirModalImagenes = () => {
+    if (imagenesModalInstance) {
+        imagenesModalInstance.show();
+        if (editarModalInstance) editarModalInstance.hide(); // Cierra editarp
+    }
+};
+
+const eliminarImagen = (index) => {
+    dataSitio.value.imagen.splice(index, 1); // Elimina la imagen en el índice correspondiente
+};
+
+function irFormulario() {
+    router.push('/RegistroSitio');
+}
+
+function irProveedor(sitio) {
+  const url = router.resolve({ path: '/PanelProveedores', query: { id: sitio._id } }).href;
+  window.open(url, '_blank');
+}
+
+// Obtener y configurar instancias de los modales al montar el componente
 onMounted(() => {
     getSitiosTuristicos();
-})
-</script>
 
+    const editarModalElement = document.getElementById('editarp');
+    if (editarModalElement) {
+        editarModalInstance = new bootstrap.Modal(editarModalElement);
+    }
+
+    const imagenesModalElement = document.getElementById('imagenesModal');
+    if (imagenesModalElement) {
+        imagenesModalInstance = new bootstrap.Modal(imagenesModalElement);
+
+        // Al cerrar imagenesModal, abrir editarp
+        imagenesModalElement.addEventListener('hidden.bs.modal', () => {
+            if (editarModalInstance) {
+                editarModalInstance.show();
+            }
+        });
+    }
+});
+</script>
 
 <template>
     <div class="galeria">
@@ -119,7 +269,7 @@ onMounted(() => {
                                     <!-- boton que abre el modal -->
 
                                     <!-- boton que elimina el sitio -->
-                                    <button type="button" class="btns btn btn-dark" @click="irProveedor()">
+                                    <button type="button" class="btns btn btn-dark" @click="irProveedor(sitio)">
                                         <i class="material-icons">account_circle</i>
                                     </button>
 
@@ -131,72 +281,106 @@ onMounted(() => {
                 </table>
             </div>
             <div style="display: flex; justify-content: end;">
-                <button class="btn top-bar__button" id="btns" style="margin-top: 6px;">
+                <button class="btn top-bar__button" id="btns" style="margin-top: 6px;" @click="irFormulario()">
                     Agregar Sitio Turistico
                 </button>
             </div>
             <!-- espacio para el modal -->
-            <div class="modal fade modal-lg" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel"
-                aria-hidden="true">
+            <div class="modal fade" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"
+                data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h1 class="modal-title fs-5" id="exampleModalLabel">
-                                Editar Sitio Turístico
-                            </h1>
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Sitio Turístico</h1>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-
+                            <!-- Contenido del modal editar -->
                             <div class="row">
                                 <div class="col-15">
                                     <div class="mb-3">
-                                        <label class="form-label" for="nombre_sitio"><strong>Nombre
-                                                *</strong></label><input class="form-control" type="text"
-                                            id="nombre_sitio" name="nombre_sitio" required="" />
+                                        <label class="form-label" for="nombre_sitio"><strong>Nombre *</strong></label>
+                                        <input class="form-control" type="text" v-model="dataSitio.nombre"
+                                            id="nombre_sitio" name="nombre_sitio" />
                                     </div>
                                 </div>
-
-                                <!-- Descripción del sitio -->
-                                <div style="margin-bottom: 15px" class="col-15">
+                                <div class="col-15">
                                     <label class="form-label" for="des_sitio"><strong>Descripción *</strong></label>
-                                    <textarea class="form-control" id="des_sitio" name="des_sitio" rows="1"
-                                        required=""></textarea>
+                                    <textarea class="form-control" id="des_sitio" name="des_sitio" rows="2"
+                                        v-model="dataSitio.descripcion">
+                        </textarea>
                                 </div>
-
                                 <div class="col-12">
-                                    <div class="mb-3">
-                                        <strong>Imágen pricipal *</strong>
-                                        <p>{{ imagesSelected }} imágenes seleccionadas (Máximo 4)</p>
-                                        <div style="margin-top: -15px" class="logo">
+                                    <div class="mt-3">
+                                        <strong>Imágenes *</strong>
+                                        <p>Mínimo 1 imagen (La primera imagen subida se usará como foto principal del
+                                            sitio, las
+                                            imágenes deben pesar como máximo 10 MB)</p>
+                                        <div class="logo">
                                             <p class="logop">
                                                 <i style="color: #b7642d; font-size: 30px"
                                                     class="bi bi-file-earmark-arrow-up-fill"></i>
                                             </p>
-                                            <br />
-                                            <input class="foto" style="margin-top: 13px"
-                                                :required="imagesSelected !== 4" type="file" ref="fileInput"
-                                                accept="image/*" multiple @change="handleFileUpload" />
+                                            <input class="foto" type="file" ref="fileInput" accept="image/*" multiple
+                                                @change="subirFotoSitio" />
                                         </div>
+                                        <button class="btn mt-2" type="button" @click="abrirModalImagenes"
+                                            style="background: #b7642d; color: #fff;">
+                                            Ver imágenes
+                                        </button>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" style="background-color: #343a40; border-style: none"
-                                class="btn btn-secondary" data-bs-dismiss="modal">
-                                Cancelar
-                            </button>
-                            <button type="button" style="background-color: #b7642d; border-style: none"
-                                class="btn btn-primary">
-                                Editar
-                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn" style="background-color: #b7642d; color: white;"
+                                @click="guardarCambios()" :disabled="loadingSitio">Guardar
+                                cambios</button>
                         </div>
                     </div>
                 </div>
             </div>
             <!-- espacio para el modal -->
+        </div>
+        <div class="modal fade modal-xl" id="imagenesModal" tabindex="-1" aria-labelledby="imagenesModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imagenesModalLabel" style="color: black;">Imágenes de {{
+                            dataSitio.nombre }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-flex flex-wrap gap-3 justify-content-center">
+                            <div v-for="(img, index) in dataSitio.imagen" :key="index" class="position-relative">
+                                <img :src="img.url" alt="Imagen cargada" class="img-thumbnail" />
+                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0"
+                                    @click="eliminarImagen(index)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show"
+            role="alert">
+            {{ mensajeNotificacion }}
+        </div>
+        <div v-if="notificacionValidacion" class="custom-notify alert alert-danger alert-dismissible fade show"
+            role="alert">
+            {{ mensajeValidacion }}
+        </div>
+        <div v-if="notificacionCargando" class="custom-notify alert alert-info alert-dismissible fade show"
+            role="alert">
+            {{ mensajeCargando }}
         </div>
     </div>
 </template>
@@ -218,7 +402,7 @@ onMounted(() => {
     position: relative;
     max-width: 30px;
     max-height: 40px;
-    margin-top: 5px;
+    margin-top: 2px;
     transition: 1s;
 }
 
@@ -347,6 +531,17 @@ h5 {
     max-width: 250px;
 }
 
+.foto {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+}
+
 th,
 td {
     text-align: center;
@@ -394,5 +589,25 @@ th {
 .table-responsive::-webkit-scrollbar-thumb {
     background-color: #b7642d;
     border-radius: 20px;
+}
+
+.custom-notify {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: 300px;
+    text-align: center;
+    padding: 15px;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+}
+
+.custom-notify .close:hover {
+    opacity: 1;
 }
 </style>

@@ -55,7 +55,7 @@ async function getProveedores(idSitioTuris) {
         mensajeNotificacion.value = '';
       }, 3000);
     }
-    proveedores.value = response;
+    proveedores.value = response.filter(proveedor => proveedor.estado === true);
     console.log("soy proveedor", proveedores)
   } catch (error) {
     console.log(error);
@@ -91,6 +91,8 @@ onMounted(() => {
 
 <template>
   <div>
+    <p v-if="detalleSitio" class="fs-4 text-center text-uppercase fw-bold" style="color: #b7642d;">{{
+      detalleSitio.nombre }}</p>
     <div v-if="detalleSitio" class="contenedor-imagenes">
       <div class="imagen" v-for="img in detalleSitio.imagen" :key="img._id">
         <img :src="img.url" alt="Imagen del sitio turístico" @click="mostrarImagenEnModal(img)"

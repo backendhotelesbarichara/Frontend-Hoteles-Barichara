@@ -34,7 +34,7 @@ async function getHoteles() {
     try {
         const response = await useHotel.getAll()
         if (useHotel.estatus === 200) {
-            listaHoteles.value = response;
+            listaHoteles.value = response.filter(hotel => hotel.estado === true);
             cargando.value = false;
         }
 
@@ -51,7 +51,7 @@ async function getSitiosTuristicos() {
     try {
         const response = await useSitioTuristico.getAll()
         if (useHotel.estatus === 200) {
-            sitiosTuristicos.value = response.reverse();
+            sitiosTuristicos.value = response.reverse().filter(sitio => sitio.estado === true);
             cargandoSitiosT.value = false;
         }
 

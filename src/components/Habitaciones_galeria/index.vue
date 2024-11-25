@@ -49,7 +49,7 @@ async function getHabitaciones() {
   try {
     const response = await useHabitacion.getHabitacionesPorHotel(useHotel.HotelHome);
     if (useHabitacion.estatus === 200) {
-      habitacionInfo.value = response;
+      habitacionInfo.value = response.filter(habitacion => habitacion.disponible === true);
     }
     console.log(habitacionInfo);
   } catch (error) {

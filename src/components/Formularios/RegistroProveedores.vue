@@ -1,50 +1,162 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useStoreProveedor } from '../../stores/proveedor';
+import { useStoreSitioTuristico } from '../../stores/sitio_turistico';
 import { useRouter } from 'vue-router';
+import 'bootstrap/dist/js/bootstrap.bundle';
 
 // Definir variables reactivas
-const uploadedImages = ref([]); // Almacenar las imágenes cargadas
-const imagesSelected = ref(0); // Contador de imágenes seleccionadas
+const useProveedor = useStoreProveedor();
+const useSitioTuristico = useStoreSitioTuristico();
+const nombre = ref('');
+const telefono = ref();
+const sitioSeleccionado = ref('');
+const sitios = ref([])
 const router = useRouter();
+const data = ref({
+  nombre: '',
+  telefono: '',
+  foto: '',
+  idSitioTuristico: '',
+})
+const notificacionCargando = ref(false);
+const notificacionVisible = ref(false);
+const notificacionValidacion = ref(false);
+const mensajeCargando = ref('');
+const mensajeValidacion = ref('');
+const mensajeNotificacion = ref('');
+const loadingProveedor = ref(false);
+const loadingFotos = ref(false);
+let modalInstance;
+
+const agregarProveedor = async () => {
+  if (data.value.foto.length === 0) {
+    notificacionValidacion.value = true;
+    mensajeValidacion.value = 'Debe añadir una foto para el proveedor';
+    setTimeout(() => {
+      notificacionValidacion.value = false;
+      mensajeValidacion.value = '';
+    }, 3000);
+    return;
+  }
+
+  data.value.nombre = nombre.value;
+  data.value.telefono = telefono.value;
+  data.value.idSitioTuristico = sitioSeleccionado.value._id;
+
+  notificacionCargando.value = true;
+  mensajeCargando.value = 'Agregando proveedor';
+  loadingProveedor.value = true;
+
+  try {
+    const response = await useProveedor.agregar(data.value);
+
+    if (useProveedor.estatus === 200) {
+      notificacionCargando.value = false;
+      mensajeCargando.value = '';
+      notificacionVisible.value = true;
+      mensajeNotificacion.value = 'Proveedor agregado con éxito';
+
+      setTimeout(() => {
+        notificacionCargando.value = false;
+        mensajeCargando.value = '';
+        notificacionVisible.value = false;
+        mensajeNotificacion.value = '';
+        irPanelProveedor();
+      }, 3000);
+    } else {
+      notificacionCargando.value = false;
+      mensajeCargando.value = '';
+      notificacionValidacion.value = true;
+      mensajeValidacion.value = useProveedor.validacion;
+
+      setTimeout(() => {
+        notificacionValidacion.value = false;
+        mensajeValidacion.value = '';
+      }, 3000);
+    }
+  } catch (error) {
+    notificacionValidacion.value = true;
+    mensajeValidacion.value = useProveedor.validacion;
+
+    setTimeout(() => {
+      notificacionValidacion.value = false;
+      mensajeValidacion.value = '';
+    }, 3000);
+    console.log(error);
+  } finally {
+    loadingProveedor.value = false;
+  }
+};
+
+const subirFotoProveedor = async (event) => {
+  const files = event.target.files;
+  if (files.length === 0) return;
+
+  loadingFotos.value = true;
+  notificacionCargando.value = true;
+  mensajeCargando.value = 'Subiendo imagen del proveedor, por favor espere...';
+
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imageUrl = await useProveedor.subirFoto(data.value._id, file);
+
+      data.value.foto = imageUrl;
+    }
+
+    mensajeCargando.value = 'Imagen subida exitosamente';
+    setTimeout(() => {
+      notificacionCargando.value = false;
+      mensajeCargando.value = '';
+    }, 6000);
+  } catch (error) {
+    console.error('Error al subir la foto:', error);
+    notificacionCargando.value = false;
+    mensajeNotificacion.value = '';
+    notificacionValidacion.value = true;
+    mensajeValidacion.value = 'Error al subir la imagen';
+    setTimeout(() => {
+      notificacionValidacion.value = false;
+      mensajeValidacion.value = '';
+    }, 3000);
+  } finally {
+    loadingFotos.value = false;
+  }
+};
+
+async function getSitiosTuristicos() {
+  try {
+    const response = await useSitioTuristico.getAll();
+    sitios.value = response;
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 function irPanelProveedor() {
   router.push('/PanelProveedores');
 }
 
-// Función para manejar la carga de archivos
-const handleFileUpload = (event) => {
-  if (imagesSelected.value >= 1) {
-    // Límite de 1 imagen alcanzado, no permitir más
-    return;
+const abrirModal = () => {
+  if (modalInstance) {
+    modalInstance.show();
   }
-
-  const fileInput = event.target;
-  const files = fileInput.files;
-
-  // Recorrer los archivos seleccionados
-  for (let i = 0; i < files.length; i++) {
-    if (imagesSelected.value >= 1) {
-      // Límite de 1 imagen alcanzado, no permitir más
-      break;
-    }
-
-    const file = files[i];
-    const imageURL = URL.createObjectURL(file);
-
-    uploadedImages.value.push({ src: imageURL, alt: "Imagen" });
-    imagesSelected.value++;
-  }
-
-  // Limpiar el campo de entrada de archivos si es necesario
-  fileInput.value = "";
 };
 
-// Función para limpiar las imágenes cargadas
-const clearImages = () => {
-  // Restablecer el array de imágenes cargadas y el contador
-  uploadedImages.value = [];
-  imagesSelected.value = 0;
+const eliminarImagen = () => {
+  data.value.foto = '';
 };
+
+onMounted(() => {
+  getSitiosTuristicos();
+
+  const modalElement = document.getElementById('imagenesModal');
+  if (modalElement) {
+    modalInstance = new bootstrap.Modal(modalElement);
+  }
+})
+
 </script>
 
 <template>
@@ -55,7 +167,7 @@ const clearImages = () => {
       </div>
       <!-- Start: Ludens - Create-Edit Form -->
       <div class="container" style="margin-top: 20px; margin-bottom: 20px">
-        <form enctype="multipart/form-data" method="post">
+        <form @submit.prevent="agregarProveedor">
           <div class="card shadow mb-3">
             <div class="card-header py-3">
               <p class="text-primary m-0 fw-bold">
@@ -69,7 +181,8 @@ const clearImages = () => {
                   <div class="mb-3">
                     <label class="form-label" for="nombre_proveedor"><strong>Nombre <span
                           class="text-danger">*</span></strong></label><input class="form-control" type="text"
-                      id="nombre_proveedor" placeholder="Ej: Sprex Aguilas" name="nombre_proveedor" required="" />
+                      v-model="nombre" id="nombre_proveedor" placeholder="Ej: Sprex Aguilas" name="nombre_proveedor"
+                      required />
                   </div>
                 </div>
 
@@ -77,7 +190,8 @@ const clearImages = () => {
                   <div class="mb-3">
                     <label class="form-label" for="nombre_proveedor"><strong>Telefono <span
                           class="text-danger">*</span></strong></label><input class="form-control" type="number"
-                      id="nombre_proveedor" placeholder="Ej: 3222431440" name="nombre_proveedor" required="" />
+                      v-model="telefono" id="nombre_proveedor" placeholder="Ej: 3222431440" name="nombre_proveedor"
+                      required />
                   </div>
                 </div>
 
@@ -85,9 +199,9 @@ const clearImages = () => {
                   <div class="mb-3">
                     <label class="form-label" for="nombre_proveedor"><strong>Sitio Turístico <span
                           class="text-danger">*</span></strong></label>
-                    <select id="hotelSelector" @change=""
-                      class="form-select text-center fw-bold">
-                      <option disabled value="" selected>Asigne un sitio turístico para el proveedor</option> <!-- Opción por defecto -->
+                    <select id="hotelSelector" v-model="sitioSeleccionado" class="form-select text-center fw-bold">
+                      <option disabled value="" selected>Asigne un sitio turístico para el proveedor</option>
+                      <option v-for="sitio in sitios" :key="sitio._id" :value="sitio">{{ sitio.nombre }}</option>
                     </select>
                   </div>
                 </div>
@@ -103,24 +217,15 @@ const clearImages = () => {
                         <i style="color:  #b7642d; font-size: 30px" class="bi bi-file-earmark-arrow-up-fill"></i>
                       </p>
                       <br />
-                      <input class="foto" style="margin-top: 13px" :required="imagesSelected !== 1" type="file"
-                        ref="fileInput" accept="image/*" multiple @change="handleFileUpload" />
+                      <input class="foto" style="margin-top: 13px" type="file" ref="fileInput" accept="image/*" multiple
+                        @change="subirFotoProveedor" />
                     </div>
-
-                    <!-- Contenedor de las imágenes con margen -->
-                    <div style="margin-top: 20px" class="d-flex flex-wrap gap-1">
-                      <div v-for="(image, index) in uploadedImages" :key="index" class="image-preview">
-                        <img class="fixed-size-image" :src="image.src" :alt="image.alt" />
-                      </div>
+                    <div class="mt-3">
+                      <button class="btn" type="button" v-if="data.foto" @click="abrirModal"
+                        style="background:  #b7642d; color: #fff;">
+                        Ver foto
+                      </button>
                     </div>
-
-                    <button style="
-                        background-color:  #b7642d;
-                        color: #fff;
-                        margin-top: 20px;
-                      " class="btn btn-custom btn" @click="clearImages" v-if="uploadedImages.length > 0">
-                      <i class="bi bi-trash3-fill"></i> Limpiar Imágenes
-                    </button>
                   </div>
                 </div>
               </div>
@@ -136,7 +241,47 @@ const clearImages = () => {
           </div>
         </form>
       </div>
-      <!-- End: Ludens - Create-Edit Form -->
+
+      <div class="modal fade" id="imagenesModal" tabindex="-1" aria-labelledby="imagenesModalLabel" aria-hidden="true">
+        <!-- Agregar modal-dialog-scrollable para habilitar el scroll interno -->
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="imagenesModalLabel" style="color: black;">Foto cargada</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Modal body con contenido desplazable -->
+            <div class="modal-body">
+              <div class="d-flex flex-wrap gap-3 justify-content-center">
+                <!-- Imágenes cargadas -->
+                <div v-if="data.foto" class="position-relative">
+                  <img  :src="data.foto" alt="Imagen cargada" class="img-thumbnail" />
+                  <!-- Botón de eliminar -->
+                  <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0"
+                    @click="eliminarImagen()">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="notificacionVisible" class="custom-notify alert alert-success alert-dismissible fade show"
+        role="alert">
+        {{ mensajeNotificacion }}
+      </div>
+      <div v-if="notificacionValidacion" class="custom-notify alert alert-danger alert-dismissible fade show"
+        role="alert">
+        {{ mensajeValidacion }}
+      </div>
+      <div v-if="notificacionCargando" class="custom-notify alert alert-info alert-dismissible fade show" role="alert">
+        {{ mensajeCargando }}
+      </div>
     </div>
   </main>
 </template>
@@ -206,6 +351,26 @@ h5 {
   align-items: center;
   border-radius: 10px;
   transition: 1s;
+}
+
+.custom-notify {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 300px;
+  text-align: center;
+  padding: 15px;
+  color: rgb(0, 0, 0);
+  font-weight: bold;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+}
+
+.custom-notify .close:hover {
+  opacity: 1;
 }
 
 @media screen and (max-width: 500px) {

@@ -122,10 +122,6 @@ async function guardarCambios() {
       notificacionVisible.value = true;
       useHotel.editarHotelSelec = res;
       getHoteles();
-      const modalEditar = bootstrap.Modal.getInstance(document.getElementById('editarDHotel'));
-      if (modalEditar) {
-        modalEditar.hide();
-      }
       setTimeout(() => {
         notificacionVisible.value = false;
       }, 3000);

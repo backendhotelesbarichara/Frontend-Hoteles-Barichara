@@ -62,10 +62,6 @@ async function guardarCambios() {
     const response = await useHabitacion.editar(idHabSelec.value, data.value)
 
     if (useHabitacion.estatus === 200) {
-      const modalEditar = bootstrap.Modal.getInstance(document.getElementById('editarDHabitaciones'));
-      if (modalEditar) {
-        modalEditar.hide();
-      }
       await getHabitacionPorPiso();
       const index = buscarIndexLocal(response._id);
       habitaciones.value.splice(index, 1);
@@ -214,6 +210,9 @@ const getHoteles = async () => {
         selectedHotel.value = hotel; // Selecciona el hotel en el dropdown
         await loadHotelData(); // Carga datos del hotel seleccionado
       }
+    } else {
+      selectedHotel.value = hoteles.value[0]; // Selecciona el hotel en el dropdown
+      await loadHotelData(); // Carga datos del hotel seleccionado
     }
   } catch (error) {
     console.error("Error al cargar los hoteles:", error);
@@ -318,7 +317,7 @@ onMounted(async () => {
       <div v-else style="font-size: 12px;" class="table-responsive">
         <div class="mb-5">
           <div class="top-bar">
-            <div class="text-center w-25" style="display: flex; align-items: baseline;" >
+            <div class="text-center w-25" style="display: flex; align-items: baseline;">
               <p for="hotelSelector" class="form-p fw-bold w-100 fs-3">Habitaciones de: </p>
               <select id="hotelSelector" v-model="selectedHotel" @change="loadHotelData"
                 class="form-select text-center fw-bold">

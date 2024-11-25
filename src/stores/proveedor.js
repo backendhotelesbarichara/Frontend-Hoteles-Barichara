@@ -41,9 +41,9 @@ export const useStoreProveedor = defineStore(
     };
 
     
-    const getPorSitioTuristico = async (idSitioTuristico) => {
+    const getPorSitioTuristico = async (id) => {
         try {
-          const response = await axios.get(`${modelo}/buscar-por-sitio/${idSitioTuristico}`);
+          const response = await axios.get(`${modelo}/buscar-por-sitio/${id}`);
           console.log(response);
           estatus.value = response.status;
           return response.data;
@@ -105,6 +105,31 @@ export const useStoreProveedor = defineStore(
       }
     };
 
+    const subirFoto = async (id, file) => {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "proveedor");
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
+        const response = await axios.post(
+          `https://api.cloudinary.com/v1_1/dwslti4ar/image/upload`,
+          formData,
+          config
+        );
+        console.log(response);
+        const logo = response.data.secure_url;
+
+        return logo;
+      } catch (error) {
+        console.error("Error al subir la foto:", error);
+        throw error; // Re-lanzar el error para que se pueda manejar en el llamador
+      }
+    };
+
     return {
       getAll,
       getPorId,
@@ -113,6 +138,7 @@ export const useStoreProveedor = defineStore(
       editar,
       activar,
       inactivar,
+      subirFoto,
       proveedores,
       estatus,
       validacion,
