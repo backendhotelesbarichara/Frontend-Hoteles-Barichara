@@ -26,7 +26,7 @@ const router = useRouter();
 const route = useRoute();
 const loading = ref(false);
 const notificacionVisible = ref(false);
-console.log("hola soy h", habitacionDetalle);
+/* console.log("hola soy h", habitacionDetalle); */
 
 
 const abrirModal = (url) => {
@@ -52,11 +52,11 @@ const enviarFormulario = async () => {
     idHabitacion: habitacionDetalle.value._id,
   };
 
-  console.log("soy data a enviar", data);
+/*   console.log("soy data a enviar", data); */
   try {
     const response = await useReserva.crearReserva(data);
     if (useReserva.estatus === 200) {
-      console.log("Reserva enviada");
+      /* console.log("Reserva enviada"); */
       notificacionVisible.value = true;
       setTimeout(() => {
         notificacionVisible.value = false;
@@ -68,7 +68,7 @@ const enviarFormulario = async () => {
       limpiar();
     }
     else if (useReserva.estatus === 400) {
-      console.log(useReserva.validacion);
+     /*  console.log(useReserva.validacion); */
     }
   } catch (error) {
     console.log(error);
@@ -155,10 +155,10 @@ onMounted(async () => {
   }
 
   calcularPrecioTotal()
-  console.log("adultos", useReserva.adultos);
+/*   console.log("adultos", useReserva.adultos);
   console.log("ninos", useReserva.ninos);
   console.log("total", totalReserva.value);
-  console.log("noches", useReserva.numero_noche);
+  console.log("noches", useReserva.numero_noche); */
 });
 </script>
 

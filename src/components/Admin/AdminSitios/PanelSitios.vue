@@ -150,7 +150,7 @@ async function getSitiosTuristicos() {
             ...sitio,
             loadingActInac: false,
         }));
-        console.log(response);
+        /* console.log(response); */
     } catch (error) {
         console.log(error);
     } finally {
@@ -159,7 +159,7 @@ async function getSitiosTuristicos() {
 }
 
 function editarSitio(sitio) {
-    console.log(sitio);
+    /* console.log(sitio); */
     dataSitio.value = sitio;
     if (editarModalInstance) editarModalInstance.show();
 }

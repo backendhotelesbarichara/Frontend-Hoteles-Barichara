@@ -32,7 +32,7 @@ async function getDetalleSitioTuristico(idSitioTuris) {
       }, 3000);
     }
     detalleSitio.value = response;
-    console.log(detalleSitio)
+    /* console.log(detalleSitio) */
   } catch (error) {
     console.log(error);
   } finally {
@@ -56,7 +56,7 @@ async function getProveedores(idSitioTuris) {
       }, 3000);
     }
     proveedores.value = response.filter(proveedor => proveedor.estado === true);
-    console.log("soy proveedor", proveedores)
+    /* console.log("soy proveedor", proveedores) */
   } catch (error) {
     console.log(error);
   } finally {
@@ -66,14 +66,14 @@ async function getProveedores(idSitioTuris) {
 }
 
 function mostrarImagenEnModal(img) {
-  console.log(img)
+  /* console.log(img) */
   imagenSeleccionada.value = img.url;
   const modal = new bootstrap.Modal(document.getElementById('modalImagen'));
   modal.show();
 }
 
 function mostrarImagenEnModalProveedor(proveedor) {
-  console.log(proveedor)
+  /* console.log(proveedor) */
   imagenSeleccionada.value = proveedor.foto;
   const modal = new bootstrap.Modal(document.getElementById('modalImagen'));
   modal.show();

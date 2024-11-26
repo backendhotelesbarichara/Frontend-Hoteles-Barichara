@@ -16,6 +16,16 @@ const datasitios = ref(Sturisticos);
 const img = ref("")
 const cargando = ref(true);
 const cargandoSitiosT = ref(true)
+const primerHotel = ref([]);
+const minDate = ref(obtenerFechaActual());
+
+function irInfoPrimerHotel() {
+    useHotel.HotelHome = primerHotel.value._id
+    /* router.push('/GaleriaHabitaciones') */
+    // En lugar de router.push, abrimos una nueva pestaña
+    const url = router.resolve({ path: '/GaleriaHabitaciones', query: { id: primerHotel.value._id } }).href;
+    window.open(url, '_blank');
+}
 
 function irInfoHotel(hotel) {
     useHotel.HotelHome = hotel._id
@@ -30,6 +40,11 @@ function irSitioTuristico(sitio) {
     window.open(url, '_blank');
 }
 
+function obtenerFechaActual() {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+}
+
 async function getHoteles() {
     try {
         const response = await useHotel.getAll()
@@ -38,7 +53,8 @@ async function getHoteles() {
             cargando.value = false;
         }
 
-        console.log(response);
+        /* console.log(response[0]); */
+        primerHotel.value = response[0];
     } catch (error) {
         console.log(error);
         cargandoSitiosT.value = false;
@@ -55,7 +71,7 @@ async function getSitiosTuristicos() {
             cargandoSitiosT.value = false;
         }
 
-        console.log(response);
+        /* console.log(response); */
     } catch (error) {
         console.log(error);
         cargandoSitiosT.value = false;
@@ -145,7 +161,7 @@ onMounted(() => {
                     <div class="input-group">
                         <span style="background-color: #b7642d; color: #fff" class="input-group-text"
                             id="addon-wrapping">Ingreso</span>
-                        <input type="date" class="form-control" />
+                        <input type="date" class="form-control" @change="irInfoPrimerHotel()" :min="minDate" />
                     </div>
                 </div>
 
@@ -153,11 +169,12 @@ onMounted(() => {
                     <div class="input-group">
                         <span style="background-color: #b7642d; color: #fff" class="input-group-text"
                             id="addon-wrapping">Salida</span>
-                        <input type="date" class="form-control" />
+                        <input type="date" class="form-control" @change="irInfoPrimerHotel()" :min="minDate" />
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
-                    <button class="btncafe"><i class="bi bi-search"></i> Buscar Habitaciones Disponibles </button>
+                    <button type="button" class="btncafe" @click="irInfoPrimerHotel()"><i class="bi bi-search"></i>
+                        Buscar Habitaciones Disponibles </button>
                 </div>
             </div>
         </div>
@@ -212,7 +229,14 @@ onMounted(() => {
             </div>
         </div> -->
 
-        <div class="lista-imagenes sitios-images">
+
+        <div v-if="cargandoSitiosT" class="d-flex justify-content-center flex-column align-items-center">
+            <div class="spinner-border" style="color: #b7642d " role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p>Por favor espere...</p>
+        </div>
+        <div v-else class="lista-imagenes sitios-images">
             <div class="imagen-con-texto" v-for="sitio in sitiosTuristicos" :key="sitio.nombre"
                 @click="irSitioTuristico(sitio._id)">
                 <img :src="sitio.imagen[0].url" alt="imagen-principal" />

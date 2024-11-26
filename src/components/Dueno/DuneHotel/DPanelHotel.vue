@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router';
 import { useStoreHotel } from '../../../stores/hotel.js';
 import { useStoreUsuarios } from '../../../stores/usuario.js';
+import 'bootstrap/dist/js/bootstrap.bundle';
 
 const router = useRouter();
 const useHotel = useStoreHotel();
@@ -40,6 +41,10 @@ const editMode = ref({
   fotos: false
 });
 const nuevoServicio = ref('');
+let editarModalInstance; // Instancia del modal editarp
+let imagenesModalInstance; // Instancia del modal imagenesModal
+let serviciosModalInstance; // Instancia del modal modalVerServicios
+let logoModalInstance; // Instancia del modal modalVerServicios
 
 
 const dataHotel = ref({
@@ -47,18 +52,25 @@ const dataHotel = ref({
   servicio: useHotel.editarHotelSelec.servicio || [], // Asegura que sea un array
 });
 
-const abrirModalImagenes = (hotel) => {
-  // Abre el modal de ver imágenes y coloca el backdrop correcto
-  editaHotel(hotel);
-
-  const modalVerImagenes = new bootstrap.Modal(document.getElementById('modalVerImagenes'));
-  modalVerImagenes.show();
-
+const abrirModalImagenes = () => {
+  if (imagenesModalInstance) {
+    imagenesModalInstance.show();
+    if (editarModalInstance) editarModalInstance.hide(); // Cierra editarp
+  }
 };
 
 const abrirModalServicios = () => {
-  const modalServicios = new bootstrap.Modal(document.getElementById('modalVerServicios'));
-  modalServicios.show();
+  if (serviciosModalInstance) {
+    serviciosModalInstance.show();
+    if (editarModalInstance) editarModalInstance.hide(); // Cierra editarp
+  }
+};
+
+const abrirModalLogo = () => {
+  if (logoModalInstance) {
+    logoModalInstance.show();
+    if (editarModalInstance) editarModalInstance.hide(); // Cierra editarp
+  }
 };
 
 async function getHoteles() {
@@ -68,7 +80,7 @@ async function getHoteles() {
       ...hotel,
       loadingActInac: false // Agregamos el estado de carga por plato
     }));
-    console.log(response);
+    /* console.log(response); */
   } catch (error) {
     console.log(error);
   } finally {
@@ -90,13 +102,14 @@ async function editaHotel(hotel) {
   piso.value = hotel.pisos
   hotelSeleccionado.value = hotel
   useHotel.editarHotelSelec = hotel;
-  console.log("h", hotel)
+  /* console.log("h", hotel) */
+  if (editarModalInstance) editarModalInstance.show();
 }
 
 watch(hotelSeleccionado, (value) => {
   dataHotel.value = { ...value };
   useHotel.editarHotelSelec = value;
-  console.log("hotel selec", value);
+  /* console.log("hotel selec", value); */
 })
 
 async function guardarCambios() {
@@ -117,14 +130,14 @@ async function guardarCambios() {
 
   try {
     const res = await useHotel.editar(dataHotel.value._id, datosParaGuardar);
-    console.log("soy res", res);
+    /* console.log("soy res", res); */
     if (useHotel.estatus === 200) {
       notificacionVisible.value = true;
       useHotel.editarHotelSelec = res;
       getHoteles();
       setTimeout(() => {
         notificacionVisible.value = false;
-      }, 3000);
+      }, 4500);
     } else if (useHotel.estatus === 400) {
       notificacionValidacion.value = true;
       mensajeValidacion.value = useHabitacion.validacion;
@@ -184,6 +197,9 @@ async function subirFotosHotel(event) {
   uploadingFotos.value = true;
   const fotosAntesDeSubir = [...dataHotel.value.fotos];
 
+  notificacionCargando.value = true;
+  mensajeCargando.value = 'Subiendo imagen, por favor espere...';
+
   try {
     dataHotel.value.fotos = fotosAntesDeSubir.filter(foto => !foto.eliminada);
     for (let i = 0; i < files.length; i++) {
@@ -192,9 +208,20 @@ async function subirFotosHotel(event) {
 
       const fotoObj = { url: imageUrl };
       dataHotel.value.fotos.push(fotoObj);
+
+      mensajeCargando.value = 'Imagen subida exitosamente';
+      setTimeout(() => {
+        notificacionCargando.value = false;
+        mensajeCargando.value = '';
+      }, 6000);
     }
   } catch (error) {
     console.error("Error al subir las fotos:", error);
+    mensajeCargando.value = 'Error al subir la imagen';
+    setTimeout(() => {
+      notificacionCargando.value = false;
+      mensajeCargando.value = '';
+    }, 3000);
   } finally {
     uploadingFotos.value = false;
   }
@@ -232,17 +259,10 @@ const agregarServicio = () => {
   }
 };
 
-
 // Función para eliminar un servicio
 const eliminarServicio = (index) => {
   dataHotel.value.servicio.splice(index, 1); // Elimina el servicio por índice
 };
-
-const abrirModalLogo = () => {
-  const modal = new bootstrap.Modal(document.getElementById('modalVerLogo'));
-  modal.show();
-};
-
 
 function eliminarLogo() {
   dataHotel.value.logo = null;
@@ -265,6 +285,47 @@ function goToRegistroHotel() {
 
 onMounted(async () => {
   await getHoteles();
+
+  const editarModalElement = document.getElementById('editarDHotel');
+  if (editarModalElement) {
+    editarModalInstance = new bootstrap.Modal(editarModalElement);
+  }
+
+  const imagenesModalElement = document.getElementById('modalVerImagenes');
+  if (imagenesModalElement) {
+    imagenesModalInstance = new bootstrap.Modal(imagenesModalElement);
+
+    // Al cerrar imagenesModal, abrir editarp
+    imagenesModalElement.addEventListener('hidden.bs.modal', () => {
+      if (editarModalInstance) {
+        editarModalInstance.show();
+      }
+    });
+  }
+
+  const serviciosModalElement = document.getElementById('modalVerServicios');
+  if (serviciosModalElement) {
+    serviciosModalInstance = new bootstrap.Modal(serviciosModalElement);
+
+    // Al cerrar imagenesModal, abrir editarp
+    serviciosModalElement.addEventListener('hidden.bs.modal', () => {
+      if (editarModalInstance) {
+        editarModalInstance.show();
+      }
+    });
+  }
+
+  const logoModalElement = document.getElementById('modalVerLogo');
+  if (logoModalElement) {
+    logoModalInstance = new bootstrap.Modal(logoModalElement);
+
+    // Al cerrar imagenesModal, abrir editarp
+    logoModalElement.addEventListener('hidden.bs.modal', () => {
+      if (editarModalInstance) {
+        editarModalInstance.show();
+      }
+    });
+  }
 });
 </script>
 
@@ -287,17 +348,8 @@ onMounted(async () => {
       </div>
     </div>
     <div v-else>
-      <!-- Tabla de hoteles -->
-      <!--       <div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
-        <h1 class="text-center m-4">TUS HOTELES</h1>
-        <div>
-          <button class="btns btn btn-dark top-bar__button" @click="goToRegistroHotel">
-            <i class="material-icons">add_box</i>
-          </button>
-        </div>
-      </div> -->
       <div style="font-size: 12px" class="table-responsive mt-5">
-        <table class="table table-bordered">
+        <table class="table table-hover">
           <thead>
             <tr>
               <th>Nombre</th>
@@ -369,7 +421,7 @@ onMounted(async () => {
 
       <!-- Modal editar hotel -->
       <div class="modal fade" id="editarDHotel" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"
-        data-bs-backdrop="static">
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <div class="modal-header">
@@ -414,7 +466,7 @@ onMounted(async () => {
                 <div class="mb-3" style="display: flex; flex-direction: column;">
                   <label class="form-label"><strong>Fotos del Hotel</strong></label>
                   <div style="width: 30%">
-                    <button type="button" class="btn btn-dark" @click="abrirModalImagenes(dataHotel)">Ver
+                    <button type="button" class="btn btn-dark" @click="abrirModalImagenes()">Ver
                       Imágenes</button>
                   </div>
                 </div>
@@ -430,7 +482,7 @@ onMounted(async () => {
             </div>
             <div class="modal-footer">
               <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: gray;">Cerrar</button>
-              <button type="button" class="btn btn-dark" @click="guardarCambios">
+              <button type="button" class="btn btn-dark" @click="guardarCambios" :disabled="loadingEditar">
                 <span v-if="loadingEditar" class="spinner-border spinner-border-sm" role="status"
                   aria-hidden="true"></span>
                 <span v-else>Guardar</span>
@@ -842,12 +894,6 @@ h5 {
   max-width: 250px;
 }
 
-/* Estilos para la tabla */
-.table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
 
 .table td .vmenu {
   overflow: hidden;
@@ -879,16 +925,6 @@ th {
 
 .material-icons {
   font-size: 20px;
-}
-
-/* Estilos para scrollbar */
-.table-responsive::-webkit-scrollbar {
-  height: 7px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background-color: #b7642d;
-  border-radius: 20px;
 }
 
 .btn-link i {

@@ -16,7 +16,7 @@ export const useStoreSitioTuristico = defineStore(
     const getAll = async () => {
       try {
         const response = await axios.get(`${modelo}/all`);
-        console.log(response);
+        /* console.log(response); */
         sitios.value = response.data;
         estatus.value = response.status;
         return response.data;
@@ -29,7 +29,7 @@ export const useStoreSitioTuristico = defineStore(
     const getPorId = async (id) => {
       try {
         const response = await axios.get(`${modelo}/buscarId/${id}`);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -55,7 +55,7 @@ export const useStoreSitioTuristico = defineStore(
     const editar = async (id, data) => {
       try {
         const response = await axios.put(`${modelo}/editar/${id}`, data);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -68,7 +68,7 @@ export const useStoreSitioTuristico = defineStore(
     const activar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/activar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);
@@ -79,7 +79,7 @@ export const useStoreSitioTuristico = defineStore(
     const inactivar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/inactivar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);

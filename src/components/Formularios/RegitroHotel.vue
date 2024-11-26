@@ -229,7 +229,7 @@ function agregarServicioModal() {
     nuevoServicio.value = ""; // Limpia el input
   }
 
-  console.log(data.value.servicio)
+  /* console.log(data.value.servicio) */
 }
 
 // Eliminar un servicio específico desde el modal

@@ -27,7 +27,7 @@ export const useStoreUsuarios = defineStore(
       try {
         insertarToken();
         const response = await axios.get(`${modelo}/all`);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -100,7 +100,7 @@ export const useStoreUsuarios = defineStore(
       try {
         insertarToken();
         const response = await axios.put(`${modelo}/editar/${id}`, data);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -130,7 +130,7 @@ export const useStoreUsuarios = defineStore(
       try {
         insertarToken();
         const response = await axios.post(`${modelo}/registro`, data);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -159,7 +159,7 @@ export const useStoreUsuarios = defineStore(
     const activar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/activar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);
@@ -170,7 +170,7 @@ export const useStoreUsuarios = defineStore(
     const inactivar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/inactivar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);

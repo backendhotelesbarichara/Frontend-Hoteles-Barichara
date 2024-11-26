@@ -139,7 +139,7 @@ const router = createRouter({
 });
 
 
-axios.defaults.baseURL = 'http://localhost:4500/api/'
+axios.defaults.baseURL = 'https://backend-hoteles-barichara.onrender.com/api/'
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);

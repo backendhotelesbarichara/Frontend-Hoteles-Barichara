@@ -150,7 +150,7 @@ async function getUsuarios() {
       ...usuario,
       loadingActInac: false,
     }));
-    console.log(response);
+    /* console.log(response); */
   } catch (error) {
     console.log(error);
   } finally {
@@ -163,7 +163,7 @@ const toggleMostrarPassword = () => {
 };
 
 function editarUsuario(pusuarios) {
-  console.log(pusuarios);
+  /* console.log(pusuarios); */
   dataUsuario.value = pusuarios;
 }
 

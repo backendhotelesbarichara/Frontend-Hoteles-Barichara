@@ -25,7 +25,7 @@ export const useStoreHabitacion = defineStore(
     const getAll = async () => {
       try {
         const response = await axios.get(`${modelo}/all`);
-        console.log(response);
+        /* console.log(response); */
         habitaciones.value = response.data;
         estatus.value = response.status;
         return response.data;
@@ -38,7 +38,7 @@ export const useStoreHabitacion = defineStore(
     const getHabitacionesPorPiso = async (idPiso) => {
       try {
         const response = await axios.get(`${modelo}/buscarPiso/${idPiso}`);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -50,7 +50,7 @@ export const useStoreHabitacion = defineStore(
     const getHabitacionesPorHotel = async (idHotel) => {
       try {
         const response = await axios.get(`${modelo}/habitaciones/${idHotel}`);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -86,10 +86,10 @@ export const useStoreHabitacion = defineStore(
     const agregar = async (data) => {
       try {
         const response = await axios.post(`${modelo}/registro`, data);
-        console.log("hola soy nueva habitacion", response);
+        /* console.log("hola soy nueva habitacion", response); */
         estatus.value = response.status;
         nuevaHabitacion.value = response.data._id;
-        console.log("soy nueva habitacion", nuevaHabitacion);
+        /* console.log("soy nueva habitacion", nuevaHabitacion); */
         return response.data;
       } catch (error) {
         console.log(error);
@@ -100,10 +100,10 @@ export const useStoreHabitacion = defineStore(
 
     const editar = async (id, data) => {
       try {
-        console.log(id)
+        /* console.log(id) */
         const response = await axios.put(`${modelo}/editar/${id}`, data);
         estatus.value = response.status;
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);
@@ -115,7 +115,7 @@ export const useStoreHabitacion = defineStore(
     const activar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/activar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);
@@ -126,7 +126,7 @@ export const useStoreHabitacion = defineStore(
     const inactivar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/inactivar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);

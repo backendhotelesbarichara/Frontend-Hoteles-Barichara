@@ -16,7 +16,7 @@ export const useStoreProveedor = defineStore(
     const getAll = async () => {
       try {
         const response = await axios.get(`${modelo}/all`);
-        console.log(response);
+        /* console.log(response); */
         proveedores.value = response.data;
         estatus.value = response.status;
         return response.data;
@@ -30,7 +30,7 @@ export const useStoreProveedor = defineStore(
     const getPorId = async (id) => {
       try {
         const response = await axios.get(`${modelo}/buscarId/${id}`);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -44,7 +44,7 @@ export const useStoreProveedor = defineStore(
     const getPorSitioTuristico = async (id) => {
         try {
           const response = await axios.get(`${modelo}/buscar-por-sitio/${id}`);
-          console.log(response);
+          /* console.log(response); */
           estatus.value = response.status;
           return response.data;
         } catch (error) {
@@ -57,7 +57,7 @@ export const useStoreProveedor = defineStore(
     const agregar = async (data) => {
       try {
         const response = await axios.post(`${modelo}/registro`, data);
-        console.log("Nuevo proveedor creado:", response);
+        /* console.log("Nuevo proveedor creado:", response); */
         estatus.value = response.status;
         nuevoProveedor.value = response.data._id;
         return response.data;
@@ -71,7 +71,7 @@ export const useStoreProveedor = defineStore(
     const editar = async (id, data) => {
       try {
         const response = await axios.put(`${modelo}/editar/${id}`, data);
-        console.log(response);
+        /* console.log(response); */
         estatus.value = response.status;
         return response.data;
       } catch (error) {
@@ -84,7 +84,7 @@ export const useStoreProveedor = defineStore(
     const activar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/activar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);
@@ -96,7 +96,7 @@ export const useStoreProveedor = defineStore(
     const inactivar = async (id) => {
       try {
         const response = await axios.put(`${modelo}/inactivar/${id}`);
-        console.log(response);
+        /* console.log(response); */
         return response.data;
       } catch (error) {
         console.log(error);

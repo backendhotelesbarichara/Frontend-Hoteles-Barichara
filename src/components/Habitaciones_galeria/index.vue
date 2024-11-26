@@ -32,6 +32,7 @@ function obtenerFechaActual() {
   const today = new Date();
   return today.toISOString().split('T')[0];
 }
+
 async function getHotelSeleccionado(id) {
   try {
     const response = await useHotel.getPorId(id);
@@ -39,7 +40,7 @@ async function getHotelSeleccionado(id) {
       cargando.value = false;
       hotelInfo.value = response;
     }
-    console.log(hotelInfo);
+    /* console.log(hotelInfo); */
   } catch (error) {
     console.log(error);
   }
@@ -51,7 +52,7 @@ async function getHabitaciones() {
     if (useHabitacion.estatus === 200) {
       habitacionInfo.value = response.filter(habitacion => habitacion.disponible === true);
     }
-    console.log(habitacionInfo);
+    /* console.log(habitacionInfo); */
   } catch (error) {
     console.log(error);
   }
@@ -65,10 +66,10 @@ const filtrarHabitacion = async () => {
   };
 
   try {
-    console.log("filtros nav ", filters);
+    /* console.log("filtros nav ", filters); */
     const filteredHabitaciones = await useHabitacion.getHabitacionesPorCantPerson(filters);
     useHabitacion.habitacionesFiltradas = filteredHabitaciones.filter(habitacion => habitacion.disponible === true);
-    console.log('Habitaciones filtrados:', filteredHabitaciones);
+    /* console.log('Habitaciones filtrados:', filteredHabitaciones); */
   } catch (error) {
     console.error("Error al filtrar habitaciones:", error);
   } finally {
@@ -338,15 +339,15 @@ onMounted(async () => {
       <div class="d-flex justify-content-center mt-4">
         <div style="text-align: center; margin-bottom: 25px; gap: 10px;">
           <div style="display: inline-block">
-            <div class="input-group">
+            <div class="input-group" style="margin-bottom: 5px;">
               <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Fecha de
                 ingreso</span>
-              <input type="date" class="form-control" v-model="fechaIngreso" :min="minDate" />
+              <input type="date" class="form-control" v-model="fechaIngreso" :min="minDate"/>
             </div>
           </div>
 
           <div style="display: inline-block; margin: 0px 15px;">
-            <div class="input-group">
+            <div class="input-group" style="margin-bottom: 5px;">
               <span style="background-color: #b7642d; color: #fff" class="input-group-text" id="addon-wrapping">Fecha
                 del egreso</span>
               <input type="date" class="form-control" v-model="fechaEgreso" :min="minDate" />
@@ -568,8 +569,7 @@ onMounted(async () => {
 .servicios li {
   width: 50%;
   margin-bottom: 10px;
-  display: flex;
-  align-items: center;
+
 }
 
 .servicios li i {

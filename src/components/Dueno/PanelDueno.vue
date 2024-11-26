@@ -50,9 +50,9 @@ onMounted(()=>{
             </router-link>
 
 
-              <div class="card" style="background-color: #ffffff" @click="irHabitacionesHotel()">
+              <div class="card" style="background-color: #ffffff; cursor: pointer;" @click="irHabitacionesHotel()">
                 <div class="textos" title="DPanelHabitaciones">
-                  <center><h6>Habitaciones</h6></center>
+                  <center><h6 >Habitaciones</h6></center>
 
                   <i class="material-icons">holiday_village</i>
                 </div>

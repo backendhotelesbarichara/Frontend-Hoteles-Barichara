@@ -32,7 +32,7 @@ async function getReservas() {
         fecha_entrada_formateada: formatDate(reserva.fecha_entrada),
         fecha_salida_formateada: formatDate(reserva.fecha_salida),
       })).reverse();
-      console.log(reservas);
+      /* console.log(reservas); */
     }
   } catch (error) {
     console.log(error);

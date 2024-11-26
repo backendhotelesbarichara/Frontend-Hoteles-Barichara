@@ -228,7 +228,7 @@ const eliminarImagen = () => {
 
 onMounted(async () => {
     const Proveedor = route.query.id;
-    console.log("prueba", Proveedor)
+    /* console.log("prueba", Proveedor) */
 
     if (Proveedor) {
         idSitio.value = Proveedor;

@@ -4,6 +4,7 @@ import { useStorePiso } from '../../../stores/piso.js';
 import { useStoreHotel } from '../../../stores/hotel.js';
 import { useStoreHabitacion } from '../../../stores/habitacion.js';
 import { useRoute, useRouter } from 'vue-router';
+import 'bootstrap/dist/js/bootstrap.bundle';
 
 const usePiso = useStorePiso();
 const useHotel = useStoreHotel();
@@ -43,6 +44,10 @@ const guardando = ref(false);
 const data = ref([]);
 const hoteles = ref([]); // Lista de hoteles obtenida de la tienda
 const selectedHotel = ref(null); // Hotel seleccionado
+let editarModalInstance; // Instancia del modal editarp
+let imagenesModalInstance; // Instancia del modal imagenesModal
+let serviciosModalInstance; // Instancia del modal modalVerServicios
+let tipoHabitacionModalInstance; // Instancia del modal modalVerServicios
 
 async function guardarCambios() {
   guardando.value = true;
@@ -150,15 +155,24 @@ const removeServicio = (index) => {
 };
 
 const openTipoHabitacionModal = () => {
-  showTipoHabitacionModal.value = true;
+  if (tipoHabitacionModalInstance) {
+    tipoHabitacionModalInstance.show();
+    if (editarModalInstance) editarModalInstance.hide(); // Cierra editarp
+  }
 };
 
 const openServicioModal = () => {
-  showServicioModal.value = true;
+  if (serviciosModalInstance) {
+    serviciosModalInstance.show();
+    if (editarModalInstance) editarModalInstance.hide(); // Cierra editarp
+  }
 };
 
 const openImagenModal = () => {
-  showImagenModal.value = true;
+  if (imagenesModalInstance) {
+    imagenesModalInstance.show();
+    if (editarModalInstance) editarModalInstance.hide(); // Cierra editarp
+  }
 };
 
 function irFormularioHabitacion() {
@@ -255,11 +269,11 @@ const selectHabitacion = (habitacion) => {
   precioNoche.value = habitacion.precio_noche;
   disponible.value = habitacion.disponible;
   idHabSelec.value = selectedHabitacion.value._id;
+  if (editarModalInstance) editarModalInstance.show();
 }
 
 onMounted(async () => {
   const Hotel = route.query.id;
-  console.log("prueba", Hotel)
 
   if (Hotel) {
     idHotel.value = Hotel;
@@ -269,22 +283,49 @@ onMounted(async () => {
 
   await getHoteles();
 
-  tipoHabitacionModal.value = document.getElementById('tipoHabitacionModal');
-  serviciosModal.value = document.getElementById('servicioModal');
-  imagenModal.value = document.getElementById('verImagenesModal');
-  editarDHabitacionesModal.value = document.getElementById('editarDHabitaciones');
 
-  tipoHabitacionModal.value.addEventListener('hidden.bs.modal', () => {
-    new bootstrap.Modal(editarDHabitacionesModal.value).show();
-  });
+  const editarModalElement = document.getElementById('editarDHabitaciones');
+  if (editarModalElement) {
+    editarModalInstance = new bootstrap.Modal(editarModalElement);
+  }
 
-  serviciosModal.value.addEventListener('hidden.bs.modal', () => {
-    new bootstrap.Modal(editarDHabitacionesModal.value).show();
-  });
+  const imagenesModalElement = document.getElementById('verImagenesModal');
+  if (imagenesModalElement) {
+    imagenesModalInstance = new bootstrap.Modal(imagenesModalElement);
 
-  imagenModal.value.addEventListener('hidden.bs.modal', () => {
-    new bootstrap.Modal(editarDHabitacionesModal.value).show();
-  });
+    // Al cerrar imagenesModal, abrir editarp
+    imagenesModalElement.addEventListener('hidden.bs.modal', () => {
+      if (editarModalInstance) {
+        editarModalInstance.show();
+      }
+    });
+  }
+
+  const serviciosModalElement = document.getElementById('servicioModal');
+  if (serviciosModalElement) {
+    serviciosModalInstance = new bootstrap.Modal(serviciosModalElement);
+
+    // Al cerrar imagenesModal, abrir editarp
+    serviciosModalElement.addEventListener('hidden.bs.modal', () => {
+      if (editarModalInstance) {
+        editarModalInstance.show();
+      }
+    });
+  }
+
+  const tipoHabitacionModalElement = document.getElementById('tipoHabitacionModal');
+  if (tipoHabitacionModalElement) {
+    tipoHabitacionModalInstance = new bootstrap.Modal(tipoHabitacionModalElement);
+
+    // Al cerrar imagenesModal, abrir editarp
+    tipoHabitacionModalElement.addEventListener('hidden.bs.modal', () => {
+      if (editarModalInstance) {
+        editarModalInstance.show();
+      }
+    });
+  }
+
+
 });
 </script>
 
@@ -314,7 +355,7 @@ onMounted(async () => {
       </div>
 
       <!-- Tabla de habitaciones -->
-      <div v-else style="font-size: 12px;" class="table-responsive">
+      <div v-else style="font-size: 12px;">
         <div class="mb-5">
           <div class="top-bar">
             <div class="text-center w-25" style="display: flex; align-items: baseline;">
@@ -339,71 +380,73 @@ onMounted(async () => {
           </div>
         </div>
 
-        <table class="table table-bordered">
-          <thead style="align-items: center; text-align: center">
-            <tr>
-              <th>Num habitación</th>
-              <th>Descripción</th>
-              <th>Tipo de habitación</th>
-              <th>Cantidad de personas</th>
-              <th>Servicios</th>
-              <th>Precio x noche</th>
-              <th>Disponible</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody v-if="loading">
-            <tr>
-              <td colspan="8" class="text-center">Cargando habitaciones...</td>
-            </tr>
-          </tbody>
-          <tbody v-else>
-            <tr v-for="habitacion in habitaciones" :key="habitacion._id">
-              <td>{{ habitacion.numero_habitacion }}</td>
-              <td>
-                <VMenu class="vmenu">
-                  <span class="truncated-text">{{ habitacion.descripcion }}</span>
-                  <template #popper>
-                    <div class="descripVmenu">
-                      {{ habitacion.descripcion }}
-                    </div>
-                  </template>
-                </VMenu>
-              </td>
-              <td>
-                <VMenu class="vmenu">
-                  <span class="truncated-text">{{ habitacion.tipo_habitacion[0] }}</span>
-                  <template #popper>
-                    <div class="descripVmenu">
-                      {{ habitacion.tipo_habitacion.join(', ') }}
-                    </div>
-                  </template>
-                </VMenu>
-              </td>
-              <td>{{ habitacion.cantidad_personas }}</td>
-              <td>
-                <VMenu class="vmenu">
-                  <span class="truncated-text">{{ habitacion.servicio.slice(0, 2).join(', ') }}</span>
-                  <template #popper>
-                    <div class="descripVmenu">
-                      {{ habitacion.servicio.join(', ') }}
-                    </div>
-                  </template>
-                </VMenu>
-              </td>
-              <td>{{ habitacion.precio_noche }}</td>
-              <td>{{ habitacion.disponible ? "Si" : "No" }}</td>
-              <td>
-                <div class="btn-container">
-                  <button style="max-height: 30px" type="button" class="btns btn btn-dark" data-bs-toggle="modal"
-                    data-bs-target="#editarDHabitaciones" @click="selectHabitacion(habitacion)">
-                    <i class="material-icons">edit</i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead style="align-items: center; text-align: center">
+              <tr>
+                <th>Num habitación</th>
+                <th>Descripción</th>
+                <th>Tipo de habitación</th>
+                <th>Cantidad de personas</th>
+                <th>Servicios</th>
+                <th>Precio x noche</th>
+                <th>Disponible</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody v-if="loading">
+              <tr>
+                <td colspan="8" class="text-center">Cargando habitaciones...</td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <tr v-for="habitacion in habitaciones" :key="habitacion._id">
+                <td>{{ habitacion.numero_habitacion }}</td>
+                <td>
+                  <VMenu class="vmenu">
+                    <span class="truncated-text">{{ habitacion.descripcion }}</span>
+                    <template #popper>
+                      <div class="descripVmenu">
+                        {{ habitacion.descripcion }}
+                      </div>
+                    </template>
+                  </VMenu>
+                </td>
+                <td>
+                  <VMenu class="vmenu">
+                    <span class="truncated-text">{{ habitacion.tipo_habitacion[0] }}</span>
+                    <template #popper>
+                      <div class="descripVmenu">
+                        {{ habitacion.tipo_habitacion.join(', ') }}
+                      </div>
+                    </template>
+                  </VMenu>
+                </td>
+                <td>{{ habitacion.cantidad_personas }}</td>
+                <td>
+                  <VMenu class="vmenu">
+                    <span class="truncated-text">{{ habitacion.servicio.slice(0, 2).join(', ') }}</span>
+                    <template #popper>
+                      <div class="descripVmenu">
+                        {{ habitacion.servicio.join(', ') }}
+                      </div>
+                    </template>
+                  </VMenu>
+                </td>
+                <td>{{ habitacion.precio_noche }}</td>
+                <td>{{ habitacion.disponible ? "Si" : "No" }}</td>
+                <td>
+                  <div class="btn-container">
+                    <button style="max-height: 30px" type="button" class="btns btn btn-dark" data-bs-toggle="modal"
+                      data-bs-target="#editarDHabitaciones" @click="selectHabitacion(habitacion)">
+                      <i class="material-icons">edit</i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div style="display: flex; justify-content: end;">
           <button class="btn top-bar__button" id="btns" style="margin-top: 6px;" @click="irFormularioHabitacion()">
@@ -414,7 +457,8 @@ onMounted(async () => {
 
       <!-- Modal para editar habitación -->
       <div class="modal fade modal-small" id="editarDHabitaciones" tabindex="-1"
-        aria-labelledby="editarDHabitacionesLabel" aria-hidden="true">
+        aria-labelledby="editarDHabitacionesLabel" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -445,8 +489,8 @@ onMounted(async () => {
                   <div class="mb-3" style="display: flex; flex-direction: column;">
                     <strong>Imágenes de la habitación <span class="text-danger">*</span></strong>
                     <div style="width: 50%;">
-                      <button class="btn text-light btn-secondary mt-2" data-bs-toggle="modal"
-                        data-bs-target="#verImagenesModal" @click="openImagenModal">Ver imágenes</button>
+                      <button type="button" class="btn text-light btn-secondary mt-2" @click="openImagenModal()">Ver
+                        imágenes</button>
                     </div>
                   </div>
                 </div>
@@ -464,8 +508,8 @@ onMounted(async () => {
                     <label class="form-label" for="servicios"><strong>Servicios <span
                           class="text-danger">*</span></strong></label>
                     <br />
-                    <button class="btn text-light btn-secondary" data-bs-toggle="modal" data-bs-target="#servicioModal"
-                      @click="openServicioModal">Ver servicios</button>
+                    <button type="button" class="btn text-light btn-secondary" @click="openServicioModal()">Ver
+                      servicios</button>
                   </div>
                 </div>
                 <div class="col-6">
@@ -542,8 +586,8 @@ onMounted(async () => {
     </div>
 
     <!-- Modal para mostrar servicios -->
-    <div class="modal fade" id="servicioModal" tabindex="-1" aria-labelledby="servicioModalLabel" aria-hidden="true"
-      v-show="showServicioModal" data-bs-backdrop="static">
+    <div class="modal fade " id="servicioModal" tabindex="-1" aria-labelledby="servicioModalLabel"
+      aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -570,8 +614,8 @@ onMounted(async () => {
     </div>
 
     <!-- Modal para ver y gestionar imágenes -->
-    <div class="modal fade" id="verImagenesModal" tabindex="-1" aria-labelledby="verImagenesModalLabel"
-      aria-hidden="true" v-show="showImagenModal" data-bs-backdrop="static">
+    <div class="modal fade " id="verImagenesModal" tabindex="-1" aria-labelledby="verImagenesModalLabel"
+      aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -874,16 +918,6 @@ th {
   font-size: 20px;
 }
 
-/* Estilos para scrollbar */
-.table-responsive::-webkit-scrollbar {
-  height: 7px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background-color: #b7642d;
-  border-radius: 20px;
-}
-
 .position-relative {
   position: relative;
 }
@@ -926,5 +960,19 @@ th {
 
 .custom-notify .close:hover {
   opacity: 1;
+}
+
+.modal-large .modal-dialog {
+  max-width: 80%;
+  height: 80vh;
+  width: 80vw;
+}
+
+.modal-large .modal-content {
+  height: 100%;
+}
+
+.modal-large .modal-dialog {
+  max-width: 90%;
 }
 </style>

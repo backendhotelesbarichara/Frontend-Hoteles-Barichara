@@ -56,7 +56,7 @@ const agregarHabitacion = async () => {
         mensajeNotificacion.value = '';
         goToHabitaciones();
       }, 3000);
-      console.log(response)
+/*       console.log(response) */
       console.log("Habitación añadida");
     } else if (useHabitacion.estatus === 400 || useHabitacion.estatus === 404 || useHabitacion.estatus === 500) {
       notificacionValidacion.value = true;
@@ -111,7 +111,7 @@ async function subirFotosHabitacion(event) {
 
       const fotoObj = { url: imageUrl };
       data.value.imagenes.push(fotoObj);
-      console.log("soy data fotos", data.value)
+      /* console.log("soy data fotos", data.value) */
     }
 
     uploadedImages.value = data.value.imagenes;
@@ -152,8 +152,8 @@ const addTipo = () => {
   if (tipoInput.value.trim() !== "") {
     data.value.tipo_habitacion.push(tipoInput.value.trim());
     tipoInput.value = "";
-    console.log(tipo_habitacion);
-    console.log(data.value.tipo_habitacion);
+/*     console.log(tipo_habitacion);
+    console.log(data.value.tipo_habitacion); */
   }
 };
 
