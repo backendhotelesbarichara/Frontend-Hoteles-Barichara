@@ -124,9 +124,6 @@ export const useStoreHotel = defineStore(
         console.log(response);
         const logo = response.data.secure_url;
 
-        // Actualizar la foto de perfil del usuario
-        editarHotelSelec.value.logo = logo;
-
         return logo;
       } catch (error) {
         console.error("Error al subir la foto:", error);
@@ -151,9 +148,7 @@ export const useStoreHotel = defineStore(
         );
         console.log("img", response);
         const fotos = response.data.secure_url;
-        // Actualizar la foto de perfil del usuario
-        editarHotelSelec.value.fotos = fotos;
-        // Guardar la foto de perfil en el servidor
+
         return fotos;
       } catch (error) {
         console.error("Error al subir la foto:", error);
