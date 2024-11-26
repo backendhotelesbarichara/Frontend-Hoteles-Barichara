@@ -233,10 +233,10 @@ onMounted(() => {
           </div>
           <div class="text-center mb-3">
             <button class="btn btn-outline-danger btn" type="button" style="margin-right: 5px"
-              @click="irPanelProveedor()">Cancelar</button>
-            <button class="btn btn-custom btn" type="submit" style="background:  #b7642d; color: #fff">
-              <i class="bi bi-floppy-fill"></i>
-              Registrar
+              @click="irPanelProveedor()" :disabled="loadingProveedor || loadingFotos">Cancelar</button>
+            <button class="btn btn-custom btn" type="submit" style="background:  #b7642d; color: #fff" :disabled="loadingProveedor || loadingFotos">
+              <span v-if="loadingProveedor" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span v-else> <i class="bi bi-floppy-fill"></i> Registrar</span>
             </button>
           </div>
         </form>

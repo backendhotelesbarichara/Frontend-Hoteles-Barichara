@@ -288,11 +288,11 @@ onMounted(() => {
             </div>
           </div>
           <div class="text-center mb-3">
-            <button class="btn btncancelar" type="button" :disabled="loading"
+            <button class="btn btncancelar" type="button" :disabled="loadingHabitacion || loading"
               style="margin-right: 5px; background-color: #dc3545; color: white;"
               @click="goToHabitaciones()">Cancelar</button>
-            <button class="btn btn-custom" type="submit" style="background: #b7642d; color: #fff" :disabled="loading">
-              <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <button class="btn btn-custom" type="submit" style="background: #b7642d; color: #fff" :disabled="loadingHabitacion || loading">
+              <span v-if="loadingHabitacion" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               <span v-else> <i class="bi bi-floppy-fill"></i> Registrar</span>
             </button>
           </div>

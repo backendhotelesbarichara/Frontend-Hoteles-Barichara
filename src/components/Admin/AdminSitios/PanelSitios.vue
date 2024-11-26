@@ -225,7 +225,7 @@ onMounted(() => {
 
             <!-- Tabla de hoteles -->
             <div style="font-size: 12px;" class="table-responsive m-5">
-                <table class="table table-bordered">
+                <table class="table table-hover">
                     <thead style="align-items: center; text-align: center">
                         <tr>
                             <th>Nombre</th>
@@ -510,11 +510,6 @@ h5 {
 }
 
 /* Estilos para la tabla */
-.table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-}
 
 .table td .vmenu {
     overflow: hidden;
@@ -581,15 +576,6 @@ th {
     /* Tamaño del icono */
 }
 
-/* Estilos para scrollbar */
-.table-responsive::-webkit-scrollbar {
-    height: 7px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-    background-color: #b7642d;
-    border-radius: 20px;
-}
 
 .custom-notify {
     position: fixed;

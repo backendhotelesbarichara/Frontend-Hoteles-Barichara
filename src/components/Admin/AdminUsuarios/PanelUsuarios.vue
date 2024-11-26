@@ -184,7 +184,7 @@ onMounted(() => {
     <div>
       <!-- Tabla de usuarios -->
       <div style="font-size: 12px;" class="table-responsive mt-5">
-        <table class="table table-bordered">
+        <table class="table table-hover">
           <thead style="align-items: center; text-align: center">
             <tr>
               <th>Nombre</th>
@@ -397,11 +397,7 @@ h5 {
 }
 
 /* Estilos para la tabla */
-.table {
-  border-collapse: collapse;
-  /* Para eliminar los espacios entre las celdas */
-  width: 100%;
-}
+
 
 #btns {
   background-color: #b7642d;
@@ -455,16 +451,6 @@ th {
 .material-icons {
   font-size: 20px;
   /* Tamaño del icono */
-}
-
-/* Estilos para scrollbar */
-.table-responsive::-webkit-scrollbar {
-  height: 7px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background-color: #b7642d;
-  border-radius: 20px;
 }
 
 .custom-notify {

@@ -204,10 +204,11 @@ function irPanelAdmin() {
           </div>
           <div class="text-center mb-3">
             <button class="btn btn-outline-danger btn" type="button" href="#" style="margin-right: 5px"
-              @click="irPanelAdmin()">Cancelar</button><button class="btn btn-custom btn" type="submit"
-              style="background:  #b7642d; color: #fff">
-              <i class="bi bi-floppy-fill"></i>
-              Registrar
+              @click="irPanelAdmin()" :disabled="loadingSitio || loadingFotos">Cancelar</button>
+              <button class="btn btn-custom btn" type="submit"
+              style="background:  #b7642d; color: #fff" :disabled="loadingSitio || loadingFotos">
+              <span v-if="loadingSitio" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span v-else> <i class="bi bi-floppy-fill"></i> Registrar</span>
             </button>
           </div>
         </form>

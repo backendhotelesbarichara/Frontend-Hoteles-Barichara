@@ -73,7 +73,7 @@ onMounted(() => {
 
       <!-- Tabla de habitaciones -->
       <div style="font-size: 12px" class="table-responsive">
-        <table class="table table-bordered">
+        <table class="table table-hover">
           <thead style="align-items: center; text-align: center">
             <tr>
               <th>Nombre Cliente</th>
@@ -230,11 +230,6 @@ h5 {
   }
 }
 
-/* Estilos para la tabla */
-.table {
-  border-collapse: collapse;
-  width: 100%;
-}
 
 th,
 td {
@@ -285,13 +280,4 @@ th {
   font-size: 20px;
 }
 
-/* Estilos para scrollbar */
-.table-responsive::-webkit-scrollbar {
-  height: 7px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background-color: #b7642d;
-  border-radius: 20px;
-}
 </style>

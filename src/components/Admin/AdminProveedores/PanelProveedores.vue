@@ -182,7 +182,7 @@ async function getSitiosTuristicos() {
         } else {
             selectedSitio.value = sitios.value[0];
             await loadProveedorData();
-        }   
+        }
 
     } catch (error) {
         console.log(error);
@@ -262,20 +262,25 @@ onMounted(async () => {
             <h5>Administrar Proveedores Turísticos</h5>
         </div>
         <div>
-            <div class="text-center w-25" style="display: flex; align-items: baseline;">
-                <p for="hotelSelector" class="form-p fw-bold w-100 fs-3">Proveedores de: </p>
-                <select id="hotelSelector" v-model="selectedSitio" @change="loadProveedorData"
-                    class="form-select text-center fw-bold">
-                    <option disabled value="">Seleccione un hotel...</option> <!-- Opción por defecto -->
-                    <option v-for="sitio in sitios" :key="sitio._id" :value="sitio">
-                        {{ sitio.nombre }}
-                    </option>
-                </select>
+            <div class="text-center w-25 align-container">
+                <div style="display: flex; gap: 20px; height: 30%;">
+                    <div style="min-width: 250px">   
+                    <p for="hotelSelector" class="form-p fw-bold" style="font-size: 2rem;">Proveedores de: </p>
+                    </div>
+                    <select id="hotelSelector" v-model="selectedSitio" @change="loadProveedorData"
+                        class="form-select text-center fw-bold">
+                        <option disabled value="">Seleccione un hotel...</option> <!-- Opción por defecto -->
+                        <option v-for="sitio in sitios" :key="sitio._id" :value="sitio">
+                            {{ sitio.nombre }}
+                        </option>
+                    </select>
+                </div>
+
             </div>
 
             <!-- Tabla de proveedores -->
-            <div style="font-size: 12px;" class="table-responsive">
-                <table class="table table-bordered">
+            <div style="font-size: 12px;" class="table-responsive mt-5">
+                <table class="table table-hover">
                     <thead style="align-items: center; text-align: center">
                         <tr>
                             <th>Nombre</th>
@@ -314,18 +319,17 @@ onMounted(async () => {
                         </tr>
                     </tbody>
                 </table>
+            </div>
 
-                <div style="display: flex; justify-content: end;">
-                    <button class="btn top-bar__button" id="btns" style="margin-top: 6px;"
-                        @click="irFormularioProveedor()">
-                        Agregar Proveedor
-                    </button>
-                </div>
+            <div style="display: flex; justify-content: end;">
+                <button class="btn top-bar__button" id="btns" style="margin-top: 6px;" @click="irFormularioProveedor()">
+                    Agregar Proveedor
+                </button>
             </div>
 
             <!-- espacio para el modal -->
             <div class="modal fade modal-lg" id="editarp" tabindex="-1" aria-labelledby="exampleModalLabel"
-                aria-hidden="true"  data-bs-backdrop="static" data-bs-keyboard="false">
+                aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -565,13 +569,20 @@ h5 {
         border-radius: 10px;
     }
 }
+.align-container {
+  display: flex;
+  align-items: center;
+  /* Centra verticalmente el texto y el selector */
+  gap: 10px;
+  /* Espaciado horizontal entre el texto y el select */
+}
+
+.form-p {
+  margin: 0;
+  /* Elimina márgenes extra para un mejor alineado */
+}
 
 /* Estilos para la tabla */
-.table {
-    border-collapse: collapse;
-    /* Para eliminar los espacios entre las celdas */
-    width: 100%;
-}
 
 th,
 td {
@@ -610,16 +621,6 @@ th {
 .material-icons {
     font-size: 20px;
     /* Tamaño del icono */
-}
-
-/* Estilos para scrollbar */
-.table-responsive::-webkit-scrollbar {
-    height: 7px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-    background-color: #b7642d;
-    border-radius: 20px;
 }
 
 .custom-notify {

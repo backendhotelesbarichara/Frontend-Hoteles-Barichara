@@ -419,11 +419,11 @@ onMounted(() => {
           </div>
           <div class="text-center mb-3">
             <button class="btn btn-outline-danger btn" type="button" style="margin-right: 5px"
-              @click="irPanelDueno()">Cancelar</button>
+              @click="irPanelDueno()" :disabled="loadingHotel || loadingFotos">Cancelar</button>
 <!--             <button class="btn btn-outline-dark btn" type="button" style="margin-right: 5px" @click="limpiar()">
               Limpiar</button> -->
             <button class="btn btn-custom btn" type="submit" style="background:  #b7642d; color: #fff"
-              :disabled="loadingHotel">
+              :disabled="loadingHotel || loadingFotos">
               <span v-if="loadingHotel" class="spinner-border spinner-border-sm" role="status"
                 aria-hidden="true"></span>
               <span v-if="!loadingHotel"><i class="bi bi-floppy-fill"></i> Registrar</span>

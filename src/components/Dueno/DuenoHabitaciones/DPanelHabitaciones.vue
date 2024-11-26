@@ -358,16 +358,21 @@ onMounted(async () => {
       <div v-else style="font-size: 12px;">
         <div class="mb-5">
           <div class="top-bar">
-            <div class="text-center w-25" style="display: flex; align-items: baseline;">
-              <p for="hotelSelector" class="form-p fw-bold w-100 fs-3">Habitaciones de: </p>
-              <select id="hotelSelector" v-model="selectedHotel" @change="loadHotelData"
-                class="form-select text-center fw-bold">
-                <option disabled value="">Seleccione un hotel...</option> <!-- Opción por defecto -->
-                <option v-for="hotel in hoteles" :key="hotel._id" :value="hotel">
-                  {{ hotel.nombre }}
-                </option>
-              </select>
+            <div class="text-center w-25 align-container">
+              <div style="display: flex; gap: 20px; height: 30%;">
+                <div style="min-width: 250px">
+                  <p for="hotelSelector" class="form-p fw-bold" style="font-size: 2rem;">Habitaciones de: </p>
+                </div>
+                <select id="hotelSelector" v-model="selectedHotel" @change="loadHotelData"
+                  class="form-select text-center fw-bold" style="height: 50px;">
+                  <option disabled value="">Seleccione un hotel...</option>
+                  <option v-for="hotel in hoteles" :key="hotel._id" :value="hotel">
+                    {{ hotel.nombre }}
+                  </option>
+                </select>
+              </div>
             </div>
+
 
 
             <div class="top-bar__select-container">
@@ -586,8 +591,8 @@ onMounted(async () => {
     </div>
 
     <!-- Modal para mostrar servicios -->
-    <div class="modal fade " id="servicioModal" tabindex="-1" aria-labelledby="servicioModalLabel"
-      aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade " id="servicioModal" tabindex="-1" aria-labelledby="servicioModalLabel" aria-hidden="true"
+      data-bs-backdrop="static" data-bs-keyboard="false">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -830,6 +835,25 @@ h5 {
   transition: 1s;
 }
 
+.align-container {
+  display: flex;
+  align-items: center;
+  /* Centra verticalmente el texto y el selector */
+  gap: 10px;
+  /* Espaciado horizontal entre el texto y el select */
+}
+
+.form-p {
+  margin: 0;
+  /* Elimina márgenes extra para un mejor alineado */
+}
+
+.form-select {
+  flex-shrink: 0;
+  /* Evita que el select cambie de tamaño inesperadamente */
+}
+
+
 @media screen and (max-width: 500px) {
   .Hoteles {
     background-color: #b7642d;
@@ -837,6 +861,41 @@ h5 {
     border-radius: 10px;
   }
 }
+
+@media screen and (max-width: 768px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    /* Espacio entre elementos */
+  }
+
+  .top-bar__select-container {
+    margin-top: 10px;
+    width: 100%;
+    /* Asegura que ocupe todo el ancho */
+  }
+
+  .text-center.w-25 {
+    width: 100%;
+    /* Asegura que el div ocupe el ancho completo */
+    display: block;
+    /* Cambia el estilo para adaptarse verticalmente */
+  }
+
+  .text-center.w-25 p {
+    text-align: center;
+    /* Centra el texto en dispositivos pequeños */
+  }
+
+  .form-select {
+    width: 100%;
+    /* La lista desplegable ocupa todo el ancho disponible */
+    margin-top: 5px;
+    /* Añade algo de separación */
+  }
+}
+
 
 /* Estilos para la tabla */
 .table td .vmenu {
