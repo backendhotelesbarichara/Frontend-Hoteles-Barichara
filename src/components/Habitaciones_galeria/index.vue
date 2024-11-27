@@ -260,17 +260,23 @@ onMounted(async () => {
     await getHotelSeleccionado(Hotel);
   }
 
-
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowFormatted = tomorrow.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+  if(useReserva.fechaEgreso){
+    fechaIngreso.value = useReserva.fechaIngreso;
+    fechaEgreso.value = useReserva.fechaEgreso;
+  } else{
+    fechaIngreso.value = today;
+    fechaEgreso.value = tomorrowFormatted;
+  }
+
   adults.value = 1;
   children.value = 0;
   useReserva.adultos = 1;
   useReserva.ninos = 0;
-  fechaIngreso.value = today;
-  fechaEgreso.value = tomorrowFormatted;
   useHabitacion.fechaEgreso = fechaEgreso.value;
 
   getHabitaciones();

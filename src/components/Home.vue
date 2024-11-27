@@ -3,14 +3,18 @@
 import { ref, onMounted } from 'vue';
 import { hoteles, Sturisticos } from './../components/BD/bd';
 import { useStoreSitioTuristico } from '../stores/sitio_turistico.js';
+import { useStoreReserva } from '../stores/reserva.js';
 import { useStoreHotel } from '../stores/hotel.js';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const useHotel = useStoreHotel();
 const useSitioTuristico = useStoreSitioTuristico();
+const useReserva = useStoreReserva();
 const listaHoteles = ref("");
 const sitiosTuristicos = ref([]);
+const fechaEntrada = ref();
+const fechaSalida = ref();
 const datahotel = ref(hoteles);
 const datasitios = ref(Sturisticos);
 const img = ref("")
@@ -21,6 +25,8 @@ const minDate = ref(obtenerFechaActual());
 
 function irInfoPrimerHotel() {
     useHotel.HotelHome = primerHotel.value._id
+    useReserva.fechaIngreso = fechaEntrada.value;
+    useReserva.fechaEgreso = fechaSalida.value;
     /* router.push('/GaleriaHabitaciones') */
     // En lugar de router.push, abrimos una nueva pestaña
     const url = router.resolve({ path: '/GaleriaHabitaciones', query: { id: primerHotel.value._id } }).href;
@@ -161,7 +167,7 @@ onMounted(() => {
                     <div class="input-group">
                         <span style="background-color: #b7642d; color: #fff" class="input-group-text"
                             id="addon-wrapping">Ingreso</span>
-                        <input type="date" class="form-control" @change="irInfoPrimerHotel()" :min="minDate" />
+                        <input type="date" class="form-control" v-model="fechaEntrada":min="minDate" />
                     </div>
                 </div>
 
@@ -169,11 +175,11 @@ onMounted(() => {
                     <div class="input-group">
                         <span style="background-color: #b7642d; color: #fff" class="input-group-text"
                             id="addon-wrapping">Salida</span>
-                        <input type="date" class="form-control" @change="irInfoPrimerHotel()" :min="minDate" />
+                        <input type="date" class="form-control" v-model="fechaSalida" @change="irInfoPrimerHotel()" :min="minDate" />
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
-                    <button type="button" class="btncafe" @click="irInfoPrimerHotel()"><i class="bi bi-search"></i>
+                    <button type="button" class="btncafe"  @click="irInfoPrimerHotel()"><i class="bi bi-search"></i>
                         Buscar Habitaciones Disponibles </button>
                 </div>
             </div>
