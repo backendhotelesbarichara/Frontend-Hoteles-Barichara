@@ -4,6 +4,7 @@ import { useStoreHabitacion } from '../../stores/habitacion.js';
 import { useStoreReserva } from '../../stores/reserva.js';
 import { useRouter, useRoute } from 'vue-router';
 
+
 const useHabitacion = useStoreHabitacion();
 const useReserva = useStoreReserva();
 const habitacionDetalle = ref();
@@ -61,10 +62,7 @@ const enviarFormulario = async () => {
       setTimeout(() => {
         notificacionVisible.value = false;
       }, 9000);
-      const modalReserva = bootstrap.Modal.getInstance(document.getElementById('modalReserva'));
-      if (modalReserva) {
-        modalReserva.hide();
-      }
+
       limpiar();
     }
     else if (useReserva.estatus === 400) {
