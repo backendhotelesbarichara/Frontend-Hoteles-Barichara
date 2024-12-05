@@ -573,7 +573,7 @@ onMounted(async () => {
 }
 
 .servicios li {
-  width: 50%;
+  width: 30%;
   margin-bottom: 10px;
 
 }
